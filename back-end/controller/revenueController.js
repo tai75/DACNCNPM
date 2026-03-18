@@ -17,10 +17,10 @@ exports.getRevenue = (req, res) => {
 // Doanh thu theo ngày
 exports.getRevenueByDate = (req, res) => {
   const sql = `
-    SELECT DATE(b.date) as date, SUM(s.price) as revenue
+    SELECT DATE(b.booking_date) as date, SUM(s.price) as revenue
     FROM bookings b
     JOIN services s ON b.service_id = s.id
-    GROUP BY DATE(b.date)
+    GROUP BY DATE(b.booking_date)
     ORDER BY date DESC
   `;
 

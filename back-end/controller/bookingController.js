@@ -7,7 +7,7 @@ exports.getBookings = (req, res) => {
   const sql = `
     SELECT 
       b.id,
-      b.date,
+      b.booking_date,
       b.status,
       b.created_at,
       u.name AS user_name,
