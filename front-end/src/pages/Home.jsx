@@ -9,7 +9,7 @@ function Home() {
     { name: "Phun thuốc sâu", img: "/images/service-spraying.jpg" },
     { name: "Tưới cây tự động", img: "/images/service-watering.jpg" },
     { name: "Thiết kế sân vườn", img: "/images/service-landscape.jpg" },
-    { name: "Chăm sóc cây cảnh", img: "/images/service-indoor.jpg" },
+    { name: "Thiết kế cây trong nhà", img: "/images/service-indoor.jpg" },
   ];
 
   return (
@@ -18,34 +18,34 @@ function Home() {
       <div className="flex-grow space-y-20 p-6">
 
         {/* HERO */}
-        <section className="relative h-[500px] rounded-2xl overflow-hidden shadow-lg">
+        <section className="relative h-[500px] rounded-2xl overflow-hidden shadow-lg animate-fade-in">
           <img
             src="/images/hero-garden.jpg"
             alt="Garden"
-            className="absolute w-full h-full object-cover"
+            className="absolute w-full h-full object-cover animate-scale-in"
           />
 
-          <div className="absolute inset-0 bg-gradient-to-r from-green-900/70 to-green-500/40"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-green-900/70 to-green-500/40 animate-gradient"></div>
 
-          <div className="relative z-10 flex flex-col items-center justify-center h-full text-white text-center px-4">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          <div className="relative z-10 flex flex-col items-center justify-center h-full text-white text-center px-4 animate-slide-up">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">
               🌿 Dịch vụ chăm sóc cây chuyên nghiệp
             </h1>
-            <p className="text-lg mb-6">
-              Đặt lịch nhanh chóng - Nhân viên tận nơi - Giá minh bạch
+            <p className="text-lg mb-6 drop-shadow-md">
+              Đặt lịch nhanh chóng - Nhân viên tận nơi - Giá cả minh bạch
             </p>
 
-            <div className="flex gap-4">
+            <div className="flex gap-4 animate-bounce-in">
               <button
                 onClick={() => navigate("/services")}
-                className="bg-green-500 hover:bg-green-600 px-6 py-3 rounded-full font-semibold shadow"
+                className="bg-green-500 hover:bg-green-600 px-6 py-3 rounded-full font-semibold shadow-lg transform hover:scale-105 transition-all duration-300"
               >
                 Xem dịch vụ
               </button>
 
               <button
                 onClick={() => navigate("/contact")}
-                className="border border-white px-6 py-3 rounded-full hover:bg-white hover:text-black transition"
+                className="border-2 border-white px-6 py-3 rounded-full hover:bg-white hover:text-green-800 transition-all duration-300 transform hover:scale-105"
               >
                 Liên hệ
               </button>

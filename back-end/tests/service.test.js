@@ -1,8 +1,15 @@
-const serviceController = require("../controllers/serviceController");
+jest.mock("../config/db", () => ({
+  query: jest.fn((sql, params, callback) => {
+    if (typeof callback === "function") {
+      callback(null, { insertId: 1 });
+    }
+  }),
+}));
+
+const serviceController = require("../controller/serviceController");
 
 describe("Service Controller", () => {
-
-  test("Thiếu name", () => {
+  test("should return error for missing name", () => {
     const req = {
       body: { price: 100 }
     };
@@ -17,9 +24,9 @@ describe("Service Controller", () => {
     expect(res.status).toHaveBeenCalledWith(400);
   });
 
-  test("Thiếu price", () => {
+  test("should return error for missing price", () => {
     const req = {
-      body: { name: "Cắt cây" }
+      body: { name: "Test Service" }
     };
 
     const res = {
@@ -32,9 +39,9 @@ describe("Service Controller", () => {
     expect(res.status).toHaveBeenCalledWith(400);
   });
 
-  test("Price không hợp lệ", () => {
+  test("should return error for invalid price", () => {
     const req = {
-      body: { name: "Cắt cây", price: -10 }
+      body: { name: "Test Service", price: -100 }
     };
 
     const res = {
@@ -77,5 +84,4 @@ describe("Service Controller", () => {
 
     expect(res.status).not.toHaveBeenCalledWith(400);
   });
-
 });

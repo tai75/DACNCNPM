@@ -30,15 +30,15 @@ function AdminBookings() {
     }
   };
 
-  // ================= UPDATE STATUS =================
-  const handleStatusChange = async (id, status) => {
+  // ================= UPDATE PAYMENT STATUS =================
+  const handlePaymentStatusChange = async (id, payment_status) => {
     try {
-      await axios.put(`http://localhost:5000/api/bookings/${id}`, {
-        status,
+      await axios.put(`http://localhost:5000/api/bookings/${id}/payment`, {
+        payment_status,
       });
       fetchBookings();
     } catch (err) {
-      console.error("Lỗi cập nhật:", err);
+      console.error("Lỗi cập nhật payment status:", err);
     }
   };
 
@@ -53,7 +53,9 @@ function AdminBookings() {
             <th className="p-2">Khách hàng</th>
             <th className="p-2">Dịch vụ</th>
             <th className="p-2">Ngày</th>
-            <th className="p-2">Trạng thái</th>
+            <th className="p-2">Thanh toán</th>
+            <th className="p-2">Trạng thái TT</th>
+            <th className="p-2">Trạng thái ĐH</th>
             <th className="p-2">Hành động</th>
           </tr>
         </thead>
@@ -64,9 +66,28 @@ function AdminBookings() {
               <td className="p-2">{b.id}</td>
               <td className="p-2">{b.user_name}</td>
               <td className="p-2">{b.service_name}</td>
-              <td className="p-2">{b.date}</td>
+              <td className="p-2">{new Date(b.booking_date).toLocaleDateString('vi-VN')}</td>
+              <td className="p-2">{b.payment_method_vietnamese}</td>
 
-              {/* STATUS */}
+              {/* PAYMENT STATUS */}
+              <td className="p-2">
+                <select
+                  value={b.payment_status}
+                  onChange={(e) =>
+                    handlePaymentStatusChange(b.id, e.target.value)
+                  }
+                  className={`border p-1 rounded ${
+                    b.payment_status === 'paid' ? 'bg-green-100' :
+                    b.payment_status === 'refunded' ? 'bg-red-100' : 'bg-yellow-100'
+                  }`}
+                >
+                  <option value="pending">Chưa thanh toán</option>
+                  <option value="paid">Đã thanh toán</option>
+                  <option value="refunded">Đã hoàn tiền</option>
+                </select>
+              </td>
+
+              {/* BOOKING STATUS */}
               <td className="p-2">
                 <select
                   value={b.status}
@@ -75,10 +96,10 @@ function AdminBookings() {
                   }
                   className="border p-1"
                 >
-                  <option value="pending">Chờ xử lý</option>
+                  <option value="pending">Chờ xác nhận</option>
                   <option value="confirmed">Đã xác nhận</option>
-                  <option value="done">Hoàn thành</option>
-                  <option value="cancel">Đã hủy</option>
+                  <option value="completed">Hoàn thành</option>
+                  <option value="cancelled">Đã hủy</option>
                 </select>
               </td>
 
@@ -86,7 +107,7 @@ function AdminBookings() {
               <td className="p-2">
                 <button
                   onClick={() => handleDelete(b.id)}
-                  className="bg-red-500 text-white px-2 py-1 rounded"
+                  className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
                 >
                   Xóa
                 </button>
