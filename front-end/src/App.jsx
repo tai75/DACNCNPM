@@ -25,6 +25,7 @@ import AdminServices from "./pages/admin/AdminServices";
 import AdminBookings from "./pages/admin/AdminBookings";
 import AdminEmployees from "./pages/admin/AdminEmployees";
 import AdminRevenue from "./pages/admin/AdminRevenue";
+import AdminRoute from "./routes/Adminroute";
 
 /* ======================
    USER LAYOUT
@@ -72,7 +73,7 @@ function App() {
         </Route>
 
         {/* ================= ADMIN ================= */}
-        <Route path="/admin" element={<AdminLayout />}>
+        <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
           <Route path="dashboard" element={<AdminDashBoard />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="services" element={<AdminServices />} />
