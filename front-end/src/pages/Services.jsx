@@ -1,60 +1,85 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import api from "../config/axios";
 
 function Services() {
   const navigate = useNavigate();
   const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const imageBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/services")
-      .then((res) => res.json())
-      .then((data) => setServices(data))
-      .catch(() => alert("Lỗi tải dịch vụ"));
+    const fetchServices = async () => {
+      try {
+        const response = await api.get("/services");
+        setServices(response.data);
+      } catch (error) {
+        console.error("Error fetching services:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
   }, []);
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-emerald-600" />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <div className="flex-grow py-12 px-6">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-6 md:py-10">
+      <div className="mb-10 reveal-up">
+        <p className="text-xs uppercase tracking-[0.14em] text-emerald-700">Danh mục dịch vụ</p>
+        <h1 className="mt-2 text-3xl font-extrabold text-slate-800 md:text-4xl">Chăm sóc sân vườn theo nhu cầu thực tế</h1>
+        <p className="mt-3 max-w-3xl text-sm text-slate-600 md:text-base">
+          Mỗi gói đều có quy trình rõ ràng, kỹ thuật viên phụ trách và báo cáo sau khi hoàn thành.
+        </p>
+      </div>
 
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-green-700 mb-3">
-            Dịch vụ chăm sóc sân vườn
-          </h1>
-          <p className="text-gray-500">
-            Giải pháp toàn diện giúp không gian xanh của bạn luôn tươi đẹp 🌿
-          </p>
-        </div>
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {services.map((service, index) => (
+          <article
+            key={service.id}
+            onClick={() => navigate(`/services/${service.id}`)}
+            className="card-soft reveal-up cursor-pointer overflow-hidden transition hover:-translate-y-1"
+            style={{ animationDelay: `${index * 0.06}s` }}
+          >
+            <img
+              src={
+                service.image
+                  ? `${imageBaseUrl}/uploads/${service.image}`
+                  : "https://via.placeholder.com/300x200?text=No+Image"
+              }
+              alt={service.name}
+              className="h-48 w-full object-cover"
+            />
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {services.map((service) => (
-            <div
-              key={service.id}
-              className="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition overflow-hidden cursor-pointer"
-              onClick={() => navigate(`/services/${service.id}`)}
-            >
-              <img
-                src={service.image}
-                alt={service.name}
-                className="w-full h-44 object-cover group-hover:scale-105 transition"
-              />
+            <div className="p-5">
+              <h2 className="line-clamp-1 text-lg font-semibold text-slate-800">{service.name}</h2>
+              <p className="mt-2 line-clamp-2 text-sm text-slate-500">{service.description}</p>
 
-              <div className="p-5">
-                <h2 className="text-xl font-semibold mb-2">
-                  {service.name}
-                </h2>
-
-                <p className="text-gray-600 text-sm mb-3">
-                  {service.description}
+              <div className="mt-4 flex items-center justify-between">
+                <p className="text-base font-bold text-emerald-700">
+                  {Number(service.price || 0).toLocaleString("vi-VN")} đ
                 </p>
-
-                <p className="text-green-600 font-bold text-lg">
-                  {service.price?.toLocaleString()}đ
-                </p>
+                <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  Xem chi tiết
+                </span>
               </div>
             </div>
-          ))}
-        </div>
+          </article>
+        ))}
 
+        {services.length === 0 && (
+          <div className="card-soft p-8 text-center text-slate-500 sm:col-span-2 lg:col-span-3">
+            Chưa có dịch vụ nào.
+          </div>
+        )}
       </div>
     </div>
   );

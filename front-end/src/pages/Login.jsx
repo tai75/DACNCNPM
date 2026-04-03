@@ -1,6 +1,7 @@
 import { FaLeaf } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import api from "../config/axios";
 
 function Login() {
   const navigate = useNavigate();
@@ -32,113 +33,87 @@ function Login() {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:5000/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(form),
-      });
+      const res = await api.post("/login", form);
+      const data = res.data;
 
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        // ✅ lưu user
+      if (data.success) {
+        // ✅ lưu token và user
+        localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
+        window.dispatchEvent(new Event("auth-changed"));
 
-        // ❗ QUAN TRỌNG: điều hướng TRƯỚC khi reload
+        // điều hướng
         if (data.user.role === "admin") {
           navigate("/admin/dashboard");
+        } else if (data.user.role === "staff") {
+          navigate("/staff/bookings");
         } else {
           navigate("/");
         }
-
-        // ❗ delay nhỏ để tránh lỗi navigate chưa kịp chạy
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
-
       } else {
-        alert(data.message || "Sai tài khoản hoặc mật khẩu");
+        alert(data.message || "Đăng nhập thất bại");
       }
-
     } catch (error) {
-      console.log(error);
-      alert("Không kết nối được server!");
+      console.error("Login error:", error);
+      alert(error.response?.data?.message || "Lỗi đăng nhập");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4
-      bg-gradient-to-br from-green-100 via-green-200 to-green-400"
-    >
-      <div className="grid md:grid-cols-2 max-w-4xl w-full rounded-2xl overflow-hidden
-        bg-white/90 backdrop-blur-md shadow-[0_10px_40px_rgba(0,0,0,0.2)]"
-      >
-        {/* LEFT */}
-        <div className="hidden md:flex flex-col justify-center items-center text-white p-10
-          bg-gradient-to-br from-green-500 to-green-700"
-        >
-          <h1 className="text-3xl font-bold mb-4 flex items-center gap-2">
-            <FaLeaf /> Garden Care
-          </h1>
-
-          <p className="text-center mb-6 opacity-90">
-            Dịch vụ chăm sóc cây chuyên nghiệp tại nhà
-          </p>
+    <div className="mx-auto flex min-h-[75vh] w-full max-w-5xl items-center px-4 py-8 md:px-6 md:py-10">
+      <div className="card-soft grid w-full overflow-hidden md:grid-cols-2">
+        <div className="hidden bg-gradient-to-br from-emerald-700 to-emerald-500 p-10 text-white md:block">
+          <h1 className="flex items-center gap-2 text-3xl font-extrabold"><FaLeaf /> Garden Care</h1>
+          <p className="mt-4 text-emerald-50">Đăng nhập để theo dõi lịch sử đặt lịch và quản lý dịch vụ của bạn.</p>
         </div>
 
-        {/* RIGHT */}
-        <div className="p-8 md:p-10 flex flex-col justify-center">
-          <h2 className="text-2xl font-bold mb-6 text-green-700 text-center">
-            Đăng nhập
-          </h2>
+        <div className="p-7 md:p-10">
+          <h2 className="text-3xl font-bold text-slate-800">Đăng nhập</h2>
+          <p className="mt-1 text-sm text-slate-500">Chào mừng bạn quay lại.</p>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            {/* EMAIL */}
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={form.email}
-              onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg 
-              focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
+          <form onSubmit={handleLogin} className="mt-6 space-y-4">
+            <div>
+              <label className="mb-1 block text-sm text-slate-600">Email</label>
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+                placeholder="email@cuaban.com"
+                required
+              />
+            </div>
 
-            {/* PASSWORD */}
-            <input
-              type="password"
-              name="password"
-              placeholder="Mật khẩu"
-              value={form.password}
-              onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg 
-              focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
+            <div>
+              <label className="mb-1 block text-sm text-slate-600">Mật khẩu</label>
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+                placeholder="••••••••"
+                required
+              />
+            </div>
 
-            {/* BUTTON */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-600 text-white py-3 rounded-lg 
-              hover:bg-green-700 transition disabled:opacity-50"
+              className="w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
           </form>
 
-          {/* REGISTER LINK */}
-          <p className="text-sm text-center mt-4">
+          <p className="mt-5 text-sm text-slate-600">
             Chưa có tài khoản?{" "}
-            <span
-              onClick={() => navigate("/register")}
-              className="text-green-600 cursor-pointer hover:underline"
-            >
+            <a href="/register" className="font-semibold text-emerald-700 hover:underline">
               Đăng ký ngay
-            </span>
+            </a>
           </p>
         </div>
       </div>

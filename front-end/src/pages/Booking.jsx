@@ -1,47 +1,39 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import api from "../config/axios";
 
 function Booking() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 👉 nhận dữ liệu từ Services
   const serviceData = location.state;
 
+  const [services, setServices] = useState([]);
+
   const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    service: "",
-    date: "",
+    service_id: "",
+    booking_date: "",
+    time_slot: "",
     address: "",
-    note: "",
   });
 
-  // 👉 auto fill service nếu đi từ Services
+  // 🔥 Load services từ DB
+  useEffect(() => {
+    api
+      .get("/services")
+      .then((res) => setServices(res.data))
+      .catch((err) => console.log(err));
+  }, []);
+
+  // 🔥 Auto fill nếu đi từ Services
   useEffect(() => {
     if (serviceData) {
       setFormData((prev) => ({
         ...prev,
-        service: serviceData.service || "",
+        service_id: serviceData.id || "",
       }));
     }
   }, [serviceData]);
-
-  // 👉 giá phải là NUMBER (rất quan trọng)
-  const getPrice = (service) => {
-    switch (service) {
-      case "Cắt tỉa cây":
-        return 200000;
-      case "Bón phân định kỳ":
-        return 150000;
-      case "Phun thuốc sâu":
-        return 250000;
-      case "Thiết kế sân vườn":
-        return 1500000;
-      default:
-        return 0;
-    }
-  };
 
   const handleChange = (e) => {
     setFormData({
@@ -50,163 +42,126 @@ function Booking() {
     });
   };
 
-  const handleSubmit = (e) => {
+  // 🔥 Submit
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const bookingData = {
-      ...formData,
-      price: getPrice(formData.service),
-    };
+    const user = JSON.parse(localStorage.getItem("user"));
 
-    // 👉 chuyển sang payment + truyền data
-    navigate("/payment", { state: bookingData });
+    if (!user) {
+      alert("Vui lòng đăng nhập!");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      // Không tạo booking ở đây nữa, chuyển đến Payment để chọn phương thức thanh toán
+      const selectedServiceInfo = services.find(s => s.id == formData.service_id);
+
+      const bookingData = {
+        service_id: parseInt(formData.service_id),
+        booking_date: formData.booking_date,
+        time_slot: formData.time_slot,
+        address: formData.address,
+        service: selectedServiceInfo?.name || 'Dịch vụ',
+        price: selectedServiceInfo?.price || 0
+      };
+
+      navigate("/payment", {
+        state: bookingData
+      });
+    } catch (err) {
+      console.log(err);
+      alert("Có lỗi xảy ra!");
+    }
   };
 
-  return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <div className="flex-grow p-6 space-y-10 max-w-6xl mx-auto w-full">
+  // 👉 lấy thông tin service đang chọn
+  const selectedService = services.find(
+    (s) => s.id == formData.service_id
+  );
 
-        {/* HEADER */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-green-700 mb-2">
-            📅 Đặt lịch chăm sóc cây
-          </h1>
-          <p className="text-gray-500">
-            Điền thông tin bên dưới, chúng tôi sẽ liên hệ xác nhận nhanh chóng
+  return (
+    <div className="mx-auto w-full max-w-5xl px-4 py-8 md:px-6 md:py-10">
+      <div className="card-soft grid gap-8 p-6 md:grid-cols-5 md:p-8">
+        <div className="md:col-span-2">
+          <p className="text-xs uppercase tracking-[0.14em] text-emerald-700">Bước 1</p>
+          <h1 className="mt-2 text-3xl font-bold text-slate-800">Đặt lịch chăm sóc</h1>
+          <p className="mt-3 text-sm text-slate-500">
+            Chọn dịch vụ, ngày thực hiện và địa chỉ. Sau đó bạn sẽ chuyển sang bước thanh toán.
           </p>
         </div>
 
-        {/* MAIN */}
-        <div className="grid md:grid-cols-3 gap-8">
+        <form onSubmit={handleSubmit} className="grid gap-5 md:col-span-3">
+          <div>
+            <label className="mb-1 block text-sm text-slate-600">Dịch vụ</label>
+            <select
+              name="service_id"
+              value={formData.service_id}
+              onChange={handleChange}
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+              required
+            >
+              <option value="">Chọn dịch vụ</option>
+              {services.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
 
-          {/* FORM */}
-          <div className="md:col-span-2 bg-white shadow-xl p-8 rounded-xl">
-            <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-6">
-
-              <div>
-                <label className="text-sm text-gray-600">Họ tên</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Nguyễn Văn A"
-                  className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-sm text-gray-600">Số điện thoại</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="0123 456 789"
-                  className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-sm text-gray-600">Dịch vụ</label>
-                <select
-                  name="service"
-                  value={formData.service}
-                  onChange={handleChange}
-                  className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
-                  required
-                >
-                  <option value="">Chọn dịch vụ</option>
-                  <option>Cắt tỉa cây</option>
-                  <option>Bón phân định kỳ</option>
-                  <option>Phun thuốc sâu</option>
-                  <option>Thiết kế sân vườn</option>
-                </select>
-
-                {/* 👉 HIỂN THỊ GIÁ */}
-                {formData.service && (
-                  <p className="text-green-600 font-semibold mt-2">
-                    Giá: {getPrice(formData.service).toLocaleString()}đ
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm text-gray-600">Ngày thực hiện</label>
-                <input
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                  className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
-                  required
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="text-sm text-gray-600">Địa chỉ</label>
-                <input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  placeholder="Nhập địa chỉ..."
-                  className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
-                  required
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="text-sm text-gray-600">Ghi chú</label>
-                <textarea
-                  name="note"
-                  value={formData.note}
-                  onChange={handleChange}
-                  placeholder="Yêu cầu thêm..."
-                  className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
-                  rows="4"
-                ></textarea>
-              </div>
-
-              <button
-                type="submit"
-                className="md:col-span-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-lg font-semibold hover:opacity-90 transition"
-              >
-                Xác nhận đặt lịch
-              </button>
-
-            </form>
+            {selectedService && (
+              <p className="mt-2 font-semibold text-emerald-700">
+                Giá: {Number(selectedService.price || 0).toLocaleString("vi-VN")} đ
+              </p>
+            )}
           </div>
 
-          {/* SIDEBAR */}
-          <div className="space-y-6">
-
-            <div className="bg-green-50 p-6 rounded-xl shadow">
-              <h3 className="font-semibold text-green-700 mb-3">
-                🌿 Lợi ích khi đặt lịch
-              </h3>
-              <ul className="text-sm text-gray-600 space-y-2">
-                <li>✔ Nhân viên đến tận nơi</li>
-                <li>✔ Giá rõ ràng, không phát sinh</li>
-                <li>✔ Đặt lịch nhanh chóng</li>
-                <li>✔ Hỗ trợ 24/7</li>
-              </ul>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow">
-              <h3 className="font-semibold mb-3">📞 Liên hệ nhanh</h3>
-              <p className="text-sm text-gray-600">
-                Hotline: <span className="font-semibold">0123 456 789</span>
-              </p>
-              <p className="text-sm text-gray-600">
-                Email: support@gardencare.vn
-              </p>
-            </div>
-
+          <div>
+            <label className="mb-1 block text-sm text-slate-600">Ngày</label>
+            <input
+              type="date"
+              name="booking_date"
+              value={formData.booking_date}
+              onChange={handleChange}
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+              required
+            />
           </div>
-        </div>
+
+          <div>
+            <label className="mb-1 block text-sm text-slate-600">Khung giờ</label>
+            <select
+              name="time_slot"
+              value={formData.time_slot}
+              onChange={handleChange}
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+              required
+            >
+              <option value="">Chọn khung giờ</option>
+              <option value="morning">Sáng (08:00 - 12:00)</option>
+              <option value="afternoon">Chiều (13:00 - 17:00)</option>
+              <option value="evening">Tối (18:00 - 21:00)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm text-slate-600">Địa chỉ</label>
+            <input
+              type="text"
+              name="address"
+              placeholder="Nhập địa chỉ"
+              value={formData.address}
+              onChange={handleChange}
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+              required
+            />
+          </div>
+
+          <button className="rounded-xl bg-emerald-600 py-3 font-semibold text-white transition hover:bg-emerald-700">
+            Tiếp tục tới thanh toán
+          </button>
+        </form>
       </div>
     </div>
   );

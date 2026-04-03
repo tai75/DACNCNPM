@@ -1,4 +1,16 @@
 const db = require("../config/db");
+const Joi = require("joi");
+
+const idSchema = Joi.object({
+  id: Joi.number().integer().positive().required(),
+});
+
+const employeePayloadSchema = Joi.object({
+  name: Joi.string().min(2).max(100).required(),
+  phone: Joi.string().pattern(/^[0-9]{10,11}$/).required(),
+  role: Joi.string().min(2).max(50).required(),
+  salary: Joi.number().positive().required(),
+});
 
 // GET ALL
 exports.getEmployees = (req, res) => {
@@ -10,7 +22,10 @@ exports.getEmployees = (req, res) => {
 
 // GET DETAIL
 exports.getEmployeeById = (req, res) => {
-  const { id } = req.params;
+  const { error, value } = idSchema.validate(req.params);
+  if (error) return res.status(400).json({ success: false, message: "ID nhân viên không hợp lệ" });
+
+  const { id } = value;
 
   db.query("SELECT * FROM employees WHERE id = ?", [id], (err, result) => {
     if (err) return res.status(500).json(err);
@@ -20,11 +35,10 @@ exports.getEmployeeById = (req, res) => {
 
 // CREATE
 exports.createEmployee = (req, res) => {
-  const { name, phone, role, salary } = req.body;
+  const { error, value } = employeePayloadSchema.validate(req.body);
+  if (error) return res.status(400).json({ success: false, message: "Dữ liệu không hợp lệ" });
 
-  if (!name || !phone || !role || !salary) {
-    return res.status(400).json({ message: "Thiếu dữ liệu" });
-  }
+  const { name, phone, role, salary } = value;
 
   const sql = `
     INSERT INTO employees (name, phone, role, salary)
@@ -39,8 +53,14 @@ exports.createEmployee = (req, res) => {
 
 // UPDATE
 exports.updateEmployee = (req, res) => {
-  const { id } = req.params;
-  const { name, phone, role, salary } = req.body;
+  const idValidation = idSchema.validate(req.params);
+  if (idValidation.error) return res.status(400).json({ success: false, message: "ID nhân viên không hợp lệ" });
+
+  const bodyValidation = employeePayloadSchema.validate(req.body);
+  if (bodyValidation.error) return res.status(400).json({ success: false, message: "Dữ liệu không hợp lệ" });
+
+  const { id } = idValidation.value;
+  const { name, phone, role, salary } = bodyValidation.value;
 
   const sql = `
     UPDATE employees
@@ -56,7 +76,10 @@ exports.updateEmployee = (req, res) => {
 
 // DELETE
 exports.deleteEmployee = (req, res) => {
-  const { id } = req.params;
+  const { error, value } = idSchema.validate(req.params);
+  if (error) return res.status(400).json({ success: false, message: "ID nhân viên không hợp lệ" });
+
+  const { id } = value;
 
   db.query("DELETE FROM employees WHERE id = ?", [id], (err) => {
     if (err) return res.status(500).json(err);

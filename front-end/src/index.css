@@ -1,3 +1,105 @@
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+	--gc-bg: #f3f7f2;
+	--gc-bg-soft: #eaf2eb;
+	--gc-ink: #143025;
+	--gc-ink-soft: #4f665c;
+	--gc-accent: #0e8f5b;
+	--gc-accent-strong: #0a6a45;
+}
+
+html,
+body,
+#root {
+	min-height: 100%;
+}
+
+body {
+	margin: 0;
+	color: var(--gc-ink);
+	background:
+		radial-gradient(circle at 10% -10%, rgba(14, 143, 91, 0.18), transparent 34%),
+		radial-gradient(circle at 90% 18%, rgba(22, 163, 74, 0.14), transparent 32%),
+		var(--gc-bg);
+	font-family: "Be Vietnam Pro", "Segoe UI", Tahoma, sans-serif;
+	line-height: 1.5;
+}
+
+.panel-shell {
+	background: linear-gradient(180deg, #f7fbf8 0%, #eaf2ec 100%);
+}
+
+.card-soft {
+	border: 1px solid #e5efe8;
+	border-radius: 16px;
+	background: #ffffff;
+	box-shadow: 0 18px 32px rgba(20, 30, 24, 0.08);
+}
+
+.table-wrap {
+	border: 1px solid #e5efe8;
+	border-radius: 16px;
+	overflow: auto;
+	background: #ffffff;
+}
+
+.badge-status {
+	display: inline-block;
+	border-radius: 999px;
+	padding: 4px 10px;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.hero-glass {
+	background: linear-gradient(140deg, rgba(10, 106, 69, 0.9), rgba(14, 143, 91, 0.82));
+	backdrop-filter: blur(3px);
+}
+
+.gc-button {
+	border-radius: 12px;
+	padding: 10px 18px;
+	font-weight: 600;
+	transition: all 0.2s ease;
+}
+
+.gc-button-primary {
+	background: var(--gc-accent);
+	color: white;
+	box-shadow: 0 10px 20px rgba(14, 143, 91, 0.22);
+}
+
+.gc-button-primary:hover {
+	background: var(--gc-accent-strong);
+	transform: translateY(-1px);
+}
+
+.gc-button-ghost {
+	background: transparent;
+	border: 1px solid rgba(255, 255, 255, 0.55);
+	color: white;
+}
+
+.gc-button-ghost:hover {
+	background: rgba(255, 255, 255, 0.12);
+}
+
+@keyframes revealUp {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.reveal-up {
+	animation: revealUp 0.6s ease both;
+}

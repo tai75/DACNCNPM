@@ -1,211 +1,216 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../config/axios";
 
 function AdminServices() {
   const [services, setServices] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [form, setForm] = useState({ name: "", description: "", price: "", image: null });
+  const imageBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    price: "",
-    image: "",
-  });
-
-  // ======================
-  // LOAD DATA
-  // ======================
+  // ===== LOAD DATA =====
   const fetchServices = async () => {
-    const res = await axios.get("http://localhost:5000/api/admin/services");
-    setServices(res.data);
+    try {
+      const res = await api.get("/admin/services");
+      setServices(res.data);
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi tải dữ liệu dịch vụ");
+    }
   };
 
   useEffect(() => {
     fetchServices();
   }, []);
 
-  // ======================
-  // HANDLE INPUT
-  // ======================
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+  // ===== INPUT & FILE =====
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setForm({ ...form, image: file });
+      setPreview(URL.createObjectURL(file));
+    }
   };
 
-  // ======================
-  // ADD / UPDATE
-  // ======================
+  // ===== SUBMIT =====
   const handleSubmit = async () => {
     try {
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("description", form.description);
+      formData.append("price", form.price);
+      if (form.image) formData.append("image", form.image); // field name phải đúng với multer
+
       if (editingId) {
-        await axios.put(
-          `http://localhost:5000/api/admin/services/${editingId}`,
-          form
+        // Update
+        await api.put(
+          `/admin/services/${editingId}`,
+          formData
         );
         alert("Cập nhật thành công");
       } else {
-        await axios.post(
-          "http://localhost:5000/api/admin/services",
-          form
+        // Create
+        await api.post(
+          "/admin/services",
+          formData
         );
         alert("Thêm dịch vụ thành công");
       }
 
-      setForm({ name: "", description: "", price: "", image: "" });
+      // reset form
+      setForm({ name: "", description: "", price: "", image: null });
+      setPreview(null);
       setEditingId(null);
       setShowModal(false);
       fetchServices();
     } catch (err) {
       console.error(err);
-      alert("Lỗi!");
+      alert("Lỗi gửi dữ liệu dịch vụ");
     }
   };
 
-  // ======================
-  // EDIT
-  // ======================
+  // ===== EDIT & DELETE =====
   const handleEdit = (service) => {
-    setForm(service);
+    setForm({ name: service.name, description: service.description, price: service.price, image: null });
+    setPreview(service.image ? `http://localhost:5000/uploads/${service.image}` : null);
     setEditingId(service.id);
     setShowModal(true);
   };
 
-  // ======================
-  // DELETE
-  // ======================
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xóa?")) return;
-
-    await axios.delete(
-      `http://localhost:5000/api/admin/services/${id}`
-    );
-
-    fetchServices();
+    try {
+      await api.delete(`/admin/services/${id}`);
+      fetchServices();
+    } catch (err) {
+      console.error(err);
+      alert("Xóa thất bại");
+    }
   };
 
   return (
     <div className="p-6">
-      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Quản lý dịch vụ</h1>
-
+        <h1 className="text-2xl font-semibold text-slate-800">Quản lý dịch vụ</h1>
         <button
           onClick={() => {
             setShowModal(true);
             setEditingId(null);
+            setPreview(null);
+            setForm({ name: "", description: "", price: "", image: null });
           }}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700"
         >
           + Thêm dịch vụ
         </button>
       </div>
 
-      {/* TABLE */}
-      <div className="bg-white rounded shadow">
+      <div className="table-wrap">
         <table className="w-full">
-          <thead className="bg-gray-100">
+          <thead className="bg-slate-100 text-slate-700">
             <tr>
-              <th className="p-3">ID</th>
-              <th>Ảnh</th>
-              <th>Tên</th>
-              <th>Mô tả</th>
-              <th>Giá</th>
-              <th>Hành động</th>
+              <th className="p-3 text-left">ID</th>
+              <th className="p-3 text-left">Ảnh</th>
+              <th className="p-3 text-left">Tên</th>
+              <th className="p-3 text-left">Mô tả</th>
+              <th className="p-3 text-left">Giá</th>
+              <th className="p-3 text-left">Hành động</th>
             </tr>
           </thead>
-
           <tbody>
             {services.map((s) => (
-              <tr key={s.id} className="text-center border-t">
-                <td>{s.id}</td>
-
-                <td>
+              <tr key={s.id} className="border-t border-slate-100 text-sm">
+                <td className="p-3 font-medium text-slate-600">#{s.id}</td>
+                <td className="p-3">
                   <img
-                    src={s.image}
+                    src={
+                      s.image
+                        ? `${imageBaseUrl}/uploads/${s.image}`
+                        : "https://via.placeholder.com/100?text=No+Image"
+                    }
                     alt=""
-                    className="w-16 h-16 object-cover mx-auto"
+                    className="h-14 w-14 rounded-lg object-cover"
                   />
                 </td>
-
-                <td>{s.name}</td>
-                <td>{s.description}</td>
-                <td>{s.price}đ</td>
-
-                <td className="space-x-2">
+                <td className="p-3 text-slate-800">{s.name}</td>
+                <td className="p-3 text-slate-600">{s.description}</td>
+                <td className="p-3 text-slate-700">{Number(s.price).toLocaleString("vi-VN")} đ</td>
+                <td className="p-3 space-x-2 whitespace-nowrap">
                   <button
                     onClick={() => handleEdit(s)}
-                    className="bg-yellow-400 px-2 py-1 rounded"
+                    className="rounded-lg bg-amber-400 px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:bg-amber-300"
                   >
                     Sửa
                   </button>
-
                   <button
                     onClick={() => handleDelete(s.id)}
-                    className="bg-red-500 text-white px-2 py-1 rounded"
+                    className="rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-rose-600"
                   >
                     Xóa
                   </button>
                 </td>
               </tr>
             ))}
+            {services.length === 0 && (
+              <tr>
+                <td colSpan="6" className="p-8 text-center text-slate-500">
+                  Chưa có dịch vụ nào.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/30 flex justify-center items-center">
-          <div className="bg-white p-6 rounded w-96">
-            <h2 className="text-xl font-bold mb-4">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/45 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <h2 className="mb-4 text-xl font-semibold text-slate-800">
               {editingId ? "Sửa dịch vụ" : "Thêm dịch vụ"}
             </h2>
-
             <input
               name="name"
               placeholder="Tên dịch vụ"
               value={form.name}
               onChange={handleChange}
-              className="w-full mb-2 p-2 border"
+              className="mb-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
             />
-
             <input
               name="description"
               placeholder="Mô tả"
               value={form.description}
               onChange={handleChange}
-              className="w-full mb-2 p-2 border"
+              className="mb-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
             />
-
             <input
+              type="number"
               name="price"
               placeholder="Giá"
               value={form.price}
               onChange={handleChange}
-              className="w-full mb-2 p-2 border"
+              className="mb-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
             />
-
-            <input
-              name="image"
-              placeholder="Link ảnh"
-              value={form.image}
-              onChange={handleChange}
-              className="w-full mb-4 p-2 border"
-            />
-
+            <input type="file" onChange={handleFileChange} className="mb-2 w-full text-sm text-slate-600" />
+            {preview && (
+              <img
+                src={preview}
+                alt="preview"
+                className="mb-3 h-40 w-full rounded-xl object-cover"
+              />
+            )}
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-3 py-1 border rounded"
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 transition hover:bg-slate-100"
               >
                 Hủy
               </button>
-
               <button
                 onClick={handleSubmit}
-                className="bg-blue-500 text-white px-3 py-1 rounded"
+                className="rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-sky-700"
               >
                 {editingId ? "Cập nhật" : "Thêm"}
               </button>
