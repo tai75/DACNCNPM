@@ -8,7 +8,7 @@ const registerSchema = Joi.object({
   name: Joi.string().min(2).max(100).required(),
   email: Joi.string().email().required(),
   phone: Joi.string().pattern(/^[0-9]{10,11}$/).required(),
-  password: Joi.string().min(6).required(),
+  password: Joi.string().min(8).required(),
 });
 
 const loginSchema = Joi.object({
@@ -100,9 +100,15 @@ exports.login = (req, res) => {
         return res.status(500).json({ success: false, message: "JWT_SECRET chưa được cấu hình" });
       }
 
+      const secret = process.env.JWT_SECRET;
+      const strongSecretPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{32,}$/;
+      if (!strongSecretPattern.test(secret)) {
+        return res.status(500).json({ success: false, message: "JWT_SECRET quá yếu hoặc không đủ 32 ký tự" });
+      }
+
       const token = jwt.sign(
         { id: user.id, role: user.role || "user" },
-        process.env.JWT_SECRET,
+        secret,
         { expiresIn: "7d" }
       );
 

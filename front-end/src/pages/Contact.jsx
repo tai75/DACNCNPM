@@ -2,24 +2,15 @@ import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope } from "react-icons/fa";
 
 function Contact() {
   return (
-    <div className="bg-gray-50 min-h-screen">
-      
-      {/* HEADER */}
-      <div className="bg-gradient-to-r from-green-500 to-emerald-700 text-white py-16 text-center">
-        <h1 className="text-3xl md:text-4xl font-bold mb-2">
-          Liên hệ với chúng tôi
-        </h1>
-        <p className="opacity-90">
-          Chúng tôi luôn sẵn sàng hỗ trợ bạn chăm sóc khu vườn tốt nhất 🌱
-        </p>
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-6 md:py-10">
+      <div className="mb-8">
+        <p className="text-xs uppercase tracking-[0.14em] text-emerald-700">Liên hệ</p>
+        <h1 className="mt-2 text-3xl font-extrabold text-slate-800">Chúng tôi sẵn sàng hỗ trợ bạn</h1>
       </div>
 
-      {/* CONTENT */}
-      <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-2 gap-10">
-        
-        {/* FORM */}
-        <div className="bg-white p-8 rounded-xl shadow-lg">
-          <h2 className="text-xl font-semibold mb-6 text-green-700">
+      <div className="grid gap-8 md:grid-cols-2">
+        <div className="card-soft p-6 md:p-8">
+          <h2 className="mb-6 text-xl font-semibold text-emerald-700">
             Gửi liên hệ
           </h2>
 
@@ -27,37 +18,35 @@ function Contact() {
             <input
               type="text"
               placeholder="Họ và tên"
-              className="w-full border p-3 rounded focus:ring-2 focus:ring-green-400 outline-none"
+              className="w-full rounded-xl border border-slate-200 p-3 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
             />
 
             <input
               type="email"
               placeholder="Email"
-              className="w-full border p-3 rounded focus:ring-2 focus:ring-green-400 outline-none"
+              className="w-full rounded-xl border border-slate-200 p-3 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
             />
 
             <input
               type="tel"
               placeholder="Số điện thoại"
-              className="w-full border p-3 rounded focus:ring-2 focus:ring-green-400 outline-none"
+              className="w-full rounded-xl border border-slate-200 p-3 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
             />
 
             <textarea
               placeholder="Nội dung"
               rows="4"
-              className="w-full border p-3 rounded focus:ring-2 focus:ring-green-400 outline-none"
+              className="w-full rounded-xl border border-slate-200 p-3 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
             ></textarea>
 
-            <button className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition">
+            <button className="w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white transition hover:bg-emerald-700">
               Gửi liên hệ
             </button>
           </form>
         </div>
 
-        {/* INFO */}
         <div className="space-y-6">
-          
-          <div className="bg-white p-6 rounded-xl shadow flex items-center gap-4">
+          <div className="card-soft flex items-center gap-4 p-6">
             <FaMapMarkerAlt className="text-green-600 text-xl" />
             <div>
               <p className="font-semibold">Địa chỉ</p>
@@ -67,7 +56,7 @@ function Contact() {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow flex items-center gap-4">
+          <div className="card-soft flex items-center gap-4 p-6">
             <FaPhoneAlt className="text-green-600 text-xl" />
             <div>
               <p className="font-semibold">Hotline</p>
@@ -77,7 +66,7 @@ function Contact() {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow flex items-center gap-4">
+          <div className="card-soft flex items-center gap-4 p-6">
             <FaEnvelope className="text-green-600 text-xl" />
             <div>
               <p className="font-semibold">Email</p>
@@ -86,17 +75,15 @@ function Contact() {
               </p>
             </div>
           </div>
-
         </div>
       </div>
 
-      {/* MAP */}
-      <div className="max-w-6xl mx-auto px-6 pb-16">
-        <h2 className="text-2xl font-bold text-center mb-6">
+      <div className="mt-8">
+        <h2 className="mb-4 text-2xl font-bold text-slate-800">
           Vị trí của chúng tôi
         </h2>
 
-        <div className="w-full h-[400px] rounded-xl overflow-hidden shadow-lg">
+        <div className="card-soft h-[360px] overflow-hidden">
           <iframe
             title="map"
             src="https://www.google.com/maps?q=Tam%20Ky%20Quang%20Nam&output=embed"
@@ -105,7 +92,6 @@ function Contact() {
           ></iframe>
         </div>
       </div>
-
     </div>
   );
 }

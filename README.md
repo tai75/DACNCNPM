@@ -18,6 +18,20 @@ Một ứng dụng web đầy đủ cho việc quản lý dịch vụ chăm sóc
 - Bảng điều khiển thống kê chi tiết
 - Báo cáo doanh thu
 
+### 👨‍🔧 Nhân viên
+- Xem danh sách booking cần xử lý
+- Cập nhật trạng thái booking
+- Cập nhật trạng thái thanh toán booking
+
+## 🔐 Ma trận phân quyền
+
+| Vai trò | Quyền chính | Frontend routes | Backend phạm vi truy cập |
+|---------|-------------|-----------------|---------------------------|
+| Admin | Quản lý toàn bộ hệ thống | /admin/dashboard, /admin/users, /admin/services, /admin/bookings, /admin/employees, /admin/revenue | /api/admin/*, /api/users/*, /api/employees/*, /api/revenue/*, /api/bookings/* |
+| Staff | Xử lý lịch đặt dịch vụ | /staff/bookings | /api/bookings/* (xem/cập nhật trạng thái và thanh toán) |
+| User (đã đăng nhập) | Đặt lịch và xem lịch sử | /booking, /bookings | /api/bookings (chỉ dữ liệu của chính mình) |
+| Guest (chưa đăng nhập) | Xem dịch vụ, đăng ký, đăng nhập | /, /services, /login, /register | /api/register, /api/login, /api/services |
+
 ## 🛠️ Tech Stack
 
 ### Frontend
@@ -103,14 +117,31 @@ Frontend sẽ chạy tại: http://localhost:5173
 ### Đặt lịch (Đã xác thực)
 - `GET /api/bookings` - Lấy danh sách booking của người dùng
 - `POST /api/bookings` - Tạo booking mới
-- `PUT /api/bookings/:id` - Cập nhật trạng thái (quản trị viên only)
+- `PUT /api/bookings/:id/status` - Cập nhật trạng thái booking (admin/staff)
+- `PUT /api/bookings/:id/payment` - Cập nhật trạng thái thanh toán (admin/staff)
 - `DELETE /api/bookings/:id` - Xóa booking
 
-### Quản trị (Quản trị viên only)
+### Quản trị (Quản trị viên)
 - `GET /api/admin/dashboard` - Thống kê bảng điều khiển
 - `GET /api/admin/users` - Quản lý người dùng
 - `GET /api/admin/services` - Quản lý dịch vụ
 - `GET /api/admin/bookings` - Quản lý bookings
+
+### Nhân viên và quản trị
+- `GET /api/bookings` - Danh sách booking (staff/admin xem toàn bộ, user xem của mình)
+- `PUT /api/bookings/:id/status` - Cập nhật trạng thái booking
+- `PUT /api/bookings/:id/payment` - Cập nhật trạng thái thanh toán
+
+### Quản trị nội bộ
+- `GET /api/users` - Danh sách users
+- `PUT /api/users/:id/role` - Cập nhật role user (user/staff/admin)
+- `DELETE /api/users/:id` - Xóa user
+- `GET /api/employees` - Danh sách nhân viên
+- `POST /api/employees` - Thêm nhân viên
+- `PUT /api/employees/:id` - Cập nhật nhân viên
+- `DELETE /api/employees/:id` - Xóa nhân viên
+- `GET /api/revenue` - Tổng doanh thu
+- `GET /api/revenue/by-date` - Doanh thu theo ngày
 
 ## 🧪 Testing
 

@@ -20,9 +20,24 @@ const employeeRoutes = require("./routes/employeesRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const revenueRoutes = require("./routes/revenueRoutes");
 
+const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow tools or same-origin requests that may not send Origin.
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+};
+
 app.use(helmet());
 app.use(morgan("combined"));
-app.use(cors());
+app.use(cors(corsOptions));
 
 // 🔥 QUAN TRỌNG (thiếu cái này là lỗi req.body)
 app.use(express.json());

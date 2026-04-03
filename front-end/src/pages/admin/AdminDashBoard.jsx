@@ -3,6 +3,7 @@ import api from "../../config/axios";
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   Tooltip,
@@ -27,21 +28,23 @@ function AdminDashBoard() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [userRes, serviceRes, bookingRes] = await Promise.all([
+      const [userRes, serviceRes, bookingRes, revenueRes] = await Promise.all([
         api.get("/admin/users"),
         api.get("/admin/services"),
         api.get("/admin/bookings"),
+        api.get("/revenue"),
       ]);
 
-      const users = userRes.data.data.length;
-      const services = serviceRes.data.length;
-      const bookings = bookingRes.data.length;
+      const users = userRes.data?.data?.length || 0;
+      const services = Array.isArray(serviceRes.data) ? serviceRes.data.length : 0;
+      const bookings = bookingRes.data?.data?.length || 0;
+      const revenue = Number(revenueRes.data?.total_revenue || 0);
 
       setStats({
         users,
         services,
         bookings,
-        revenue: 0, // TODO: calculate from bookings
+        revenue,
       });
 
       setChartData([
@@ -68,7 +71,7 @@ function AdminDashBoard() {
         <>
           {/* CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div className="card-soft p-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-100">Tổng số người dùng</p>
@@ -78,7 +81,7 @@ function AdminDashBoard() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div className="card-soft p-6 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-purple-100">Tổng số dịch vụ</p>
@@ -88,7 +91,7 @@ function AdminDashBoard() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div className="card-soft p-6 bg-gradient-to-r from-yellow-500 to-orange-500 text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-yellow-100">Đơn đặt lịch</p>
@@ -98,7 +101,7 @@ function AdminDashBoard() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div className="card-soft p-6 bg-gradient-to-r from-green-500 to-green-600 text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-100">Tổng doanh thu</p>
@@ -112,7 +115,7 @@ function AdminDashBoard() {
           </div>
 
           {/* CHART */}
-          <div className="bg-white p-6 rounded-xl shadow-lg">
+          <div className="card-soft p-6">
             <h2 className="mb-6 text-xl font-bold text-gray-800">Thống kê tổng quan</h2>
 
             <ResponsiveContainer width="100%" height={300}>
@@ -120,7 +123,11 @@ function AdminDashBoard() {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="value" fill="#10b981" />
+                <Bar dataKey="value">
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>

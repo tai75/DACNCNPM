@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../config/axios";
 
 function Booking() {
   const navigate = useNavigate();
@@ -19,8 +19,8 @@ function Booking() {
 
   // 🔥 Load services từ DB
   useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/services")
+    api
+      .get("/services")
       .then((res) => setServices(res.data))
       .catch((err) => console.log(err));
   }, []);
@@ -54,14 +54,6 @@ function Booking() {
       return;
     }
 
-    const bookingData = {
-      user_id: user.id,
-      service_id: formData.service_id,
-      booking_date: formData.booking_date,
-      time_slot: formData.time_slot,
-      address: formData.address,
-    };
-
     try {
       // Không tạo booking ở đây nữa, chuyển đến Payment để chọn phương thức thanh toán
       const selectedServiceInfo = services.find(s => s.id == formData.service_id);
@@ -90,23 +82,24 @@ function Booking() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex justify-center items-center p-6">
-      <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-3xl">
+    <div className="mx-auto w-full max-w-5xl px-4 py-8 md:px-6 md:py-10">
+      <div className="card-soft grid gap-8 p-6 md:grid-cols-5 md:p-8">
+        <div className="md:col-span-2">
+          <p className="text-xs uppercase tracking-[0.14em] text-emerald-700">Bước 1</p>
+          <h1 className="mt-2 text-3xl font-bold text-slate-800">Đặt lịch chăm sóc</h1>
+          <p className="mt-3 text-sm text-slate-500">
+            Chọn dịch vụ, ngày thực hiện và địa chỉ. Sau đó bạn sẽ chuyển sang bước thanh toán.
+          </p>
+        </div>
 
-        <h1 className="text-2xl font-bold text-green-700 mb-6 text-center">
-          📅 Đặt lịch chăm sóc cây
-        </h1>
-
-        <form onSubmit={handleSubmit} className="grid gap-5">
-
-          {/* SERVICE */}
+        <form onSubmit={handleSubmit} className="grid gap-5 md:col-span-3">
           <div>
-            <label className="text-sm text-gray-600">Dịch vụ</label>
+            <label className="mb-1 block text-sm text-slate-600">Dịch vụ</label>
             <select
               name="service_id"
               value={formData.service_id}
               onChange={handleChange}
-              className="w-full border p-3 rounded-lg"
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
               required
             >
               <option value="">Chọn dịch vụ</option>
@@ -118,62 +111,56 @@ function Booking() {
             </select>
 
             {selectedService && (
-              <p className="text-green-600 mt-2 font-semibold">
-                Giá: {selectedService.price?.toLocaleString()}đ
+              <p className="mt-2 font-semibold text-emerald-700">
+                Giá: {Number(selectedService.price || 0).toLocaleString("vi-VN")} đ
               </p>
             )}
           </div>
 
-          {/* DATE */}
           <div>
-            <label className="text-sm text-gray-600">Ngày</label>
+            <label className="mb-1 block text-sm text-slate-600">Ngày</label>
             <input
               type="date"
               name="booking_date"
               value={formData.booking_date}
               onChange={handleChange}
-              className="w-full border p-3 rounded-lg"
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
               required
             />
           </div>
 
-          {/* TIME SLOT */}
           <div>
-            <label className="text-sm text-gray-600">Khung giờ</label>
+            <label className="mb-1 block text-sm text-slate-600">Khung giờ</label>
             <select
               name="time_slot"
               value={formData.time_slot}
               onChange={handleChange}
-              className="w-full border p-3 rounded-lg"
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
               required
             >
               <option value="">Chọn khung giờ</option>
-              <option value="08:00-10:00">08:00 - 10:00</option>
-              <option value="10:00-12:00">10:00 - 12:00</option>
-              <option value="13:00-15:00">13:00 - 15:00</option>
-              <option value="15:00-17:00">15:00 - 17:00</option>
+              <option value="morning">Sáng (08:00 - 12:00)</option>
+              <option value="afternoon">Chiều (13:00 - 17:00)</option>
+              <option value="evening">Tối (18:00 - 21:00)</option>
             </select>
           </div>
 
-          {/* ADDRESS */}
           <div>
-            <label className="text-sm text-gray-600">Địa chỉ</label>
+            <label className="mb-1 block text-sm text-slate-600">Địa chỉ</label>
             <input
               type="text"
               name="address"
               placeholder="Nhập địa chỉ"
               value={formData.address}
               onChange={handleChange}
-              className="w-full border p-3 rounded-lg"
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
               required
             />
           </div>
 
-          {/* BUTTON */}
-          <button className="bg-green-600 text-white py-3 rounded-lg font-semibold hover:opacity-90">
-            Xác nhận đặt lịch
+          <button className="rounded-xl bg-emerald-600 py-3 font-semibold text-white transition hover:bg-emerald-700">
+            Tiếp tục tới thanh toán
           </button>
-
         </form>
       </div>
     </div>

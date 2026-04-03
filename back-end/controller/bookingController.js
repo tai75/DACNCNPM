@@ -1,52 +1,63 @@
 const db = require("../config/db");
 const Joi = require("joi");
 
-// Validation schemas
 const bookingSchema = Joi.object({
   service_id: Joi.number().integer().positive().required(),
-  booking_date: Joi.date().greater('now').required(),
-  time_slot: Joi.string().valid('morning', 'afternoon', 'evening').required(),
+  booking_date: Joi.date().greater("now").required(),
+  time_slot: Joi.string().valid("morning", "afternoon", "evening").required(),
   address: Joi.string().min(10).max(500).required(),
-  payment_method: Joi.string().valid('cod', 'bank').default('cod'),
+  payment_method: Joi.string().valid("cod", "bank").default("cod"),
 });
 
 const statusSchema = Joi.object({
-  status: Joi.string().valid('pending', 'confirmed', 'completed', 'cancelled').required(),
+  status: Joi.string().valid("pending", "confirmed", "completed", "cancelled").required(),
 });
 
 const paymentStatusSchema = Joi.object({
-  payment_status: Joi.string().valid('pending', 'paid', 'refunded').required(),
+  payment_status: Joi.string().valid("pending", "paid", "refunded").required(),
 });
 
-// Status translation
+const bookingIdSchema = Joi.object({
+  id: Joi.number().integer().positive().required(),
+});
+
+const bookingsQuerySchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(10),
+});
+
 const statusTranslations = {
-  'pending': 'Chờ xác nhận',
-  'confirmed': 'Đã xác nhận',
-  'completed': 'Hoàn thành',
-  'cancelled': 'Đã hủy'
+  pending: "Cho xac nhan",
+  confirmed: "Da xac nhan",
+  completed: "Hoan thanh",
+  cancelled: "Da huy",
 };
 
 const paymentMethodTranslations = {
-  'cod': 'Thanh toán khi hoàn thành',
-  'bank': 'Chuyển khoản ngân hàng'
+  cod: "Thanh toan khi hoan thanh",
+  bank: "Chuyen khoan ngan hang",
 };
 
 const paymentStatusTranslations = {
-  'pending': 'Chưa thanh toán',
-  'paid': 'Đã thanh toán',
-  'refunded': 'Đã hoàn tiền'
+  pending: "Chua thanh toan",
+  paid: "Da thanh toan",
+  refunded: "Da hoan tien",
 };
 
-/* ======================
-   GET ALL BOOKINGS
-====================== */
 exports.getBookings = (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
+  const { error, value } = bookingsQuerySchema.validate(req.query);
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      message: "Query khong hop le",
+    });
+  }
+
+  const { page, limit } = value;
   const offset = (page - 1) * limit;
 
   let sql = `
-    SELECT 
+    SELECT
       b.id,
       b.booking_date,
       b.time_slot,
@@ -58,9 +69,16 @@ exports.getBookings = (req, res) => {
       u.name AS user_name,
       s.name AS service_name,
       s.price AS service_price
+    FROM bookings b
+    JOIN users u ON b.user_id = u.id
+    JOIN services s ON b.service_id = s.id
+  `;
+
+  let countSql = "SELECT COUNT(*) AS total FROM bookings";
+  const params = [];
   const countParams = [];
 
-  if (req.user.role !== "admin") {
+  if (req.user.role !== "admin" && req.user.role !== "staff") {
     sql += " WHERE b.user_id = ?";
     countSql += " WHERE user_id = ?";
     params.push(req.user.id);
@@ -70,34 +88,30 @@ exports.getBookings = (req, res) => {
   sql += " ORDER BY b.created_at DESC LIMIT ? OFFSET ?";
   params.push(limit, offset);
 
-  db.query(countSql, countParams, (err, countResult) => {
-    if (err) {
-      console.error("Lỗi count bookings:", err);
-      return res.status(500).json({
-        success: false,
-        message: "Lỗi server",
-      });
+  db.query(countSql, countParams, (countErr, countResult) => {
+    if (countErr) {
+      console.error("Count bookings error:", countErr);
+      return res.status(500).json({ success: false, message: "Loi server" });
     }
 
     const total = countResult[0].total;
     const totalPages = Math.ceil(total / limit);
 
-    db.query(sql, params, (err, result) => {
-      if (err) {
-        console.error("Lỗi getBookings:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Lỗi server",
-        });
+    db.query(sql, params, (listErr, result) => {
+      if (listErr) {
+        console.error("Get bookings error:", listErr);
+        return res.status(500).json({ success: false, message: "Loi server" });
       }
 
-      res.json({
+      return res.json({
         success: true,
-        data: result.map(booking => ({
+        data: result.map((booking) => ({
           ...booking,
           status_vietnamese: statusTranslations[booking.status] || booking.status,
-          payment_method_vietnamese: paymentMethodTranslations[booking.payment_method] || booking.payment_method,
-          payment_status_vietnamese: paymentStatusTranslations[booking.payment_status] || booking.payment_status
+          payment_method_vietnamese:
+            paymentMethodTranslations[booking.payment_method] || booking.payment_method,
+          payment_status_vietnamese:
+            paymentStatusTranslations[booking.payment_status] || booking.payment_status,
         })),
         pagination: {
           currentPage: page,
@@ -110,70 +124,88 @@ exports.getBookings = (req, res) => {
   });
 };
 
-/* ======================
-   CREATE BOOKING
-====================== */
 exports.createBooking = (req, res) => {
-  // Validate input
   const { error, value } = bookingSchema.validate(req.body);
   if (error) {
     return res.status(400).json({
       success: false,
-      message: "Dữ liệu không hợp lệ: " + error.details[0].message,
+      message: "Du lieu khong hop le: " + error.details[0].message,
     });
   }
 
   const { service_id, booking_date, time_slot, address, payment_method } = value;
 
-  const sql = `
-    INSERT INTO bookings
-    (user_id, service_id, booking_date, time_slot, address, payment_method, payment_status, status)
-    VALUES (?, ?, ?, ?, ?, ?, 'pending', 'pending')
+  const checkConflictSql = `
+    SELECT id
+    FROM bookings
+    WHERE service_id = ?
+      AND DATE(booking_date) = DATE(?)
+      AND time_slot = ?
+      AND status IN ('pending', 'confirmed')
+    LIMIT 1
   `;
 
-  db.query(
-    sql,
-    [req.user.id, service_id, booking_date, time_slot, address, payment_method],
-    (err, result) => {
-      if (err) {
-        console.error("Lỗi createBooking:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Lỗi máy chủ",
-        });
-      }
+  db.query(checkConflictSql, [service_id, booking_date, time_slot], (checkErr, checkRows) => {
+    if (checkErr) {
+      console.error("Check conflict error:", checkErr);
+      return res.status(500).json({ success: false, message: "Loi may chu" });
+    }
 
-      res.json({
-        success: true,
-        message: "Đặt lịch thành công",
-        booking_id: result.insertId,
+    if (checkRows.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: "Khung gio nay da duoc dat. Vui long chon khung gio khac",
       });
     }
-  );
+
+    const insertSql = `
+      INSERT INTO bookings
+      (user_id, service_id, booking_date, time_slot, address, payment_method, payment_status, status)
+      VALUES (?, ?, ?, ?, ?, ?, 'pending', 'pending')
+    `;
+
+    db.query(
+      insertSql,
+      [req.user.id, service_id, booking_date, time_slot, address, payment_method],
+      (insertErr, result) => {
+        if (insertErr) {
+          console.error("Create booking error:", insertErr);
+          return res.status(500).json({ success: false, message: "Loi may chu" });
+        }
+
+        return res.json({
+          success: true,
+          message: "Dat lich thanh cong",
+          booking_id: result.insertId,
+        });
+      }
+    );
+  });
 };
 
-/* ======================
-   UPDATE PAYMENT STATUS (ADMIN)
-====================== */
 exports.updatePaymentStatus = (req, res) => {
-  if (req.user.role !== "admin") {
+  if (req.user.role !== "admin" && req.user.role !== "staff") {
     return res.status(403).json({
       success: false,
-      message: "Chỉ quản trị viên mới có thể cập nhật trạng thái thanh toán",
+      message: "Chi admin hoac staff moi co the cap nhat trang thai thanh toan",
     });
   }
 
-  // Validate input
-  const { error, value } = paymentStatusSchema.validate(req.body);
-  if (error) {
+  const idValidation = bookingIdSchema.validate(req.params);
+  if (idValidation.error) {
+    return res.status(400).json({ success: false, message: "ID booking khong hop le" });
+  }
+
+  const bodyValidation = paymentStatusSchema.validate(req.body);
+  if (bodyValidation.error) {
     return res.status(400).json({
       success: false,
-      message: "Dữ liệu không hợp lệ: " + error.details[0].message,
+      message: "Du lieu khong hop le: " + bodyValidation.error.details[0].message,
     });
   }
 
-  const { id } = req.params;
-  const { payment_status } = value;
+  const { id } = idValidation.value;
+  const { payment_status } = bodyValidation.value;
 
   const sql = `
     UPDATE bookings
@@ -183,139 +215,98 @@ exports.updatePaymentStatus = (req, res) => {
 
   db.query(sql, [payment_status, id], (err, result) => {
     if (err) {
-      console.error("Lỗi updatePaymentStatus:", err);
-      return res.status(500).json({
-        success: false,
-        message: "Lỗi server",
-      });
+      console.error("Update payment status error:", err);
+      return res.status(500).json({ success: false, message: "Loi server" });
     }
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Đơn đặt lịch không tồn tại",
-      });
+      return res.status(404).json({ success: false, message: "Don dat lich khong ton tai" });
     }
 
-    res.json({
-      success: true,
-      message: "Cập nhật trạng thái thanh toán thành công",
-    });
+    return res.json({ success: true, message: "Cap nhat trang thai thanh toan thanh cong" });
   });
 };
 
-/* ======================
 exports.updateBookingStatus = (req, res) => {
-  if (req.user.role !== "admin") {
+  if (req.user.role !== "admin" && req.user.role !== "staff") {
     return res.status(403).json({
       success: false,
-      message: "Chỉ quản trị viên mới có thể cập nhật trạng thái",
+      message: "Chi admin hoac staff moi co the cap nhat trang thai",
     });
   }
 
-  // Validate input
-  const { error, value } = statusSchema.validate(req.body);
-  if (error) {
+  const idValidation = bookingIdSchema.validate(req.params);
+  if (idValidation.error) {
+    return res.status(400).json({ success: false, message: "ID booking khong hop le" });
+  }
+
+  const bodyValidation = statusSchema.validate(req.body);
+  if (bodyValidation.error) {
     return res.status(400).json({
       success: false,
-      message: "Dữ liệu không hợp lệ: " + error.details[0].message,
+      message: "Du lieu khong hop le: " + bodyValidation.error.details[0].message,
     });
   }
 
-  const { id } = req.params;
-  const { status } = value;
-
-  const validStatus = ["pending", "confirmed", "completed", "cancelled"];
-
-  if (!status || !validStatus.includes(status)) {
-    return res.status(400).json({
-      success: false,
-      message: "Trạng thái không hợp lệ",
-    });
-  }
+  const { id } = idValidation.value;
+  const { status } = bodyValidation.value;
 
   const sql = `
-    UPDATE bookings 
+    UPDATE bookings
     SET status = ?
     WHERE id = ?
   `;
 
   db.query(sql, [status, id], (err, result) => {
     if (err) {
-      console.error("Lỗi updateBookingStatus:", err);
-      return res.status(500).json({
-        success: false,
-        message: "Lỗi server",
-      });
+      console.error("Update booking status error:", err);
+      return res.status(500).json({ success: false, message: "Loi server" });
     }
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Booking không tồn tại",
-      });
+      return res.status(404).json({ success: false, message: "Booking khong ton tai" });
     }
 
-    res.json({
-      success: true,
-      message: "Cập nhật trạng thái thành công",
-    });
+    return res.json({ success: true, message: "Cap nhat trang thai thanh cong" });
   });
 };
 
-/* ======================
-   DELETE BOOKING
-====================== */
 exports.deleteBooking = (req, res) => {
-  const { id } = req.params;
+  const { error, value } = bookingIdSchema.validate(req.params);
+  if (error) {
+    return res.status(400).json({ success: false, message: "ID booking khong hop le" });
+  }
 
-  // First check ownership
+  const { id } = value;
+
   db.query("SELECT user_id FROM bookings WHERE id = ?", [id], (err, result) => {
     if (err) {
-      console.error("Lỗi check ownership:", err);
-      return res.status(500).json({
-        success: false,
-        message: "Lỗi server",
-      });
+      console.error("Check ownership error:", err);
+      return res.status(500).json({ success: false, message: "Loi server" });
     }
 
     if (result.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Đơn đặt lịch không tồn tại",
-      });
+      return res.status(404).json({ success: false, message: "Don dat lich khong ton tai" });
     }
 
-    if (req.user.role !== "admin" && result[0].user_id !== req.user.id) {
+    if (req.user.role !== "admin" && req.user.role !== "staff" && result[0].user_id !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message: "Bạn không có quyền xóa đơn đặt lịch này",
+        message: "Ban khong co quyen xoa don dat lich nay",
       });
     }
 
-    // Proceed to delete
-    const sql = "DELETE FROM bookings WHERE id = ?";
-
-    db.query(sql, [id], (err, result) => {
-      if (err) {
-        console.error("Lỗi deleteBooking:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Lỗi server",
-        });
+    db.query("DELETE FROM bookings WHERE id = ?", [id], (deleteErr, deleteResult) => {
+      if (deleteErr) {
+        console.error("Delete booking error:", deleteErr);
+        return res.status(500).json({ success: false, message: "Loi server" });
       }
 
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Booking không tồn tại",
-        });
+      if (deleteResult.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: "Booking khong ton tai" });
       }
 
-      res.json({
-        success: true,
-        message: "Xóa booking thành công",
-      });
+      return res.json({ success: true, message: "Xoa booking thanh cong" });
     });
   });
 };

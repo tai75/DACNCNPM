@@ -1,4 +1,13 @@
 const db = require("../config/db");
+const Joi = require("joi");
+
+const idSchema = Joi.object({
+  id: Joi.number().integer().positive().required(),
+});
+
+const updateRoleSchema = Joi.object({
+  role: Joi.string().valid("user", "staff", "admin").required(),
+});
 
 /* ======================
    GET ALL USERS
@@ -27,14 +36,15 @@ exports.getUsers = (req, res) => {
    DELETE USER
 ====================== */
 exports.deleteUser = (req, res) => {
-  const { id } = req.params;
-
-  if (!id) {
+  const { error, value } = idSchema.validate(req.params);
+  if (error) {
     return res.status(400).json({
       success: false,
-      message: "Thiếu ID user",
+      message: "ID user không hợp lệ",
     });
   }
+
+  const { id } = value;
 
   db.query("DELETE FROM users WHERE id = ?", [id], (err, result) => {
     if (err) {
@@ -65,23 +75,24 @@ exports.deleteUser = (req, res) => {
    UPDATE USER ROLE
 ====================== */
 exports.updateUserRole = (req, res) => {
-  const { id } = req.params;
-  const { role } = req.body;
-
-  // validate
-  if (!id || !role) {
+  const idValidation = idSchema.validate(req.params);
+  if (idValidation.error) {
     return res.status(400).json({
       success: false,
-      message: "Thiếu id hoặc role",
+      message: "ID user không hợp lệ",
     });
   }
 
-  if (!["user", "admin"].includes(role)) {
+  const roleValidation = updateRoleSchema.validate(req.body);
+  if (roleValidation.error) {
     return res.status(400).json({
       success: false,
       message: "Role không hợp lệ",
     });
   }
+
+  const { id } = idValidation.value;
+  const { role } = roleValidation.value;
 
   db.query(
     "UPDATE users SET role = ? WHERE id = ?",

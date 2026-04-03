@@ -1,6 +1,7 @@
 import { FaLeaf } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import api from "../config/axios";
 
 function Register() {
   const navigate = useNavigate();
@@ -42,22 +43,15 @@ function Register() {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          password: form.password,
-        }),
+      const res = await api.post("/register", {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
       });
+      const data = res.data;
 
-      const data = await res.json();
-
-      if (res.ok) {
+      if (data.success) {
         alert("Đăng ký thành công!");
         navigate("/login");
       } else {
@@ -70,38 +64,18 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4
-      bg-gradient-to-br from-green-100 via-green-200 to-green-400"
-    >
-      <div className="grid md:grid-cols-2 max-w-4xl w-full rounded-2xl overflow-hidden
-        bg-white/90 backdrop-blur-md shadow-[0_10px_40px_rgba(0,0,0,0.2)]"
-      >
-        {/* LEFT */}
-        <div className="hidden md:flex flex-col justify-center items-center text-white p-10
-          bg-gradient-to-br from-green-500 to-green-700"
-        >
-          <h1 className="text-3xl font-bold mb-4 flex items-center gap-2">
-            <FaLeaf /> Garden Care
-          </h1>
-
-          <p className="text-center mb-6 opacity-90">
-            Bắt đầu hành trình chăm sóc khu vườn của bạn
-          </p>
-
-          <ul className="space-y-2 text-sm opacity-90">
-            <li>✔ Quản lý lịch chăm sóc</li>
-            <li>✔ Nhận tư vấn miễn phí</li>
-            <li>✔ Theo dõi tình trạng cây</li>
-          </ul>
+    <div className="mx-auto flex min-h-[75vh] w-full max-w-5xl items-center px-4 py-8 md:px-6 md:py-10">
+      <div className="card-soft grid w-full overflow-hidden md:grid-cols-2">
+        <div className="hidden bg-gradient-to-br from-emerald-700 to-emerald-500 p-10 text-white md:block">
+          <h1 className="flex items-center gap-2 text-3xl font-extrabold"><FaLeaf /> Garden Care</h1>
+          <p className="mt-4 text-emerald-50">Tạo tài khoản để quản lý lịch sử chăm cây và nhận hỗ trợ nhanh hơn.</p>
         </div>
 
-        {/* RIGHT */}
-        <div className="p-8 md:p-10 flex flex-col justify-center">
-          <h2 className="text-2xl font-bold mb-6 text-green-700 text-center">
-            Đăng ký
-          </h2>
+        <div className="p-7 md:p-10">
+          <h2 className="text-3xl font-bold text-slate-800">Đăng ký</h2>
+          <p className="mt-1 text-sm text-slate-500">Chỉ mất một phút để bắt đầu.</p>
 
-          <form onSubmit={handleRegister} className="space-y-4">
+          <form onSubmit={handleRegister} className="mt-6 space-y-4">
 
             <input
               type="text"
@@ -109,8 +83,7 @@ function Register() {
               placeholder="Họ và tên"
               value={form.name}
               onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg 
-              focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rounded-xl border border-slate-200 p-3 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
             />
 
             <input
@@ -119,8 +92,7 @@ function Register() {
               placeholder="Email"
               value={form.email}
               onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg 
-              focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rounded-xl border border-slate-200 p-3 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
             />
 
             <input
@@ -129,8 +101,7 @@ function Register() {
               placeholder="Số điện thoại"
               value={form.phone}
               onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg 
-              focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rounded-xl border border-slate-200 p-3 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
             />
 
             <input
@@ -139,8 +110,7 @@ function Register() {
               placeholder="Mật khẩu"
               value={form.password}
               onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg 
-              focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rounded-xl border border-slate-200 p-3 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
             />
 
             <input
@@ -149,25 +119,22 @@ function Register() {
               placeholder="Xác nhận mật khẩu"
               value={form.confirmPassword}
               onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg 
-              focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rounded-xl border border-slate-200 p-3 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
             />
 
             <button
               type="submit"
-              className="w-full bg-green-600 text-white py-3 rounded-lg 
-              hover:bg-green-700 transition-all duration-300 
-              transform hover:scale-105 active:scale-95"
+              className="w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white transition hover:bg-emerald-700"
             >
               Đăng ký
             </button>
           </form>
 
-          <p className="text-sm text-center mt-4">
+          <p className="mt-5 text-sm text-slate-600">
             Đã có tài khoản?{" "}
             <span
               onClick={() => navigate("/login")}
-              className="text-green-600 cursor-pointer hover:underline font-medium"
+              className="cursor-pointer font-semibold text-emerald-700 hover:underline"
             >
               Đăng nhập ngay
             </span>

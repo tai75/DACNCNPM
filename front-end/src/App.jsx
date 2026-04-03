@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import Services from "./pages/Services";
 import ServiceDetail from "./pages/ServiceDetail";
 import Booking from "./pages/Booking";
+import Bookings from "./pages/Bookings";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Payment from "./pages/Payment";
@@ -26,6 +27,10 @@ import AdminBookings from "./pages/admin/AdminBookings";
 import AdminEmployees from "./pages/admin/AdminEmployees";
 import AdminRevenue from "./pages/admin/AdminRevenue";
 import AdminRoute from "./routes/Adminroute";
+import StaffLayout from "./layouts/StaffLayout";
+import StaffRoute from "./routes/StaffRoute";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import StaffBookings from "./pages/staff/StaffBookings";
 
 /* ======================
    USER LAYOUT
@@ -66,6 +71,7 @@ function App() {
           <Route path="services/:id" element={<ServiceDetail />} />
 
           <Route path="booking" element={<Booking />} />
+          <Route path="bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
 
           <Route path="payment" element={<Payment />} />
           <Route path="thank-you" element={<Thankyou />} />
@@ -80,6 +86,11 @@ function App() {
           <Route path="bookings" element={<AdminBookings />} />
           <Route path="employees" element={<AdminEmployees />} />
           <Route path="revenue" element={<AdminRevenue />} />
+        </Route>
+
+        {/* ================= STAFF ================= */}
+        <Route path="/staff" element={<StaffRoute><StaffLayout /></StaffRoute>}>
+          <Route path="bookings" element={<StaffBookings />} />
         </Route>
 
       </Routes>

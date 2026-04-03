@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../config/axios";
 
 function AdminBookings() {
   const [bookings, setBookings] = useState([]);
@@ -7,7 +7,7 @@ function AdminBookings() {
   // ================= LOAD DATA =================
   const fetchBookings = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/bookings");
+      const res = await api.get("/bookings");
       setBookings(res.data.data || res.data);
     } catch (err) {
       console.error("Lỗi load bookings:", err);
@@ -23,7 +23,7 @@ function AdminBookings() {
     if (!window.confirm("Xóa đơn này?")) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/bookings/${id}`);
+      await api.delete(`/bookings/${id}`);
       fetchBookings();
     } catch (err) {
       console.error("Lỗi xóa:", err);
@@ -33,7 +33,7 @@ function AdminBookings() {
   // ================= UPDATE PAYMENT STATUS =================
   const handlePaymentStatusChange = async (id, payment_status) => {
     try {
-      await axios.put(`http://localhost:5000/api/bookings/${id}/payment`, {
+      await api.put(`/bookings/${id}/payment`, {
         payment_status,
       });
       fetchBookings();
@@ -42,12 +42,22 @@ function AdminBookings() {
     }
   };
 
+  const handleStatusChange = async (id, status) => {
+    try {
+      await api.put(`/bookings/${id}/status`, { status });
+      fetchBookings();
+    } catch (err) {
+      console.error("Lỗi cập nhật status:", err);
+    }
+  };
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Quản lý đơn hàng</h1>
 
-      <table className="w-full bg-white shadow rounded">
-        <thead className="bg-gray-200">
+      <div className="table-wrap">
+      <table className="w-full">
+        <thead className="bg-gray-100">
           <tr>
             <th className="p-2">ID</th>
             <th className="p-2">Khách hàng</th>
@@ -114,8 +124,16 @@ function AdminBookings() {
               </td>
             </tr>
           ))}
+          {bookings.length === 0 && (
+            <tr>
+              <td colSpan="8" className="p-8 text-center text-gray-500">
+                Chưa có đơn hàng nào.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
