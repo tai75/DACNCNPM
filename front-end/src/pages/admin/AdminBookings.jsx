@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+<<<<<<< HEAD
 import api from "../../config/axios";
 
 function AdminBookings() {
@@ -7,10 +8,17 @@ function AdminBookings() {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+=======
+import axios from "axios";
+
+function AdminBookings() {
+  const [bookings, setBookings] = useState([]);
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 
   // ================= LOAD DATA =================
   const fetchBookings = async () => {
     try {
+<<<<<<< HEAD
       setLoading(true);
       const res = await api.get("/bookings");
       setBookings(res.data.data || res.data);
@@ -28,12 +36,21 @@ function AdminBookings() {
       setStaffs(allUsers.filter((u) => u.role === "staff"));
     } catch (err) {
       console.error("Lỗi load staffs:", err);
+=======
+      const res = await axios.get("http://localhost:5000/api/bookings");
+      setBookings(res.data.data || res.data);
+    } catch (err) {
+      console.error("Lỗi load bookings:", err);
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
     }
   };
 
   useEffect(() => {
     fetchBookings();
+<<<<<<< HEAD
     fetchStaffs();
+=======
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
   }, []);
 
   // ================= DELETE =================
@@ -41,7 +58,11 @@ function AdminBookings() {
     if (!window.confirm("Xóa đơn này?")) return;
 
     try {
+<<<<<<< HEAD
       await api.delete(`/bookings/${id}`);
+=======
+      await axios.delete(`http://localhost:5000/api/bookings/${id}`);
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
       fetchBookings();
     } catch (err) {
       console.error("Lỗi xóa:", err);
@@ -51,7 +72,11 @@ function AdminBookings() {
   // ================= UPDATE PAYMENT STATUS =================
   const handlePaymentStatusChange = async (id, payment_status) => {
     try {
+<<<<<<< HEAD
       await api.put(`/bookings/${id}/payment`, {
+=======
+      await axios.put(`http://localhost:5000/api/bookings/${id}/payment`, {
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
         payment_status,
       });
       fetchBookings();
@@ -60,6 +85,7 @@ function AdminBookings() {
     }
   };
 
+<<<<<<< HEAD
   const handleStatusChange = async (id, status) => {
     try {
       await api.put(`/bookings/${id}/status`, { status });
@@ -274,6 +300,82 @@ function AdminBookings() {
           </tbody>
         </table>
       </div>
+=======
+  return (
+    <div>
+      <h1 className="text-2xl font-bold mb-6">Quản lý đơn hàng</h1>
+
+      <table className="w-full bg-white shadow rounded">
+        <thead className="bg-gray-200">
+          <tr>
+            <th className="p-2">ID</th>
+            <th className="p-2">Khách hàng</th>
+            <th className="p-2">Dịch vụ</th>
+            <th className="p-2">Ngày</th>
+            <th className="p-2">Thanh toán</th>
+            <th className="p-2">Trạng thái TT</th>
+            <th className="p-2">Trạng thái ĐH</th>
+            <th className="p-2">Hành động</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {bookings.map((b) => (
+            <tr key={b.id} className="text-center border-t">
+              <td className="p-2">{b.id}</td>
+              <td className="p-2">{b.user_name}</td>
+              <td className="p-2">{b.service_name}</td>
+              <td className="p-2">{new Date(b.booking_date).toLocaleDateString('vi-VN')}</td>
+              <td className="p-2">{b.payment_method_vietnamese}</td>
+
+              {/* PAYMENT STATUS */}
+              <td className="p-2">
+                <select
+                  value={b.payment_status}
+                  onChange={(e) =>
+                    handlePaymentStatusChange(b.id, e.target.value)
+                  }
+                  className={`border p-1 rounded ${
+                    b.payment_status === 'paid' ? 'bg-green-100' :
+                    b.payment_status === 'refunded' ? 'bg-red-100' : 'bg-yellow-100'
+                  }`}
+                >
+                  <option value="pending">Chưa thanh toán</option>
+                  <option value="paid">Đã thanh toán</option>
+                  <option value="refunded">Đã hoàn tiền</option>
+                </select>
+              </td>
+
+              {/* BOOKING STATUS */}
+              <td className="p-2">
+                <select
+                  value={b.status}
+                  onChange={(e) =>
+                    handleStatusChange(b.id, e.target.value)
+                  }
+                  className="border p-1"
+                >
+                  <option value="pending">Chờ xác nhận</option>
+                  <option value="confirmed">Đã xác nhận</option>
+                  <option value="completed">Hoàn thành</option>
+                  <option value="cancelled">Đã hủy</option>
+                </select>
+              </td>
+
+              {/* ACTION */}
+              <td className="p-2">
+                <button
+                  onClick={() => handleDelete(b.id)}
+                  className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                >
+                  Xóa
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
     </div>
   );
 }

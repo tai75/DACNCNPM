@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
+<<<<<<< HEAD
 import api from "../../config/axios";
 import { Plus, SquarePen, Trash2, ImagePlus, UploadCloud, Sparkles, Eye, Tag } from "lucide-react";
+=======
+import axios from "axios";
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 
 function AdminServices() {
   const [services, setServices] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
+<<<<<<< HEAD
   const [viewService, setViewService] = useState(null);
   const [preview, setPreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,11 +38,19 @@ function AdminServices() {
   const pageStart = Math.max(1, Math.min(currentPage - 1, totalPages - 2));
   const pageEnd = Math.min(totalPages, pageStart + 2);
   const visiblePages = Array.from({ length: pageEnd - pageStart + 1 }, (_, index) => pageStart + index);
+=======
+  const [preview, setPreview] = useState(null);
+  const [form, setForm] = useState({ name: "", description: "", price: "", image: null });
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 
   // ===== LOAD DATA =====
   const fetchServices = async () => {
     try {
+<<<<<<< HEAD
       const res = await api.get("/admin/services");
+=======
+      const res = await axios.get("http://localhost:5000/api/admin/services");
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
       setServices(res.data);
     } catch (err) {
       console.error(err);
@@ -49,12 +62,15 @@ function AdminServices() {
     fetchServices();
   }, []);
 
+<<<<<<< HEAD
   useEffect(() => {
     if (currentPage > totalPages) {
       setCurrentPage(totalPages);
     }
   }, [currentPage, totalPages]);
 
+=======
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
   // ===== INPUT & FILE =====
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -77,15 +93,25 @@ function AdminServices() {
 
       if (editingId) {
         // Update
+<<<<<<< HEAD
         await api.put(
           `/admin/services/${editingId}`,
+=======
+        await axios.put(
+          `http://localhost:5000/api/admin/services/${editingId}`,
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
           formData
         );
         alert("Cập nhật thành công");
       } else {
         // Create
+<<<<<<< HEAD
         await api.post(
           "/admin/services",
+=======
+        await axios.post(
+          "http://localhost:5000/api/admin/services",
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
           formData
         );
         alert("Thêm dịch vụ thành công");
@@ -106,7 +132,11 @@ function AdminServices() {
   // ===== EDIT & DELETE =====
   const handleEdit = (service) => {
     setForm({ name: service.name, description: service.description, price: service.price, image: null });
+<<<<<<< HEAD
     setPreview(service.image ? getServiceImageUrl(service.image) : null);
+=======
+    setPreview(service.image ? `http://localhost:5000/uploads/${service.image}` : null);
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
     setEditingId(service.id);
     setShowModal(true);
   };
@@ -114,7 +144,11 @@ function AdminServices() {
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xóa?")) return;
     try {
+<<<<<<< HEAD
       await api.delete(`/admin/services/${id}`);
+=======
+      await axios.delete(`http://localhost:5000/api/admin/services/${id}`);
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
       fetchServices();
     } catch (err) {
       console.error(err);
@@ -122,6 +156,7 @@ function AdminServices() {
     }
   };
 
+<<<<<<< HEAD
   const openCreateModal = () => {
     setShowModal(true);
     setEditingId(null);
@@ -357,19 +392,138 @@ function AdminServices() {
               <button
                 onClick={() => setShowModal(false)}
                 className="rounded-lg border border-gray-300 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-gray-50"
+=======
+  return (
+    <div className="p-6">
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Quản lý dịch vụ</h1>
+        <button
+          onClick={() => {
+            setShowModal(true);
+            setEditingId(null);
+            setPreview(null);
+            setForm({ name: "", description: "", price: "", image: null });
+          }}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          + Thêm dịch vụ
+        </button>
+      </div>
+
+      {/* TABLE */}
+      <div className="bg-white rounded shadow">
+        <table className="w-full">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-3">ID</th>
+              <th>Ảnh</th>
+              <th>Tên</th>
+              <th>Mô tả</th>
+              <th>Giá</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {services.map((s) => (
+              <tr key={s.id} className="text-center border-t">
+                <td>{s.id}</td>
+                <td>
+                  <img
+                    src={
+                      s.image
+                        ? `http://localhost:5000/uploads/${s.image}`
+                        : "https://via.placeholder.com/100?text=No+Image"
+                    }
+                    alt=""
+                    className="w-16 h-16 object-cover mx-auto"
+                  />
+                </td>
+                <td>{s.name}</td>
+                <td>{s.description}</td>
+                <td>{s.price}đ</td>
+                <td className="space-x-2">
+                  <button
+                    onClick={() => handleEdit(s)}
+                    className="bg-yellow-400 px-2 py-1 rounded"
+                  >
+                    Sửa
+                  </button>
+                  <button
+                    onClick={() => handleDelete(s.id)}
+                    className="bg-red-500 text-white px-2 py-1 rounded"
+                  >
+                    Xóa
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* MODAL */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/30 flex justify-center items-center">
+          <div className="bg-white p-6 rounded w-96">
+            <h2 className="text-xl font-bold mb-4">
+              {editingId ? "Sửa dịch vụ" : "Thêm dịch vụ"}
+            </h2>
+            <input
+              name="name"
+              placeholder="Tên dịch vụ"
+              value={form.name}
+              onChange={handleChange}
+              className="w-full mb-2 p-2 border"
+            />
+            <input
+              name="description"
+              placeholder="Mô tả"
+              value={form.description}
+              onChange={handleChange}
+              className="w-full mb-2 p-2 border"
+            />
+            <input
+              type="number"
+              name="price"
+              placeholder="Giá"
+              value={form.price}
+              onChange={handleChange}
+              className="w-full mb-2 p-2 border"
+            />
+            <input type="file" onChange={handleFileChange} className="w-full mb-2" />
+            {preview && (
+              <img
+                src={preview}
+                alt="preview"
+                className="w-full h-40 object-cover mb-3 rounded"
+              />
+            )}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-3 py-1 border rounded"
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
               >
                 Hủy
               </button>
               <button
                 onClick={handleSubmit}
+<<<<<<< HEAD
                 className="rounded-lg bg-green-600 px-8 py-3 text-base font-semibold text-white transition hover:bg-green-700"
               >
                 {editingId ? "Cập nhật" : "Tạo mới"}
+=======
+                className="bg-blue-500 text-white px-3 py-1 rounded"
+              >
+                {editingId ? "Cập nhật" : "Thêm"}
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
               </button>
             </div>
           </div>
         </div>
       )}
+<<<<<<< HEAD
 
       {viewService && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/55 p-4">
@@ -408,6 +562,8 @@ function AdminServices() {
           </div>
         </div>
       )}
+=======
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
     </div>
   );
 }

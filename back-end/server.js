@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 require("dotenv").config({ path: require("path").resolve(__dirname, ".env") });
+=======
+require("dotenv").config();
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -16,6 +20,7 @@ const authRoutes = require("./routes/authRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+<<<<<<< HEAD
 const bookingRoutes = require("./routes/bookingRoutes");
 const revenueRoutes = require("./routes/revenueRoutes");
 
@@ -41,12 +46,22 @@ app.use(
 );
 app.use(morgan("combined"));
 app.use(cors(corsOptions));
+=======
+const employeeRoutes = require("./routes/employeesRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
+const revenueRoutes = require("./routes/revenueRoutes");
+
+app.use(helmet());
+app.use(morgan("combined"));
+app.use(cors());
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 
 // 🔥 QUAN TRỌNG (thiếu cái này là lỗi req.body)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 🔥 LOAD ẢNH
+<<<<<<< HEAD
 app.use(
   "/uploads",
   express.static("uploads", {
@@ -56,6 +71,9 @@ app.use(
     },
   })
 );
+=======
+app.use("/uploads", express.static("uploads"));
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 
 // Swagger setup
 const swaggerOptions = {
@@ -102,6 +120,10 @@ app.use("/api", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/admin", adminRoutes);
+<<<<<<< HEAD
+=======
+app.use("/api/employees", employeeRoutes);
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/revenue", revenueRoutes);
 

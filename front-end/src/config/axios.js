@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+<<<<<<< HEAD
 const rawBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const normalizedBaseUrl = rawBaseUrl.replace(/\/+$/, '');
 const apiBaseUrl = normalizedBaseUrl.endsWith('/api')
@@ -8,6 +9,13 @@ const apiBaseUrl = normalizedBaseUrl.endsWith('/api')
 
 const api = axios.create({
   baseURL: apiBaseUrl,
+=======
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 });
 
 // Attach JWT token for authenticated requests.
@@ -22,6 +30,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+<<<<<<< HEAD
     const status = error.response?.status;
     const message = error.response?.data?.message || "";
     const shouldLogout =
@@ -32,6 +41,11 @@ api.interceptors.response.use(
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.dispatchEvent(new Event('auth-changed'));
+=======
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
       window.location.href = '/login';
     }
     return Promise.reject(error);

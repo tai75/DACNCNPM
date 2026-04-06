@@ -45,7 +45,11 @@ const loginLimiter = createRateLimiter({
  *                 pattern: '^[0-9]{10,11}$'
  *               password:
  *                 type: string
+<<<<<<< HEAD
  *                 minLength: 8
+=======
+ *                 minLength: 6
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
  *     responses:
  *       200:
  *         description: Đăng ký thành công

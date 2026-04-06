@@ -3,12 +3,16 @@ jest.mock("jsonwebtoken", () => ({
 }));
 
 const jwt = require("jsonwebtoken");
+<<<<<<< HEAD
 const {
   authMiddleware,
   adminMiddleware,
   staffMiddleware,
   adminOrStaffMiddleware,
 } = require("../middleware/auth");
+=======
+const { authMiddleware, adminMiddleware } = require("../middleware/auth");
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 
 const createMockResponse = () => {
   const res = {};
@@ -19,11 +23,18 @@ const createMockResponse = () => {
 
 describe("authMiddleware", () => {
   const originalJwtSecret = process.env.JWT_SECRET;
+<<<<<<< HEAD
   const strongTestSecret = ["A", "b", "3", "!", "x".repeat(40)].join("");
 
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.JWT_SECRET = strongTestSecret;
+=======
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env.JWT_SECRET = "test-secret";
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
   });
 
   afterAll(() => {
@@ -87,7 +98,11 @@ describe("authMiddleware", () => {
 
     authMiddleware(req, res, next);
 
+<<<<<<< HEAD
     expect(jwt.verify).toHaveBeenCalledWith("valid-token", strongTestSecret);
+=======
+    expect(jwt.verify).toHaveBeenCalledWith("valid-token", "test-secret");
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
     expect(req.user).toEqual({ id: 1, role: "user" });
     expect(next).toHaveBeenCalledTimes(1);
   });
@@ -118,6 +133,7 @@ describe("adminMiddleware", () => {
     expect(next).toHaveBeenCalledTimes(1);
   });
 });
+<<<<<<< HEAD
 
 describe("staffMiddleware", () => {
   test("should return 403 for non-staff user", () => {
@@ -180,3 +196,5 @@ describe("adminOrStaffMiddleware", () => {
     expect(next).toHaveBeenCalledTimes(1);
   });
 });
+=======
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577

@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
+<<<<<<< HEAD
 import api from "../../config/axios";
+=======
+import axios from "axios";
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 import {
   LineChart,
   Line,
@@ -7,7 +11,10 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
+<<<<<<< HEAD
   ResponsiveContainer,
+=======
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 } from "recharts";
 
 function AdminRevenue() {
@@ -19,7 +26,13 @@ function AdminRevenue() {
   ====================== */
   const fetchTotal = async () => {
     try {
+<<<<<<< HEAD
       const res = await api.get("/revenue");
+=======
+      const res = await axios.get(
+        "http://localhost:5000/api/revenue"
+      );
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
       setTotal(res.data.total_revenue || 0);
     } catch (err) {
       console.error("Lỗi total revenue:", err);
@@ -31,7 +44,13 @@ function AdminRevenue() {
   ====================== */
   const fetchByDate = async () => {
     try {
+<<<<<<< HEAD
       const res = await api.get("/revenue/by-date");
+=======
+      const res = await axios.get(
+        "http://localhost:5000/api/revenue/by-date"
+      );
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
       setData(res.data);
     } catch (err) {
       console.error("Lỗi revenue by date:", err);
@@ -44,6 +63,7 @@ function AdminRevenue() {
   }, []);
 
   return (
+<<<<<<< HEAD
     <div className="space-y-5">
       <div className="panel-shell">
         <h2 className="text-2xl font-semibold text-slate-800">Thống kê doanh thu</h2>
@@ -81,11 +101,54 @@ function AdminRevenue() {
             <tr>
               <th className="p-3 text-left">Ngày</th>
               <th className="p-3 text-left">Doanh thu</th>
+=======
+    <div className="container mt-4">
+      <h2>Thống kê doanh thu</h2>
+
+      {/* TOTAL */}
+      <div className="card p-3 mt-3">
+        <h4>Tổng doanh thu</h4>
+        <h2 className="text-success">
+          {Number(total).toLocaleString()} VND
+        </h2>
+      </div>
+
+      {/* CHART */}
+      <div className="card p-3 mt-4">
+        <h4>Doanh thu theo ngày</h4>
+
+        <LineChart
+          width={800}
+          height={300}
+          data={data}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="date" />
+          <YAxis />
+          <Tooltip />
+          <Line
+            type="monotone"
+            dataKey="revenue"
+          />
+        </LineChart>
+      </div>
+
+      {/* TABLE */}
+      <div className="card p-3 mt-4">
+        <h4>Bảng doanh thu</h4>
+
+        <table className="table table-bordered mt-3">
+          <thead className="table-dark">
+            <tr>
+              <th>Ngày</th>
+              <th>Doanh thu</th>
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
             </tr>
           </thead>
 
           <tbody>
             {data.map((item, index) => (
+<<<<<<< HEAD
               <tr key={index} className="border-t border-slate-100 text-sm">
                 <td className="p-3 text-slate-700">{item.date}</td>
                 <td className="p-3 font-medium text-slate-800">
@@ -103,6 +166,17 @@ function AdminRevenue() {
           </tbody>
         </table>
         </div>
+=======
+              <tr key={index}>
+                <td>{item.date}</td>
+                <td>
+                  {Number(item.revenue).toLocaleString()} VND
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
       </div>
     </div>
   );

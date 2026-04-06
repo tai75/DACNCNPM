@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 require("dotenv").config({ path: require("path").resolve(__dirname, "..", ".env") });
+=======
+require("dotenv").config();
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 
 const mysql = require("mysql2");
 

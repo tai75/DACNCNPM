@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { BrowserRouter, Routes, Route, Outlet, Navigate, useLocation } from "react-router-dom";
+=======
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 
 // USER LAYOUT
 import Navbar from "./components/Navbar";
@@ -11,12 +15,20 @@ import Register from "./pages/Register";
 import Services from "./pages/Services";
 import ServiceDetail from "./pages/ServiceDetail";
 import Booking from "./pages/Booking";
+<<<<<<< HEAD
 import Bookings from "./pages/Bookings";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Payment from "./pages/Payment";
 import BankPayment from "./pages/BankPayment";
 import UserInfo from "./pages/UserInfo";
+=======
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Payment from "./pages/Payment";
+import Thankyou from "./pages/Thankyou";
+import BankPayment from "./pages/BankPayment";
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 
 // ADMIN
 import AdminLayout from "./layouts/AdminLayout";
@@ -24,6 +36,7 @@ import AdminDashBoard from "./pages/admin/AdminDashBoard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminServices from "./pages/admin/AdminServices";
 import AdminBookings from "./pages/admin/AdminBookings";
+<<<<<<< HEAD
 import AdminRevenue from "./pages/admin/AdminRevenue";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminStaff from "./pages/admin/AdminStaff";
@@ -32,11 +45,17 @@ import StaffLayout from "./layouts/StaffLayout";
 import StaffRoute from "./routes/StaffRoute";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import StaffBookings from "./pages/staff/StaffBookings";
+=======
+import AdminEmployees from "./pages/admin/AdminEmployees";
+import AdminRevenue from "./pages/admin/AdminRevenue";
+import AdminRoute from "./routes/Adminroute";
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 
 /* ======================
    USER LAYOUT
 ====================== */
 function UserLayout() {
+<<<<<<< HEAD
   const location = useLocation();
   const token = localStorage.getItem("token");
   let role = null;
@@ -79,6 +98,17 @@ function UserLayout() {
       </main>
 
       {!isAuthPage && <Footer />}
+=======
+  return (
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      <Navbar />
+
+      <main className="flex-grow">
+        <Outlet />
+      </main>
+
+      <Footer />
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
     </div>
   );
 }
@@ -105,10 +135,16 @@ function App() {
           <Route path="services/:id" element={<ServiceDetail />} />
 
           <Route path="booking" element={<Booking />} />
+<<<<<<< HEAD
           <Route path="profile" element={<ProtectedRoute><UserInfo /></ProtectedRoute>} />
           <Route path="bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
 
           <Route path="payment" element={<Payment />} />
+=======
+
+          <Route path="payment" element={<Payment />} />
+          <Route path="thank-you" element={<Thankyou />} />
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
           <Route path="bank-payment" element={<BankPayment />} />
         </Route>
 
@@ -116,6 +152,7 @@ function App() {
         <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
           <Route path="dashboard" element={<AdminDashBoard />} />
           <Route path="users" element={<AdminUsers />} />
+<<<<<<< HEAD
           <Route path="staff" element={<AdminStaff />} />
           <Route path="services" element={<AdminServices />} />
           <Route path="reviews" element={<AdminReviews />} />
@@ -128,6 +165,14 @@ function App() {
           <Route path="bookings" element={<StaffBookings />} />
         </Route>
 
+=======
+          <Route path="services" element={<AdminServices />} />
+          <Route path="bookings" element={<AdminBookings />} />
+          <Route path="employees" element={<AdminEmployees />} />
+          <Route path="revenue" element={<AdminRevenue />} />
+        </Route>
+
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
       </Routes>
     </BrowserRouter>
   );

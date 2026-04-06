@@ -1,5 +1,8 @@
 const jwt = require("jsonwebtoken");
+<<<<<<< HEAD
 const { getJwtSecret } = require("../config/jwt");
+=======
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization || "";
@@ -9,6 +12,7 @@ const authMiddleware = (req, res, next) => {
     return res.status(401).json({ success: false, message: "Token không hợp lệ hoặc thiếu Bearer" });
   }
 
+<<<<<<< HEAD
   const secret = getJwtSecret();
   if (!secret) {
     return res.status(500).json({
@@ -19,6 +23,14 @@ const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, secret);
+=======
+  if (!process.env.JWT_SECRET) {
+    return res.status(500).json({ success: false, message: "JWT_SECRET chưa được cấu hình" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
     req.user = decoded;
     next();
   } catch (error) {
@@ -33,6 +45,7 @@ const adminMiddleware = (req, res, next) => {
   next();
 };
 
+<<<<<<< HEAD
 const staffMiddleware = (req, res, next) => {
   if (req.user.role !== "staff") {
     return res.status(403).json({ success: false, message: "Staff access required" });
@@ -48,3 +61,6 @@ const adminOrStaffMiddleware = (req, res, next) => {
 };
 
 module.exports = { authMiddleware, adminMiddleware, staffMiddleware, adminOrStaffMiddleware };
+=======
+module.exports = { authMiddleware, adminMiddleware };
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577

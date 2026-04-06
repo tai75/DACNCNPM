@@ -1,8 +1,13 @@
+<<<<<<< HEAD
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+=======
+import { NavLink, useNavigate } from "react-router-dom";
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 import { useEffect, useState } from "react";
 
 function Navbar() {
   const navigate = useNavigate();
+<<<<<<< HEAD
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -130,16 +135,81 @@ function Navbar() {
                     : "border border-slate-200 bg-slate-50 text-slate-700"
                 }`}
               >
+=======
+  const [user, setUser] = useState(null);
+
+  // ✅ lấy user từ localStorage
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const linkClass = ({ isActive }) =>
+    isActive
+      ? "text-green-200 font-semibold"
+      : "hover:text-green-200 transition";
+
+  // ✅ logout
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/login");
+    window.location.reload();
+  };
+
+  return (
+    <nav className="bg-green-700 text-white shadow-md sticky top-0 z-50">
+      <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
+        
+        {/* LOGO */}
+        <h1 className="text-xl font-bold tracking-wide">
+          🌿 GardenCare
+        </h1>
+
+        {/* MENU */}
+        <div className="space-x-6 hidden md:flex items-center">
+          <NavLink to="/" className={linkClass}>
+            Trang chủ
+          </NavLink>
+
+          <NavLink to="/services" className={linkClass}>
+            Dịch vụ
+          </NavLink>
+
+          <NavLink to="/booking" className={linkClass}>
+            Đặt lịch
+          </NavLink>
+
+          <NavLink to="/about" className={linkClass}>
+            Giới thiệu
+          </NavLink>
+
+          <NavLink to="/contact" className={linkClass}>
+            Liên hệ
+          </NavLink>
+        </div>
+
+        {/* AUTH */}
+        <div className="space-x-3">
+          {user ? (
+            <>
+              <span>
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
                 Xin chào, <b>{user.name}</b>
               </span>
 
               <button
                 onClick={handleLogout}
+<<<<<<< HEAD
                 className={`rounded-full px-6 py-2 text-sm transition ${
                   isHomePage
                     ? "border border-white text-white hover:bg-white/15"
                     : "border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
                 }`}
+=======
+                className="px-4 py-2 border border-white rounded hover:bg-white hover:text-green-700 transition"
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
               >
                 Đăng xuất
               </button>
@@ -148,22 +218,30 @@ function Navbar() {
             <>
               <NavLink
                 to="/login"
+<<<<<<< HEAD
                 className={`rounded-full px-6 py-2 text-sm transition ${
                   isHomePage
                     ? "border border-white text-white hover:bg-white/15"
                     : "border border-slate-300 text-slate-700 hover:bg-slate-100"
                 }`}
+=======
+                className="px-4 py-2 border border-white rounded hover:bg-white hover:text-green-700 transition"
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
               >
                 Đăng nhập
               </NavLink>
 
               <NavLink
                 to="/register"
+<<<<<<< HEAD
                 className={`rounded-full px-6 py-2 text-sm font-semibold transition ${
                   isHomePage
                     ? "border border-white text-white hover:bg-white/15"
                     : "bg-emerald-600 text-white hover:bg-emerald-700"
                 }`}
+=======
+                className="bg-white text-green-700 px-4 py-2 rounded hover:bg-green-100 transition"
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
               >
                 Đăng ký
               </NavLink>
@@ -171,6 +249,7 @@ function Navbar() {
           )}
         </div>
 
+<<<<<<< HEAD
         <button
           onClick={() => setMobileOpen((prev) => !prev)}
           className={`relative z-10 rounded-full px-4 py-2 text-sm md:hidden ${
@@ -223,6 +302,10 @@ function Navbar() {
         </div>
       )}
     </header>
+=======
+      </div>
+    </nav>
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
   );
 }
 

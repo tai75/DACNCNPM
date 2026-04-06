@@ -14,6 +14,7 @@ Một ứng dụng web đầy đủ cho việc quản lý dịch vụ chăm sóc
 ### 👨‍💼 Quản trị viên
 - Quản lý người dùng (xem, chỉnh sửa vai trò)
 - Quản lý dịch vụ (thêm, sửa, xóa)
+<<<<<<< HEAD
 - Quản lý đơn đặt lịch và gán staff
 - Bảng điều khiển thống kê chi tiết
 - Báo cáo doanh thu
@@ -32,6 +33,12 @@ Một ứng dụng web đầy đủ cho việc quản lý dịch vụ chăm sóc
 | User (đã đăng nhập) | Đặt lịch và xem lịch sử | /booking, /bookings | /api/bookings (chỉ dữ liệu của chính mình) |
 | Guest (chưa đăng nhập) | Xem dịch vụ, đăng ký, đăng nhập | /, /services, /login, /register | /api/register, /api/login, /api/services |
 
+=======
+- Quản lý đơn đặt lịch (xác nhận, hủy)
+- Bảng điều khiển thống kê chi tiết
+- Báo cáo doanh thu
+
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 ## 🛠️ Tech Stack
 
 ### Frontend
@@ -117,16 +124,24 @@ Frontend sẽ chạy tại: http://localhost:5173
 ### Đặt lịch (Đã xác thực)
 - `GET /api/bookings` - Lấy danh sách booking của người dùng
 - `POST /api/bookings` - Tạo booking mới
+<<<<<<< HEAD
 - `PUT /api/bookings/:id/status` - Cập nhật trạng thái booking (admin/staff)
 - `PUT /api/bookings/:id/payment` - Cập nhật trạng thái thanh toán (admin/staff)
 - `DELETE /api/bookings/:id` - Xóa booking
 
 ### Quản trị (Quản trị viên)
+=======
+- `PUT /api/bookings/:id` - Cập nhật trạng thái (quản trị viên only)
+- `DELETE /api/bookings/:id` - Xóa booking
+
+### Quản trị (Quản trị viên only)
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 - `GET /api/admin/dashboard` - Thống kê bảng điều khiển
 - `GET /api/admin/users` - Quản lý người dùng
 - `GET /api/admin/services` - Quản lý dịch vụ
 - `GET /api/admin/bookings` - Quản lý bookings
 
+<<<<<<< HEAD
 ### Nhân viên và quản trị
 - `GET /api/bookings` - Danh sách booking (staff chỉ xem booking được giao, admin xem toàn bộ, user xem của mình)
 - `PUT /api/bookings/:id/status` - Cập nhật trạng thái booking
@@ -139,6 +154,8 @@ Frontend sẽ chạy tại: http://localhost:5173
 - `GET /api/revenue` - Tổng doanh thu
 - `GET /api/revenue/by-date` - Doanh thu theo ngày
 
+=======
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 ## 🧪 Testing
 
 ```bash

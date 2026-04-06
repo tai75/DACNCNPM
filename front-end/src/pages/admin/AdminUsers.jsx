@@ -1,20 +1,32 @@
 import { useEffect, useState } from "react";
+<<<<<<< HEAD
 import api from "../../config/axios";
 import { Search, ShieldCheck, ShieldOff, Trash2, RefreshCw } from "lucide-react";
+=======
+import axios from "axios";
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 
 function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
+<<<<<<< HEAD
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+=======
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 
   /* ======================
       FETCH USERS
   ====================== */
   const fetchUsers = async () => {
     try {
+<<<<<<< HEAD
       const res = await api.get("/users");
       setUsers(res.data.data);
+=======
+      const res = await axios.get("http://localhost:5000/api/users");
+      setUsers(res.data.data); // 🔥 đúng với backend của bạn
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
     } catch (err) {
       console.error("Lỗi lấy users:", err);
     }
@@ -31,7 +43,11 @@ function AdminUsers() {
     if (!window.confirm("Bạn chắc chắn muốn xoá user này?")) return;
 
     try {
+<<<<<<< HEAD
       await api.delete(`/users/${id}`);
+=======
+      await axios.delete(`http://localhost:5000/api/users/${id}`);
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
       fetchUsers();
     } catch (err) {
       console.error("Lỗi xoá user:", err);
@@ -43,8 +59,13 @@ function AdminUsers() {
   ====================== */
   const handleChangeRole = async (id, currentRole) => {
     try {
+<<<<<<< HEAD
       await api.put(
         `/users/${id}/role`,
+=======
+      await axios.put(
+        `http://localhost:5000/api/users/${id}/role`,
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
         {
           role: currentRole === "admin" ? "user" : "admin",
         }
@@ -64,6 +85,7 @@ function AdminUsers() {
       u.email.toLowerCase().includes(search.toLowerCase())
   );
 
+<<<<<<< HEAD
   const totalItems = filteredUsers.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -134,10 +156,36 @@ function AdminUsers() {
             <th className="p-3 text-left">Điện thoại</th>
             <th className="p-3 text-left">Role</th>
             <th className="p-3 text-left">Hành động</th>
+=======
+  return (
+    <div className="container mt-4">
+      <h2 className="mb-3">Quản lý người dùng</h2>
+
+      {/* SEARCH */}
+      <input
+        type="text"
+        placeholder="Tìm theo tên hoặc email..."
+        className="form-control mb-3"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      {/* TABLE */}
+      <table className="table table-bordered table-hover">
+        <thead className="table-dark">
+          <tr>
+            <th>ID</th>
+            <th>Tên</th>
+            <th>Email</th>
+            <th>Điện thoại</th>
+            <th>Role</th>
+            <th>Hành động</th>
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
           </tr>
         </thead>
 
         <tbody>
+<<<<<<< HEAD
           {paginatedUsers.length > 0 ? (
             paginatedUsers.map((user) => (
               <tr key={user.id} className="border-t border-slate-100 text-sm">
@@ -155,10 +203,38 @@ function AdminUsers() {
                   <button
                     title={user.role === "admin" ? "Hạ quyền" : "Nâng admin"}
                     className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-700 transition hover:bg-amber-200"
+=======
+          {filteredUsers.length > 0 ? (
+            filteredUsers.map((user) => (
+              <tr key={user.id}>
+                <td>{user.id}</td>
+                <td>{user.name}</td>
+                <td>{user.email}</td>
+                <td>{user.phone}</td>
+
+                {/* ROLE */}
+                <td>
+                  <span
+                    className={
+                      user.role === "admin"
+                        ? "badge bg-danger"
+                        : "badge bg-success"
+                    }
+                  >
+                    {user.role}
+                  </span>
+                </td>
+
+                {/* ACTION */}
+                <td>
+                  <button
+                    className="btn btn-warning btn-sm me-2"
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
                     onClick={() =>
                       handleChangeRole(user.id, user.role)
                     }
                   >
+<<<<<<< HEAD
                     {user.role === "admin" ? <ShieldOff className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
                   </button>
 
@@ -170,18 +246,36 @@ function AdminUsers() {
                     <Trash2 className="h-4 w-4" />
                   </button>
                   </div>
+=======
+                    {user.role === "admin"
+                      ? "Hạ quyền"
+                      : "Nâng admin"}
+                  </button>
+
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => handleDelete(user.id)}
+                  >
+                    Xoá
+                  </button>
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
                 </td>
               </tr>
             ))
           ) : (
             <tr>
+<<<<<<< HEAD
               <td colSpan="6" className="p-8 text-center text-slate-500">
+=======
+              <td colSpan="6" className="text-center">
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
                 Không có user nào
               </td>
             </tr>
           )}
         </tbody>
       </table>
+<<<<<<< HEAD
 
       {totalItems > 0 && (
         <div className="flex flex-col gap-3 border-t border-gray-100 px-4 py-3 text-sm text-gray-500 md:flex-row md:items-center md:justify-between">
@@ -226,6 +320,8 @@ function AdminUsers() {
         </div>
       )}
       </div>
+=======
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
     </div>
   );
 }

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap");
 
 @tailwind base;
@@ -115,3 +116,8 @@ body {
 .reveal-up {
 	animation: revealUp 0.6s ease both;
 }
+=======
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
