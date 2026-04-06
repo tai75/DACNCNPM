@@ -14,7 +14,7 @@ Một ứng dụng web đầy đủ cho việc quản lý dịch vụ chăm sóc
 ### 👨‍💼 Quản trị viên
 - Quản lý người dùng (xem, chỉnh sửa vai trò)
 - Quản lý dịch vụ (thêm, sửa, xóa)
-- Quản lý đơn đặt lịch (xác nhận, hủy)
+- Quản lý đơn đặt lịch và gán staff
 - Bảng điều khiển thống kê chi tiết
 - Báo cáo doanh thu
 
@@ -27,7 +27,7 @@ Một ứng dụng web đầy đủ cho việc quản lý dịch vụ chăm sóc
 
 | Vai trò | Quyền chính | Frontend routes | Backend phạm vi truy cập |
 |---------|-------------|-----------------|---------------------------|
-| Admin | Quản lý toàn bộ hệ thống | /admin/dashboard, /admin/users, /admin/services, /admin/bookings, /admin/employees, /admin/revenue | /api/admin/*, /api/users/*, /api/employees/*, /api/revenue/*, /api/bookings/* |
+| Admin | Quản lý toàn bộ hệ thống | /admin/dashboard, /admin/users, /admin/services, /admin/bookings, /admin/revenue | /api/admin/*, /api/users/*, /api/revenue/*, /api/bookings/* |
 | Staff | Xử lý lịch đặt dịch vụ | /staff/bookings | /api/bookings/* (xem/cập nhật trạng thái và thanh toán) |
 | User (đã đăng nhập) | Đặt lịch và xem lịch sử | /booking, /bookings | /api/bookings (chỉ dữ liệu của chính mình) |
 | Guest (chưa đăng nhập) | Xem dịch vụ, đăng ký, đăng nhập | /, /services, /login, /register | /api/register, /api/login, /api/services |
@@ -128,7 +128,7 @@ Frontend sẽ chạy tại: http://localhost:5173
 - `GET /api/admin/bookings` - Quản lý bookings
 
 ### Nhân viên và quản trị
-- `GET /api/bookings` - Danh sách booking (staff/admin xem toàn bộ, user xem của mình)
+- `GET /api/bookings` - Danh sách booking (staff chỉ xem booking được giao, admin xem toàn bộ, user xem của mình)
 - `PUT /api/bookings/:id/status` - Cập nhật trạng thái booking
 - `PUT /api/bookings/:id/payment` - Cập nhật trạng thái thanh toán
 
@@ -136,10 +136,6 @@ Frontend sẽ chạy tại: http://localhost:5173
 - `GET /api/users` - Danh sách users
 - `PUT /api/users/:id/role` - Cập nhật role user (user/staff/admin)
 - `DELETE /api/users/:id` - Xóa user
-- `GET /api/employees` - Danh sách nhân viên
-- `POST /api/employees` - Thêm nhân viên
-- `PUT /api/employees/:id` - Cập nhật nhân viên
-- `DELETE /api/employees/:id` - Xóa nhân viên
 - `GET /api/revenue` - Tổng doanh thu
 - `GET /api/revenue/by-date` - Doanh thu theo ngày
 

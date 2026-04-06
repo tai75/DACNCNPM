@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ path: require("path").resolve(__dirname, ".env") });
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -16,7 +16,6 @@ const authRoutes = require("./routes/authRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-const employeeRoutes = require("./routes/employeesRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const revenueRoutes = require("./routes/revenueRoutes");
 
@@ -91,7 +90,6 @@ app.use("/api", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/employees", employeeRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/revenue", revenueRoutes);
 

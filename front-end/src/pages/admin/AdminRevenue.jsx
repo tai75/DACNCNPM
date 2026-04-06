@@ -57,10 +57,10 @@ function AdminRevenue() {
         </h2>
       </div>
 
-      <div className="card-soft">
+      <div className="card-soft min-w-0">
         <h4 className="text-lg font-semibold text-slate-800">Doanh thu theo ngày</h4>
-        <div className="mt-4 h-80 w-full">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="mt-4 h-80 w-full min-w-0">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="date" />

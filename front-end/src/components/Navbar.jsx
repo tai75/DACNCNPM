@@ -30,8 +30,8 @@ function Navbar() {
 
   const linkClass = ({ isActive }) =>
     isActive
-      ? "text-green-200 font-semibold"
-      : "hover:text-green-200 transition";
+      ? "text-white font-semibold"
+      : "text-white hover:text-green-400 transition";
 
   // ✅ logout
   const handleLogout = () => {
@@ -46,14 +46,13 @@ function Navbar() {
   const closeMobileMenu = () => setMobileOpen(false);
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-emerald-900/20 bg-emerald-950/90 text-white backdrop-blur-lg">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 md:px-6">
-        <button onClick={() => navigate("/")} className="flex items-center gap-2 text-left">
-          <span className="rounded-xl bg-emerald-500/25 px-2 py-1 text-sm">GC</span>
-          <span className="text-lg font-bold tracking-wide">Garden Care</span>
+    <header className="absolute top-0 left-0 z-50 w-full py-6 text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)]">
+      <div className="container mx-auto flex items-center justify-between px-8">
+        <button onClick={() => navigate("/")} className="relative z-10 flex items-center text-left">
+          <span className="text-3xl font-bold tracking-wider text-white">GardenCare</span>
         </button>
 
-        <div className="hidden items-center space-x-5 text-sm md:flex">
+        <div className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-8 font-medium text-white md:flex">
           <NavLink to="/" className={linkClass}>
             Trang chủ
           </NavLink>
@@ -79,16 +78,16 @@ function Navbar() {
           </NavLink>
         </div>
 
-        <div className="hidden items-center space-x-3 md:flex">
+        <div className="relative z-10 hidden items-center gap-3 md:flex">
           {user ? (
             <>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-sm">
+              <span className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm">
                 Xin chào, <b>{user.name}</b>
               </span>
 
               <button
                 onClick={handleLogout}
-                className="rounded-xl border border-white/35 px-4 py-2 text-sm transition hover:bg-white hover:text-emerald-800"
+                className="rounded-full border border-white px-6 py-2 text-sm text-white transition hover:bg-white/15"
               >
                 Đăng xuất
               </button>
@@ -97,14 +96,14 @@ function Navbar() {
             <>
               <NavLink
                 to="/login"
-                className="rounded-xl border border-white/35 px-4 py-2 text-sm transition hover:bg-white hover:text-emerald-800"
+                className="rounded-full border border-white px-6 py-2 text-sm text-white transition hover:bg-white/15"
               >
                 Đăng nhập
               </NavLink>
 
               <NavLink
                 to="/register"
-                className="rounded-xl bg-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-300"
+                className="rounded-full border border-white px-6 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
               >
                 Đăng ký
               </NavLink>
@@ -114,7 +113,7 @@ function Navbar() {
 
         <button
           onClick={() => setMobileOpen((prev) => !prev)}
-          className="rounded-lg border border-white/35 px-3 py-1.5 text-sm md:hidden"
+          className="relative z-10 rounded-full border border-white px-4 py-2 text-sm text-white md:hidden"
           aria-label="Toggle menu"
         >
           {mobileOpen ? "Đóng" : "Menu"}
@@ -159,7 +158,7 @@ function Navbar() {
           )}
         </div>
       )}
-    </nav>
+    </header>
   );
 }
 

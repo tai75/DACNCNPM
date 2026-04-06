@@ -13,6 +13,7 @@ function Register() {
     password: "",
     confirmPassword: "",
   });
+  const [loading, setLoading] = useState(false);
 
   // xử lý input
   const handleChange = (e) => {
@@ -42,7 +43,18 @@ function Register() {
       return;
     }
 
+    if (form.password.length < 8) {
+      alert("Mật khẩu phải có ít nhất 8 ký tự");
+      return;
+    }
+
+    if (!/^[0-9]{10,11}$/.test(form.phone)) {
+      alert("Số điện thoại phải gồm 10 đến 11 chữ số");
+      return;
+    }
+
     try {
+      setLoading(true);
       const res = await api.post("/register", {
         name: form.name,
         email: form.email,
@@ -58,17 +70,29 @@ function Register() {
         alert(data.message || "Đăng ký thất bại");
       }
     } catch (error) {
-      console.log(error);
-      alert("Không kết nối được server!");
+      console.error("Register error:", error);
+      alert(error.response?.data?.message || "Không kết nối được server!");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="mx-auto flex min-h-[75vh] w-full max-w-5xl items-center px-4 py-8 md:px-6 md:py-10">
-      <div className="card-soft grid w-full overflow-hidden md:grid-cols-2">
-        <div className="hidden bg-gradient-to-br from-emerald-700 to-emerald-500 p-10 text-white md:block">
-          <h1 className="flex items-center gap-2 text-3xl font-extrabold"><FaLeaf /> Garden Care</h1>
-          <p className="mt-4 text-emerald-50">Tạo tài khoản để quản lý lịch sử chăm cây và nhận hỗ trợ nhanh hơn.</p>
+    <div className="flex min-h-full w-full items-center justify-center py-8 md:py-12">
+      <div className="card-soft grid w-full max-w-5xl overflow-hidden md:grid-cols-2">
+        <div className="relative hidden p-10 text-white md:block">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: "url('/images/background.webp')" }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/80 to-emerald-600/75" />
+          <div className="relative z-10">
+            <h1 className="flex items-center gap-2 text-3xl font-extrabold"><FaLeaf /> Garden Care</h1>
+            <p className="mt-4 text-emerald-50">Tạo tài khoản để quản lý lịch sử chăm cây và nhận hỗ trợ nhanh hơn.</p>
+            <p className="mt-8 rounded-xl border border-white/25 bg-white/10 p-4 text-sm leading-6 text-emerald-50">
+              Nhận lịch nhắc chăm cây định kỳ, theo dõi tiến độ dịch vụ và quản lý thanh toán tập trung.
+            </p>
+          </div>
         </div>
 
         <div className="p-7 md:p-10">
@@ -80,6 +104,7 @@ function Register() {
             <input
               type="text"
               name="name"
+              autoComplete="name"
               placeholder="Họ và tên"
               value={form.name}
               onChange={handleChange}
@@ -89,6 +114,7 @@ function Register() {
             <input
               type="email"
               name="email"
+              autoComplete="email"
               placeholder="Email"
               value={form.email}
               onChange={handleChange}
@@ -98,6 +124,7 @@ function Register() {
             <input
               type="tel"
               name="phone"
+              autoComplete="tel"
               placeholder="Số điện thoại"
               value={form.phone}
               onChange={handleChange}
@@ -107,6 +134,7 @@ function Register() {
             <input
               type="password"
               name="password"
+              autoComplete="new-password"
               placeholder="Mật khẩu"
               value={form.password}
               onChange={handleChange}
@@ -116,6 +144,7 @@ function Register() {
             <input
               type="password"
               name="confirmPassword"
+              autoComplete="new-password"
               placeholder="Xác nhận mật khẩu"
               value={form.confirmPassword}
               onChange={handleChange}
@@ -124,9 +153,10 @@ function Register() {
 
             <button
               type="submit"
-              className="w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white transition hover:bg-emerald-700"
+              disabled={loading}
+              className="w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Đăng ký
+              {loading ? "Đang đăng ký..." : "Đăng ký"}
             </button>
           </form>
 

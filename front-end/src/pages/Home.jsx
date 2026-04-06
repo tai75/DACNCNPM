@@ -1,42 +1,208 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Clock3, MapPin, Star } from "lucide-react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
 
 function Home() {
   const navigate = useNavigate();
+  const [selectedService, setSelectedService] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+
+  const heroImage = "/images/hero4.avif";
 
   const services = [
-    { name: "Cắt tỉa cây", img: "/images/service-pruning.jpg" },
-    { name: "Bón phân định kỳ", img: "/images/service-fertilizing.jpg" },
-    { name: "Phun thuốc sâu", img: "/images/service-spraying.jpg" },
-    { name: "Tưới cây tự động", img: "/images/service-watering.jpg" },
-    { name: "Thiết kế sân vườn", img: "/images/service-landscape.jpg" },
-    { name: "Thiết kế cây trong nhà", img: "/images/service-indoor.jpg" },
+    {
+      name: "Cắt tỉa cây",
+      img: "/images/service-pruning.webp",
+      area: "Quận 1, Quận 3, Bình Thạnh",
+      price: "500k/lần",
+      duration: "1 buổi",
+      rating: 4.8,
+    },
+    {
+      name: "Bón phân định kỳ",
+      img: "/images/service-fertilizing.webp",
+      area: "Thủ Đức, Quận 2, Quận 9",
+      price: "320k/lần",
+      duration: "2 buổi",
+      rating: 4.7,
+    },
+    {
+      name: "Phun thuốc sâu",
+      img: "/images/service-spraying.avif",
+      area: "Gò Vấp, Tân Bình, Phú Nhuận",
+      price: "450k/lần",
+      duration: "1 buổi",
+      rating: 4.9,
+    },
+    {
+      name: "Tưới cây tự động",
+      img: "/images/service-watering.webp",
+      area: "Quận 7, Nhà Bè, Bình Chánh",
+      price: "650k/lần",
+      duration: "3 buổi",
+      rating: 4.6,
+    },
+    {
+      name: "Thiết kế sân vườn",
+      img: "/images/service-landscape.webp",
+      area: "Toàn TP.HCM",
+      price: "1.200k/lần",
+      duration: "Theo dự án",
+      rating: 5.0,
+    },
+    {
+      name: "Chăm sóc cây trong nhà",
+      img: "/images/service-indoor.webp",
+      area: "Quận 4, Quận 5, Quận 10",
+      price: "280k/lần",
+      duration: "1 buổi",
+      rating: 4.5,
+    },
   ];
 
+  const projectImages = [
+    "/images/sanvuon.avif",
+    "/images/sanvuon2.avif",
+    "/images/sanvuon3.avif",
+    "/images/sanvuon4.avif",
+    "/images/sanvuon5.avif",
+    "/images/sanvuon6.jpg",
+    "/images/sanvuon7.jpg",
+  ];
+
+  const testimonials = [
+    {
+      id: 1,
+      name: "Nguyen Thi Ha",
+      avatar: "/images/kh1.avif",
+      review:
+        "Dịch vụ rất chuyên nghiệp, sân vườn nhà mình thay đổi rõ rệt sau 2 tuần chăm sóc định kỳ.",
+    },
+    {
+      id: 2,
+      name: "Tran Quoc Viet",
+      avatar: "/images/kh2.avif",
+      review:
+        "Đội ngũ làm việc đúng giờ, tư vấn nhiệt tình và có hướng dẫn rất cụ thể cho người mới chơi cây.",
+    },
+    {
+      id: 3,
+      name: "Le Minh Chau",
+      avatar: "/images/kh3.avif",
+      review:
+        "Mình thích cách các bạn theo dõi tiến độ từng buổi và gửi ảnh báo cáo sau khi hoàn thành.",
+    },
+    {
+      id: 4,
+      name: "Pham Gia Linh",
+      avatar: "/images/kh4.avif",
+      review:
+        "Sau khi cải tạo sân vườn, không gian thoáng hơn nhiều và cây cũng phát triển đồng đều hơn trước.",
+    },
+    {
+      id: 5,
+      name: "Hoang Anh Thu",
+      avatar: "/images/kh5.avif",
+      review:
+        "Mình đánh giá cao sự chỉn chu của đội ngũ, làm xong còn hướng dẫn cách chăm cây rất dễ hiểu.",
+    },
+    {
+      id: 6,
+      name: "Dang Minh Khoa",
+      avatar: "/images/kh6.avif",
+      review:
+        "Lịch làm việc rõ ràng, đến đúng giờ và chất lượng cây cải thiện rõ sau vài buổi đầu tiên.",
+    },
+  ];
+
+  const avatarFallbacks = [
+    "/images/hero1.webp",
+    "/images/hero3.webp",
+    "/images/hero-garden.webp",
+    "/images/background.webp",
+  ];
+
+  const handleQuickBooking = () => {
+    const params = new URLSearchParams();
+    if (selectedService.trim()) params.set("service", selectedService.trim());
+    if (selectedDate) params.set("date", selectedDate);
+    const query = params.toString();
+    navigate(query ? `/booking?${query}` : "/booking");
+  };
+
+  const renderStars = (rating) => {
+    const fullStars = Math.round(rating);
+    return (
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`h-4 w-4 ${star <= fullStars ? "fill-amber-400 text-amber-400" : "text-amber-200"}`}
+          />
+        ))}
+        <span className="ml-1 text-xs font-medium text-slate-500">{rating}</span>
+      </div>
+    );
+  };
+
+  const handleAvatarError = (event, index) => {
+    const fallback = avatarFallbacks[index % avatarFallbacks.length];
+    if (event.currentTarget.src.endsWith(fallback)) return;
+    event.currentTarget.src = fallback;
+  };
+
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-14 px-4 py-8 md:px-6 md:py-10">
-      <section className="relative overflow-hidden rounded-3xl">
-        <img
-          src="/images/hero-garden.jpg"
-          alt="Garden"
-          className="h-[430px] w-full object-cover md:h-[520px]"
-        />
-        <div className="hero-glass absolute inset-0" />
-        <div className="reveal-up absolute inset-0 flex flex-col justify-center px-6 text-white md:px-12">
-          <p className="mb-3 w-fit rounded-full border border-white/40 px-3 py-1 text-xs uppercase tracking-[0.15em]">
-            Dịch vụ tại nhà
-          </p>
-          <h1 className="max-w-3xl text-3xl font-extrabold leading-tight md:text-5xl">
-            Chăm cây bài bản, nhà luôn xanh mà bạn không cần tự xoay sở
+    <div className="w-full space-y-16 py-8 md:space-y-20 md:py-10">
+      <section
+        className="relative left-1/2 flex w-screen -translate-x-1/2 min-h-[85vh] items-center justify-center overflow-visible bg-cover bg-center pb-28"
+        style={{ backgroundImage: `url(${heroImage})` }}
+      >
+        <div className="absolute inset-0 z-0 bg-cover bg-center">
+          <div className="absolute inset-0 bg-slate-950/45" />
+        </div>
+
+        <div className="relative z-10 w-full max-w-6xl px-4 text-center text-white md:px-6">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">Kham pha ve dep vuon nha</p>
+          <h1 className="mx-auto mb-6 max-w-4xl text-5xl font-extrabold leading-tight md:text-6xl">
+            Kiến tạo không gian xanh của bạn
           </h1>
-          <p className="mt-4 max-w-2xl text-sm text-emerald-100 md:text-base">
-            Đặt lịch trong vài phút, đội ngũ kỹ thuật tới đúng giờ và báo cáo rõ tình trạng vườn sau mỗi lần chăm sóc.
+          <p className="mx-auto max-w-2xl text-sm text-slate-100 md:text-base">
+            Lên kế hoạch chăm sóc cây theo nhu cầu thực tế, nhận tư vấn nhanh và đặt lịch chỉ trong vài bước.
           </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <button onClick={() => navigate("/services")} className="gc-button gc-button-primary">
-              Xem dịch vụ
-            </button>
-            <button onClick={() => navigate("/booking")} className="gc-button gc-button-ghost">
-              Đặt lịch ngay
+        </div>
+
+        <div className="absolute -bottom-12 left-1/2 z-20 w-full max-w-5xl transform -translate-x-1/2 px-4 md:px-0">
+          <div className="flex w-full flex-col overflow-hidden rounded-2xl border border-white/25 bg-white/95 p-2 shadow-[0_18px_45px_rgba(15,23,42,0.32)] backdrop-blur md:flex-row md:items-center">
+            <div className="flex-1 rounded-xl border-b border-slate-200 px-5 py-3 md:border-b-0 md:border-r">
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Dịch vụ</p>
+              <input
+                type="text"
+                value={selectedService}
+                onChange={(e) => setSelectedService(e.target.value)}
+                placeholder="Chọn dịch vụ"
+                className="w-full bg-transparent text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400"
+              />
+            </div>
+
+            <div className="flex-1 rounded-xl border-b border-slate-200 px-5 py-3 md:border-b-0 md:border-r">
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Ngày bắt đầu</p>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full bg-transparent text-sm font-medium text-slate-700 outline-none"
+              />
+            </div>
+
+            <button
+              onClick={handleQuickBooking}
+              className="m-1 rounded-xl bg-orange-500 px-8 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+            >
+              Tìm kiếm
             </button>
           </div>
         </div>
@@ -49,38 +215,188 @@ function Home() {
           { title: "Lịch linh hoạt", sub: "Sáng, chiều, tối" },
           { title: "Hỗ trợ 24/7", sub: "Tư vấn nhanh mọi lúc" },
         ].map((item) => (
-          <article key={item.title} className="card-soft reveal-up p-5">
+          <article key={item.title} className="card-soft card-interactive reveal-up p-5">
             <h3 className="text-base font-semibold text-slate-800">{item.title}</h3>
             <p className="mt-1 text-sm text-slate-500">{item.sub}</p>
           </article>
         ))}
       </section>
 
-      <section>
+      <section className="pt-24">
         <div className="mb-6 flex items-end justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.14em] text-emerald-700">Nổi bật</p>
-            <h2 className="text-2xl font-bold text-slate-800 md:text-3xl">Dịch vụ được đặt nhiều</h2>
+            <h2 className="text-3xl font-bold text-slate-800">Dịch vụ được đặt nhiều</h2>
           </div>
           <button onClick={() => navigate("/services")} className="text-sm font-semibold text-emerald-700 hover:underline">
             Xem tất cả
           </button>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           {services.map((service, index) => (
-            <article key={service.name} className="card-soft reveal-up overflow-hidden" style={{ animationDelay: `${index * 0.08}s` }}>
-              <img src={service.img} alt={service.name} className="h-44 w-full object-cover" />
-              <div className="p-5">
-                <h3 className="text-lg font-semibold text-slate-800">{service.name}</h3>
-                <p className="mt-2 text-sm text-slate-500">Quy trình chăm sóc đúng kỹ thuật, phù hợp từng loại cây và môi trường sống.</p>
-                <button onClick={() => navigate("/booking")} className="mt-4 rounded-lg border border-emerald-200 px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50">
-                  Đặt lịch cho dịch vụ này
+            <article
+              key={service.name}
+              className="reveal-up overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+              style={{ animationDelay: `${index * 0.08}s` }}
+            >
+              <div className="relative">
+                <img
+                  src={service.img}
+                  alt={service.name}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-52 w-full rounded-t-2xl object-cover"
+                />
+                <span className="absolute right-3 top-3 rounded-full bg-slate-900/80 px-2.5 py-1 text-[11px] font-semibold text-white">
+                  {service.duration}
+                </span>
+              </div>
+
+              <div className="space-y-3 bg-white p-5">
+                <h3 className="min-h-[56px] text-lg font-semibold leading-7 text-slate-800">{service.name}</h3>
+
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <MapPin className="h-4 w-4 text-emerald-600" />
+                  <span className="truncate">{service.area}</span>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <Clock3 className="h-4 w-4 text-slate-400" />
+                  <span>Lịch linh hoạt theo khung giờ</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <p className="text-lg font-extrabold text-orange-500">{service.price}</p>
+                  {renderStars(service.rating)}
+                </div>
+
+                <button
+                  onClick={() => navigate("/booking")}
+                  className="w-full rounded-lg bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+                >
+                  Xem nhanh
                 </button>
               </div>
             </article>
           ))}
         </div>
+      </section>
+
+      <section className="grid gap-8 md:grid-cols-2 md:items-center">
+        <div className="relative min-h-[420px]">
+          <img
+            src="/images/kinhnghiem1.avif"
+            alt="San vuon 1"
+            loading="lazy"
+            decoding="async"
+            className="absolute left-0 top-8 h-64 w-64 rounded-2xl border-4 border-white object-cover shadow-xl md:h-72 md:w-72"
+          />
+          <img
+            src="/images/kinhnghiem2.jpg"
+            alt="San vuon 2"
+            loading="lazy"
+            decoding="async"
+            className="absolute left-28 top-0 h-56 w-44 rounded-2xl border-4 border-white object-cover shadow-xl md:left-36 md:h-64 md:w-48"
+          />
+          <img
+            src="/images/kinhnghiem3.avif"
+            alt="San vuon 3"
+            loading="lazy"
+            decoding="async"
+            className="absolute left-20 top-44 h-56 w-56 rounded-2xl border-4 border-white object-cover shadow-xl md:left-40 md:top-48 md:h-64 md:w-64"
+          />
+        </div>
+
+        <div className="space-y-5">
+          <p className="text-xs uppercase tracking-[0.14em] text-emerald-700">Về chúng tôi</p>
+          <h2 className="text-3xl font-bold text-slate-800 md:text-4xl">Kinh nghiệm của chúng tôi</h2>
+          <p className="text-sm text-slate-600 md:text-base">
+            Chúng tôi đồng hành cùng khách hàng trong hành trình biến không gian sống thành một khu vườn cân bằng,
+            xanh mát và dễ chăm sóc lâu dài.
+          </p>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <article className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
+              <p className="text-2xl font-extrabold text-green-600">15+</p>
+              <p className="mt-1 text-sm font-medium text-slate-600">Thợ lành nghề</p>
+            </article>
+            <article className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
+              <p className="text-2xl font-extrabold text-green-600">200+</p>
+              <p className="mt-1 text-sm font-medium text-slate-600">Khu vườn hoàn thiện</p>
+            </article>
+            <article className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
+              <p className="text-2xl font-extrabold text-green-600">5+</p>
+              <p className="mt-1 text-sm font-medium text-slate-600">Năm kinh nghiệm</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div className="mb-6 flex items-end justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.14em] text-emerald-700">Dự án thực tế</p>
+            <h2 className="text-2xl font-bold text-slate-800 md:text-3xl">Không gian xanh đã hoàn thiện</h2>
+          </div>
+        </div>
+
+        <div className="columns-1 gap-4 md:columns-2 lg:columns-3">
+          {projectImages.map((imageUrl, index) => (
+            <article key={`${imageUrl}-${index}`} className="mb-4 break-inside-avoid overflow-hidden rounded-2xl">
+              <img
+                src={imageUrl}
+                alt="Du an san vuon"
+                loading="lazy"
+                decoding="async"
+                className="w-full rounded-2xl object-cover transition duration-300 hover:scale-105"
+              />
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <div className="mb-6">
+          <p className="text-xs uppercase tracking-[0.14em] text-emerald-700">Đánh giá khách hàng</p>
+          <h2 className="text-2xl font-bold text-slate-800 md:text-3xl">Khách hàng nói gì về Garden Care</h2>
+        </div>
+
+        <Swiper
+          modules={[Autoplay, Pagination]}
+          autoplay={{ delay: 4000, disableOnInteraction: false }}
+          pagination={{ clickable: true }}
+          spaceBetween={16}
+          breakpoints={{
+            0: { slidesPerView: 1 },
+            768: { slidesPerView: 2 },
+            1024: { slidesPerView: 3 },
+          }}
+          className="pb-10"
+        >
+          {testimonials.map((item, index) => (
+            <SwiperSlide key={item.id}>
+              <article className="h-full rounded-2xl bg-white p-6 shadow-sm">
+                <p className="text-sm leading-relaxed text-slate-600">"{item.review}"</p>
+
+                <div className="mt-5 flex items-center gap-3">
+                  <img
+                    src={item.avatar}
+                    alt={item.name}
+                    loading="lazy"
+                    decoding="async"
+                    onError={(event) => handleAvatarError(event, index)}
+                    className="h-11 w-11 rounded-full object-cover"
+                  />
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">{item.name}</p>
+                    <p className="text-xs text-slate-500">Khách hàng thân thiết</p>
+                  </div>
+                </div>
+              </article>
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </section>
 
       <section className="card-soft grid gap-4 p-6 md:grid-cols-3 md:p-8">
