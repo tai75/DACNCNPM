@@ -25,14 +25,14 @@ function Services() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-[45vh] w-full items-center justify-center py-8">
         <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-emerald-600" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-6 md:py-10">
+    <div className="w-full py-8 md:py-10">
       <div className="mb-10 reveal-up">
         <p className="text-xs uppercase tracking-[0.14em] text-emerald-700">Danh mục dịch vụ</p>
         <h1 className="mt-2 text-3xl font-extrabold text-slate-800 md:text-4xl">Chăm sóc sân vườn theo nhu cầu thực tế</h1>
@@ -46,14 +46,14 @@ function Services() {
           <article
             key={service.id}
             onClick={() => navigate(`/services/${service.id}`)}
-            className="card-soft reveal-up cursor-pointer overflow-hidden transition hover:-translate-y-1"
+            className="card-soft card-interactive reveal-up cursor-pointer overflow-hidden"
             style={{ animationDelay: `${index * 0.06}s` }}
           >
             <img
               src={
                 service.image
                   ? `${imageBaseUrl}/uploads/${service.image}`
-                  : "https://via.placeholder.com/300x200?text=No+Image"
+                  : "/images/hero-garden.webp"
               }
               alt={service.name}
               className="h-48 w-full object-cover"
@@ -76,8 +76,23 @@ function Services() {
         ))}
 
         {services.length === 0 && (
-          <div className="card-soft p-8 text-center text-slate-500 sm:col-span-2 lg:col-span-3">
-            Chưa có dịch vụ nào.
+          <div className="card-soft sm:col-span-2 lg:col-span-3">
+            <div className="flex flex-col items-center justify-center gap-4 px-6 py-12 text-center">
+              <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
+                <img src="/images/empty-archive.png" alt="Không có dịch vụ" className="h-full w-full object-contain" />
+              </div>
+              <h2 className="text-xl font-semibold text-slate-800">Chưa có dịch vụ nào</h2>
+              <p className="max-w-md text-sm text-slate-500">
+                Đội ngũ đang cập nhật danh mục dịch vụ mới. Bạn vẫn có thể tạo yêu cầu chăm sóc để được tư vấn gói phù hợp.
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate("/booking")}
+                className="rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+              >
+                Đặt lịch ngay
+              </button>
+            </div>
           </div>
         )}
       </div>

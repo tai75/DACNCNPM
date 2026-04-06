@@ -37,7 +37,7 @@ function Payment() {
 
       if (res.data.success) {
         if (paymentMethod === "cod") {
-          navigate("/thank-you");
+          navigate("/bookings");
         } else if (paymentMethod === "bank") {
           navigate("/bank-payment", {
             state: {

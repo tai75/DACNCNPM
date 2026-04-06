@@ -6,6 +6,7 @@ const multer = require("multer");
 const adminController = require("../controller/adminController");
 const userController = require("../controller/userController");
 const serviceController = require("../controller/serviceController");
+const bookingController = require("../controller/bookingController");
 const { authMiddleware, adminMiddleware } = require("../middleware/auth");
 
 // ==== Multer setup ====
@@ -23,6 +24,19 @@ router.get("/dashboard", authMiddleware, adminMiddleware, adminController.getDas
 router.get("/users", authMiddleware, adminMiddleware, userController.getUsers);
 router.delete("/users/:id", authMiddleware, adminMiddleware, userController.deleteUser);
 router.put("/users/:id", authMiddleware, adminMiddleware, userController.updateUserRole);
+
+// STAFF
+router.get("/staff", authMiddleware, adminMiddleware, adminController.getStaffList);
+router.get("/staff/:id/schedule", authMiddleware, adminMiddleware, adminController.getStaffSchedule);
+
+// REVIEWS
+router.get("/reviews", authMiddleware, adminMiddleware, adminController.getReviews);
+router.patch("/reviews/:id/visibility", authMiddleware, adminMiddleware, adminController.updateReviewVisibility);
+router.delete("/reviews/:id", authMiddleware, adminMiddleware, adminController.deleteReview);
+
+// BOOKINGS
+router.get("/bookings", authMiddleware, adminMiddleware, bookingController.getBookings);
+router.put("/bookings/:id/assign-staff", authMiddleware, adminMiddleware, bookingController.assignStaff);
 
 // SERVICES
 router.get("/services", authMiddleware, adminMiddleware, serviceController.getAll);

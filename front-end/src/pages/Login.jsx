@@ -62,11 +62,21 @@ function Login() {
   };
 
   return (
-    <div className="mx-auto flex min-h-[75vh] w-full max-w-5xl items-center px-4 py-8 md:px-6 md:py-10">
-      <div className="card-soft grid w-full overflow-hidden md:grid-cols-2">
-        <div className="hidden bg-gradient-to-br from-emerald-700 to-emerald-500 p-10 text-white md:block">
-          <h1 className="flex items-center gap-2 text-3xl font-extrabold"><FaLeaf /> Garden Care</h1>
-          <p className="mt-4 text-emerald-50">Đăng nhập để theo dõi lịch sử đặt lịch và quản lý dịch vụ của bạn.</p>
+    <div className="flex min-h-full w-full items-center justify-center py-8 md:py-12">
+      <div className="card-soft grid w-full max-w-5xl overflow-hidden md:grid-cols-2">
+        <div className="relative hidden p-10 text-white md:block">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: "url('/images/background.webp')" }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/80 to-emerald-600/75" />
+          <div className="relative z-10">
+            <h1 className="flex items-center gap-2 text-3xl font-extrabold"><FaLeaf /> Garden Care</h1>
+            <p className="mt-4 text-emerald-50">Đăng nhập để theo dõi lịch sử đặt lịch và quản lý dịch vụ của bạn.</p>
+            <p className="mt-8 rounded-xl border border-white/25 bg-white/10 p-4 text-sm leading-6 text-emerald-50">
+              "Mỗi lần chăm đúng kỹ thuật là một lần giúp khu vườn khỏe bền hơn."
+            </p>
+          </div>
         </div>
 
         <div className="p-7 md:p-10">
@@ -79,6 +89,7 @@ function Login() {
               <input
                 type="email"
                 name="email"
+                autoComplete="email"
                 value={form.email}
                 onChange={handleChange}
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
@@ -92,6 +103,7 @@ function Login() {
               <input
                 type="password"
                 name="password"
+                autoComplete="current-password"
                 value={form.password}
                 onChange={handleChange}
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"

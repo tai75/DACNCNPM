@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { getJwtSecret } = require("../config/jwt");
 
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization || "";
@@ -8,14 +9,12 @@ const authMiddleware = (req, res, next) => {
     return res.status(401).json({ success: false, message: "Token không hợp lệ hoặc thiếu Bearer" });
   }
 
-  if (!process.env.JWT_SECRET) {
-    return res.status(500).json({ success: false, message: "JWT_SECRET chưa được cấu hình" });
-  }
-
-  const secret = process.env.JWT_SECRET;
-  const strongSecretPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{32,}$/;
-  if (!strongSecretPattern.test(secret)) {
-    return res.status(500).json({ success: false, message: "JWT_SECRET quá yếu hoặc không đủ 32 ký tự" });
+  const secret = getJwtSecret();
+  if (!secret) {
+    return res.status(500).json({
+      success: false,
+      message: "JWT_SECRET chưa được cấu hình đúng. Cần tối thiểu 32 ký tự.",
+    });
   }
 
   try {
