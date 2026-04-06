@@ -34,7 +34,11 @@ const corsOptions = {
   credentials: true,
 };
 
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 app.use(morgan("combined"));
 app.use(cors(corsOptions));
 
@@ -43,7 +47,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 🔥 LOAD ẢNH
-app.use("/uploads", express.static("uploads"));
+app.use(
+  "/uploads",
+  express.static("uploads", {
+    setHeaders: (res) => {
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+    },
+  })
+);
 
 // Swagger setup
 const swaggerOptions = {

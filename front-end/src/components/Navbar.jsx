@@ -1,10 +1,12 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isHomePage = location.pathname === "/";
 
   const getStoredUser = () => {
     try {
@@ -29,9 +31,13 @@ function Navbar() {
   }, []);
 
   const linkClass = ({ isActive }) =>
-    isActive
-      ? "text-white font-semibold"
-      : "text-white hover:text-green-400 transition";
+    isHomePage
+      ? isActive
+        ? "text-white font-semibold"
+        : "text-white hover:text-green-400 transition"
+      : isActive
+      ? "text-emerald-700 font-semibold"
+      : "text-slate-600 hover:text-emerald-700 transition";
 
   // ✅ logout
   const handleLogout = () => {
@@ -46,48 +52,94 @@ function Navbar() {
   const closeMobileMenu = () => setMobileOpen(false);
 
   return (
-    <header className="absolute top-0 left-0 z-50 w-full py-6 text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)]">
+    <header
+      className={`left-0 top-0 z-50 w-full py-4 ${
+        isHomePage
+          ? "absolute text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)]"
+          : "sticky border-b border-slate-200 bg-white/95 text-slate-700 shadow-sm backdrop-blur"
+      }`}
+    >
       <div className="container mx-auto flex items-center justify-between px-8">
         <button onClick={() => navigate("/")} className="relative z-10 flex items-center text-left">
-          <span className="text-3xl font-bold tracking-wider text-white">GardenCare</span>
+          <span className={`text-3xl font-bold tracking-wider ${isHomePage ? "text-white" : "text-emerald-700"}`}>
+            GardenCare
+          </span>
         </button>
 
-        <div className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-8 font-medium text-white md:flex">
-          <NavLink to="/" className={linkClass}>
+        <div
+          className={`absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full px-2 py-1 font-medium md:flex ${
+            isHomePage
+              ? "border border-white/30 bg-white/10 text-white"
+              : "border border-slate-300 bg-white text-slate-600"
+          }`}
+        >
+          <NavLink to="/" className={`rounded-full px-3 py-1.5 text-sm transition ${
+            isHomePage ? "text-white hover:text-white" : "text-slate-600 hover:bg-slate-100"
+          }`}>
             Trang chủ
           </NavLink>
 
-          <NavLink to="/services" className={linkClass}>
+          <NavLink to="/services" className={`rounded-full px-3 py-1.5 text-sm transition ${
+            isHomePage ? "text-white hover:text-white" : "text-slate-600 hover:bg-slate-100"
+          }`}>
             Dịch vụ
           </NavLink>
 
-          <NavLink to="/booking" className={linkClass}>
+          <NavLink to="/booking" className={`rounded-full px-3 py-1.5 text-sm transition ${
+            isHomePage ? "text-white hover:text-white" : "text-slate-600 hover:bg-slate-100"
+          }`}>
             Đặt lịch
           </NavLink>
 
-          <NavLink to="/bookings" className={linkClass}>
-            Lịch sử
-          </NavLink>
-
-          <NavLink to="/about" className={linkClass}>
+          <NavLink to="/about" className={`rounded-full px-3 py-1.5 text-sm transition ${
+            isHomePage ? "text-white hover:text-white" : "text-slate-600 hover:bg-slate-100"
+          }`}>
             Giới thiệu
           </NavLink>
 
-          <NavLink to="/contact" className={linkClass}>
+          <NavLink to="/contact" className={`rounded-full px-3 py-1.5 text-sm transition ${
+            isHomePage ? "text-white hover:text-white" : "text-slate-600 hover:bg-slate-100"
+          }`}>
             Liên hệ
           </NavLink>
+
+          {user && (
+            <NavLink to="/profile" className={`rounded-full px-3 py-1.5 text-sm transition ${
+              isHomePage ? "text-white hover:text-white" : "text-slate-600 hover:bg-slate-100"
+            }`}>
+              Thông tin
+            </NavLink>
+          )}
+
+          {user && (
+            <NavLink to="/bookings" className={`rounded-full px-3 py-1.5 text-sm transition ${
+              isHomePage ? "text-white hover:text-white" : "text-slate-600 hover:bg-slate-100"
+            }`}>
+              Lịch sử
+            </NavLink>
+          )}
         </div>
 
         <div className="relative z-10 hidden items-center gap-3 md:flex">
           {user ? (
             <>
-              <span className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm">
+              <span
+                className={`rounded-full px-4 py-2 text-sm ${
+                  isHomePage
+                    ? "border border-white/20 bg-white/10"
+                    : "border border-slate-200 bg-slate-50 text-slate-700"
+                }`}
+              >
                 Xin chào, <b>{user.name}</b>
               </span>
 
               <button
                 onClick={handleLogout}
-                className="rounded-full border border-white px-6 py-2 text-sm text-white transition hover:bg-white/15"
+                className={`rounded-full px-6 py-2 text-sm transition ${
+                  isHomePage
+                    ? "border border-white text-white hover:bg-white/15"
+                    : "border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
+                }`}
               >
                 Đăng xuất
               </button>
@@ -96,14 +148,22 @@ function Navbar() {
             <>
               <NavLink
                 to="/login"
-                className="rounded-full border border-white px-6 py-2 text-sm text-white transition hover:bg-white/15"
+                className={`rounded-full px-6 py-2 text-sm transition ${
+                  isHomePage
+                    ? "border border-white text-white hover:bg-white/15"
+                    : "border border-slate-300 text-slate-700 hover:bg-slate-100"
+                }`}
               >
                 Đăng nhập
               </NavLink>
 
               <NavLink
                 to="/register"
-                className="rounded-full border border-white px-6 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
+                className={`rounded-full px-6 py-2 text-sm font-semibold transition ${
+                  isHomePage
+                    ? "border border-white text-white hover:bg-white/15"
+                    : "bg-emerald-600 text-white hover:bg-emerald-700"
+                }`}
               >
                 Đăng ký
               </NavLink>
@@ -113,7 +173,11 @@ function Navbar() {
 
         <button
           onClick={() => setMobileOpen((prev) => !prev)}
-          className="relative z-10 rounded-full border border-white px-4 py-2 text-sm text-white md:hidden"
+          className={`relative z-10 rounded-full px-4 py-2 text-sm md:hidden ${
+            isHomePage
+              ? "border border-white text-white"
+              : "border border-slate-300 text-slate-700"
+          }`}
           aria-label="Toggle menu"
         >
           {mobileOpen ? "Đóng" : "Menu"}

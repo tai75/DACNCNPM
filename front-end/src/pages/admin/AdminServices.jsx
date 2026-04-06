@@ -11,9 +11,16 @@ function AdminServices() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [form, setForm] = useState({ name: "", description: "", price: "", image: null });
-  const imageBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const imageBaseUrl = rawApiUrl.replace(/\/+$/, "").replace(/\/api$/, "");
   const inputClassName =
     "w-full rounded-lg border border-gray-300 p-3 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100";
+
+  const getServiceImageUrl = (image) => {
+    if (!image) return "/images/hero-garden.webp";
+    if (/^https?:\/\//i.test(image)) return image;
+    return `${imageBaseUrl}/uploads/${image}`;
+  };
 
   const totalItems = services.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
@@ -99,7 +106,7 @@ function AdminServices() {
   // ===== EDIT & DELETE =====
   const handleEdit = (service) => {
     setForm({ name: service.name, description: service.description, price: service.price, image: null });
-    setPreview(service.image ? `http://localhost:5000/uploads/${service.image}` : null);
+    setPreview(service.image ? getServiceImageUrl(service.image) : null);
     setEditingId(service.id);
     setShowModal(true);
   };
@@ -173,11 +180,7 @@ function AdminServices() {
               <tr key={s.id} className="border-b border-slate-100 text-sm hover:bg-slate-50/70">
                 <td className="p-4">
                   <img
-                    src={
-                      s.image
-                        ? `${imageBaseUrl}/uploads/${s.image}`
-                        : "/images/hero-garden.webp"
-                    }
+                    src={getServiceImageUrl(s.image)}
                     alt=""
                     className="h-14 w-24 rounded-lg border border-slate-200 object-cover"
                   />
@@ -386,11 +389,7 @@ function AdminServices() {
 
             <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-[220px_1fr]">
               <img
-                src={
-                  viewService.image
-                    ? `${imageBaseUrl}/uploads/${viewService.image}`
-                    : "/images/hero-garden.webp"
-                }
+                src={getServiceImageUrl(viewService.image)}
                 alt={viewService.name}
                 className="h-40 w-full rounded-xl border border-slate-200 object-cover"
               />

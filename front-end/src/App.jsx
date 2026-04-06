@@ -16,6 +16,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Payment from "./pages/Payment";
 import BankPayment from "./pages/BankPayment";
+import UserInfo from "./pages/UserInfo";
 
 // ADMIN
 import AdminLayout from "./layouts/AdminLayout";
@@ -40,6 +41,7 @@ function UserLayout() {
   const token = localStorage.getItem("token");
   let role = null;
   const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
+  const isHomePage = location.pathname === "/";
 
   try {
     const rawUser = localStorage.getItem("user");
@@ -65,7 +67,13 @@ function UserLayout() {
       {!isAuthPage && <Navbar />}
 
       <main className="flex flex-1">
-        <div className={isAuthPage ? "flex w-full flex-1" : "mx-auto flex w-full max-w-7xl flex-1 px-4 md:px-6"}>
+        <div
+          className={
+            isAuthPage
+              ? "flex w-full flex-1"
+              : `mx-auto flex w-full max-w-7xl flex-1 px-4 md:px-6 ${isHomePage ? "" : "pt-6 md:pt-8"}`
+          }
+        >
           <Outlet />
         </div>
       </main>
@@ -97,6 +105,7 @@ function App() {
           <Route path="services/:id" element={<ServiceDetail />} />
 
           <Route path="booking" element={<Booking />} />
+          <Route path="profile" element={<ProtectedRoute><UserInfo /></ProtectedRoute>} />
           <Route path="bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
 
           <Route path="payment" element={<Payment />} />

@@ -11,7 +11,6 @@ function Booking() {
     fullName: "",
     phone: "",
     address: "",
-    datetime: "",
   });
 
   const summary = useMemo(
@@ -42,11 +41,12 @@ function Booking() {
       return;
     }
 
+    const today = new Date().toISOString().split('T')[0];
     navigate("/payment", {
       state: {
         service_id: summary.id,
-        booking_date: formData.datetime,
-        time_slot: "custom",
+        booking_date: today,
+        time_slot: "morning",
         address: formData.address,
         service: summary.service,
         price: summary.price,
@@ -99,18 +99,6 @@ function Booking() {
               name="address"
               placeholder="Số nhà, đường, quận/huyện"
               value={formData.address}
-              onChange={handleChange}
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">Thời gian thực hiện</label>
-            <input
-              type="datetime-local"
-              name="datetime"
-              value={formData.datetime}
               onChange={handleChange}
               className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
               required
