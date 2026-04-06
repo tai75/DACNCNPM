@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../config/axios";
+import { Minus, Plus, Star } from "lucide-react";
 
 function ServiceDetail() {
   const { id } = useParams();
@@ -8,14 +9,25 @@ function ServiceDetail() {
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [activeTab, setActiveTab] = useState("intro");
+
+  const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const imageBaseUrl = rawApiUrl.replace(/\/+$/, "").replace(/\/api$/, "");
+
+  const getImageUrl = (image) => {
+    if (!image) return "/images/hero-garden.webp";
+    if (/^https?:\/\//i.test(image)) return image;
+    return `${imageBaseUrl}/uploads/${image}`;
+  };
 
   useEffect(() => {
     const fetchService = async () => {
       try {
         setLoading(true);
         setError(false);
-        const res = await api.get(`/services/${id}`);
-        setService(res.data);
+        const detailRes = await api.get(`/services/${id}`);
+        setService(detailRes.data);
       } catch (err) {
         console.error("Load service detail error:", err);
         setError(true);
@@ -29,13 +41,27 @@ function ServiceDetail() {
 
   const serviceImages = useMemo(() => {
     if (!service) return [];
-    const imageBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
-    const cover = service.image
-      ? `${imageBaseUrl}/uploads/${service.image}`
-      : "/images/hero-garden.webp";
+    const cover = getImageUrl(service.image);
 
-    return [cover, "/images/service-landscape.webp", "/images/service-pruning.webp"];
+    return [cover];
   }, [service]);
+
+  const basePrice = Number(service?.price || 0);
+  const finalPrice = basePrice * quantity;
+
+  const includedItems = [
+    "Khảo sát hiện trạng sân vườn trước khi thực hiện",
+    "Dụng cụ và vật tư chăm sóc cơ bản theo gói",
+    "Kỹ thuật viên theo dõi và tư vấn sau dịch vụ",
+    "Dọn vệ sinh khu vực sau khi hoàn tất",
+    "Hỗ trợ hướng dẫn chăm cây tại nhà 24/7",
+  ];
+
+  const tabItems = [
+    { key: "intro", label: "Giới thiệu" },
+    { key: "process", label: "Quy trình" },
+    { key: "reviews", label: "Đánh giá" },
+  ];
 
   if (loading) {
     return (
@@ -63,72 +89,163 @@ function ServiceDetail() {
   }
 
   return (
-    <div className="grid w-full gap-8 py-8 md:grid-cols-2 md:py-10">
-      <section className="space-y-4">
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <img
-            src={serviceImages[0]}
-            alt={service.name}
-            className="h-72 w-full object-cover md:h-[420px]"
-          />
+    <div className="w-full bg-slate-100 py-8 md:py-10">
+      <div className="mx-auto max-w-[1180px] px-4 md:px-6">
+        <div className="mb-5 text-sm text-slate-500">
+          <span className="text-emerald-600">Trang chủ</span>
+          <span className="mx-2">/</span>
+          <span className="text-emerald-600">Dịch vụ</span>
+          <span className="mx-2">/</span>
+          <span className="font-semibold text-slate-700">{service.name}</span>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          {serviceImages.slice(1).map((image) => (
-            <div key={image} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <img src={image} alt={service.name} className="h-40 w-full object-cover" />
+
+        <div className="grid gap-5 lg:grid-cols-[2.4fr_1fr]">
+          <section className="space-y-4">
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+              <img
+                src={serviceImages[0]}
+                alt={service.name}
+                className="h-[320px] w-full object-cover md:h-[520px]"
+              />
             </div>
-          ))}
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
+              <h1 className="text-3xl font-extrabold text-slate-800">{service.name}</h1>
+              <p className="mt-2 text-sm text-slate-500">0.0 (0 đánh giá)</p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
+              <h2 className="text-2xl font-bold text-slate-800">Dịch vụ kèm theo</h2>
+              <ul className="mt-4 space-y-2">
+                {includedItems.map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-slate-600">
+                    <span className="mt-2 h-2 w-2 rounded-full bg-cyan-500" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-2">
+              <div className="flex flex-wrap gap-2">
+                {tabItems.map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                      activeTab === tab.key
+                        ? "bg-emerald-600 text-white"
+                        : "text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
+              {activeTab === "intro" && (
+                <>
+                  <h2 className="text-2xl font-bold text-slate-800">Giới thiệu dịch vụ</h2>
+                  <p className="mt-4 leading-8 text-slate-600">{service.description}</p>
+                </>
+              )}
+
+              {activeTab === "process" && (
+                <>
+                  <h2 className="text-2xl font-bold text-slate-800">Quy trình thực hiện</h2>
+                  <ol className="mt-4 space-y-3">
+                    {[
+                      "Xác nhận nhu cầu và chốt lịch với khách hàng.",
+                      "Kỹ thuật viên đến khảo sát nhanh trước khi triển khai.",
+                      "Tiến hành chăm sóc theo checklist kỹ thuật.",
+                      "Bàn giao, đánh giá kết quả và tư vấn duy trì.",
+                    ].map((step, index) => (
+                      <li key={step} className="flex items-start gap-3 text-slate-600">
+                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
+                          {index + 1}
+                        </span>
+                        <span>{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </>
+              )}
+
+              {activeTab === "reviews" && (
+                <>
+                  <h2 className="text-2xl font-bold text-slate-800">Đánh giá</h2>
+                  <p className="mt-4 text-slate-600">Chưa có đánh giá nào cho dịch vụ này.</p>
+                </>
+              )}
+            </div>
+          </section>
+
+          <aside className="space-y-4">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 md:p-5 lg:sticky lg:top-24">
+              <h3 className="text-3xl font-bold text-slate-800">Đặt dịch vụ nhanh</h3>
+
+              <div className="mt-4">
+                <label className="mb-2 block text-sm font-semibold text-slate-600">Số lượng</label>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="inline-flex h-9 min-w-[42px] items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 font-semibold text-slate-700">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={() => setQuantity((q) => q + 1)}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-xl bg-slate-100 p-3 text-sm">
+                <div className="border-t border-slate-300 pt-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-slate-700">Tổng tiền</span>
+                    <span className="text-2xl font-extrabold text-emerald-700">{finalPrice.toLocaleString("vi-VN")} đ</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() =>
+                  navigate("/booking", {
+                    state: {
+                      id: service.id,
+                      service: service.name,
+                      price: finalPrice,
+                      quantity,
+                    },
+                  })
+                }
+                className="mt-4 w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-3 font-semibold text-white transition hover:brightness-105"
+              >
+                Đặt ngay
+              </button>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <h3 className="text-2xl font-bold text-slate-800">Đánh giá nhanh</h3>
+              <p className="mt-1 text-4xl font-extrabold text-slate-800">0.0 / 5.0</p>
+              <div className="mt-2 flex items-center gap-1 text-amber-500">
+                {[1, 2, 3, 4, 5].map((item) => (
+                  <Star key={item} className="h-4 w-4" />
+                ))}
+              </div>
+              <p className="mt-1 text-sm text-slate-500">0 khách đã đánh giá dịch vụ này.</p>
+            </div>
+          </aside>
         </div>
-      </section>
-
-      <aside className="card-soft h-fit p-6 md:sticky md:top-24">
-        <p className="text-xs uppercase tracking-[0.14em] text-emerald-700">Chi tiết dịch vụ</p>
-        <h1 className="mt-2 text-3xl font-extrabold text-slate-800">{service.name}</h1>
-        <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
-          <span>{"★".repeat(5)}</span>
-          <span>4.8/5</span>
-        </div>
-        <p className="mt-4 leading-7 text-slate-600">{service.description}</p>
-
-        <p className="mt-6 text-xs uppercase tracking-[0.14em] text-emerald-700">Báo giá</p>
-        <p className="mt-2 text-3xl font-extrabold text-emerald-700">
-          {Number(service.price || 0).toLocaleString("vi-VN")} đ
-        </p>
-        <p className="mt-2 text-sm text-slate-500">Giá đã bao gồm công chăm sóc cơ bản cho một lần thực hiện.</p>
-
-        <div className="mt-6">
-          <h2 className="text-base font-semibold text-slate-800">Quy trình thực hiện</h2>
-          <ul className="mt-3 space-y-2">
-            {[
-              "Khảo sát nhanh tình trạng cây và khu vực thực hiện.",
-              "Triển khai chăm sóc đúng kỹ thuật theo từng loại cây.",
-              "Bàn giao kết quả và hướng dẫn chăm sóc tiếp theo.",
-            ].map((step, index) => (
-              <li key={step} className="flex gap-3 text-sm text-slate-600">
-                <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
-                  {index + 1}
-                </span>
-                <span>{step}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <button
-          onClick={() =>
-            navigate("/booking", {
-              state: {
-                id: service.id,
-                service: service.name,
-                price: service.price,
-              },
-            })
-          }
-          className="mt-8 w-full rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg"
-        >
-          Đặt dịch vụ này
-        </button>
-      </aside>
+      </div>
     </div>
   );
 }

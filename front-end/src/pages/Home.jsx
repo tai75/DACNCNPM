@@ -11,7 +11,7 @@ function Home() {
   const [selectedService, setSelectedService] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
 
-  const heroImage = "/images/hero4.avif";
+  const heroImage = "/images/hero-garden.webp";
 
   const services = [
     {
@@ -158,7 +158,7 @@ function Home() {
   return (
     <div className="w-full space-y-16 py-8 md:space-y-20 md:py-10">
       <section
-        className="relative left-1/2 flex w-screen -translate-x-1/2 min-h-[85vh] items-center justify-center overflow-visible bg-cover bg-center pb-28"
+        className="relative left-1/2 mt-16 flex w-screen -translate-x-1/2 min-h-[85vh] items-center justify-center overflow-visible bg-cover bg-center pb-28"
         style={{ backgroundImage: `url(${heroImage})` }}
       >
         <div className="absolute inset-0 z-0 bg-cover bg-center">
@@ -185,16 +185,6 @@ function Home() {
                 onChange={(e) => setSelectedService(e.target.value)}
                 placeholder="Chọn dịch vụ"
                 className="w-full bg-transparent text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400"
-              />
-            </div>
-
-            <div className="flex-1 rounded-xl border-b border-slate-200 px-5 py-3 md:border-b-0 md:border-r">
-              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Ngày bắt đầu</p>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full bg-transparent text-sm font-medium text-slate-700 outline-none"
               />
             </div>
 
@@ -248,26 +238,17 @@ function Home() {
                   decoding="async"
                   className="h-52 w-full rounded-t-2xl object-cover"
                 />
-                <span className="absolute right-3 top-3 rounded-full bg-slate-900/80 px-2.5 py-1 text-[11px] font-semibold text-white">
-                  {service.duration}
-                </span>
               </div>
 
               <div className="space-y-3 bg-white p-5">
                 <h3 className="min-h-[56px] text-lg font-semibold leading-7 text-slate-800">{service.name}</h3>
 
                 <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <MapPin className="h-4 w-4 text-emerald-600" />
-                  <span className="truncate">{service.area}</span>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm text-slate-500">
                   <Clock3 className="h-4 w-4 text-slate-400" />
                   <span>Lịch linh hoạt theo khung giờ</span>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <p className="text-lg font-extrabold text-orange-500">{service.price}</p>
+                <div className="flex items-center justify-end">
                   {renderStars(service.rating)}
                 </div>
 
