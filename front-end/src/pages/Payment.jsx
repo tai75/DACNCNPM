@@ -11,7 +11,15 @@ function Payment() {
   const [loading, setLoading] = useState(false);
 
   if (!bookingData) {
+<<<<<<< HEAD
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-12 text-center text-slate-600">
+        Không có dữ liệu đặt lịch.
+      </div>
+    );
+=======
     return <h2 className="text-center mt-10">Không có dữ liệu đặt lịch</h2>;
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
   }
 
   const handlePayment = async () => {
@@ -33,7 +41,11 @@ function Payment() {
 
       if (res.data.success) {
         if (paymentMethod === "cod") {
+<<<<<<< HEAD
+          navigate("/bookings");
+=======
           navigate("/thank-you");
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
         } else if (paymentMethod === "bank") {
           navigate("/bank-payment", {
             state: {
@@ -54,6 +66,57 @@ function Payment() {
   };
 
   return (
+<<<<<<< HEAD
+    <div className="mx-auto w-full max-w-4xl px-4 py-8 md:px-6 md:py-10">
+      <div className="card-soft grid gap-6 p-6 md:grid-cols-2 md:p-8">
+        <div>
+          <p className="text-xs uppercase tracking-[0.14em] text-emerald-700">Bước 2</p>
+          <h1 className="mt-2 text-2xl font-bold text-slate-800">Thanh toán đặt lịch</h1>
+
+          <div className="mt-5 space-y-2 text-sm text-slate-600">
+            <p><b>Dịch vụ:</b> {bookingData.service}</p>
+            <p><b>Ngày:</b> {bookingData.booking_date}</p>
+            <p><b>Giờ:</b> {bookingData.time_slot}</p>
+            <p><b>Địa chỉ:</b> {bookingData.address}</p>
+          </div>
+
+          <p className="mt-5 text-2xl font-extrabold text-emerald-700">
+            {Number(bookingData.price || 0).toLocaleString("vi-VN")} VND
+          </p>
+        </div>
+
+        <div>
+          <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-slate-500">Phương thức thanh toán</h3>
+
+          <label className="mb-3 flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-3 text-sm transition hover:border-emerald-300">
+            <input
+              type="radio"
+              name="payment"
+              value="cod"
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            />
+            Thanh toán khi hoàn thành
+          </label>
+
+          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-3 text-sm transition hover:border-emerald-300">
+            <input
+              type="radio"
+              name="payment"
+              value="bank"
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            />
+            Chuyển khoản ngân hàng
+          </label>
+
+          <button
+            onClick={handlePayment}
+            disabled={loading}
+            className="mt-5 w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? "Đang xử lý..." : "Xác nhận thanh toán"}
+          </button>
+        </div>
+=======
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6 text-green-700">
         Thanh toán
@@ -107,6 +170,7 @@ function Payment() {
             "Xác nhận thanh toán"
           )}
         </button>
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
       </div>
     </div>
   );

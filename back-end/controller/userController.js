@@ -1,4 +1,16 @@
 const db = require("../config/db");
+<<<<<<< HEAD
+const Joi = require("joi");
+
+const idSchema = Joi.object({
+  id: Joi.number().integer().positive().required(),
+});
+
+const updateRoleSchema = Joi.object({
+  role: Joi.string().valid("user", "staff", "admin").required(),
+});
+=======
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 
 /* ======================
    GET ALL USERS
@@ -27,6 +39,18 @@ exports.getUsers = (req, res) => {
    DELETE USER
 ====================== */
 exports.deleteUser = (req, res) => {
+<<<<<<< HEAD
+  const { error, value } = idSchema.validate(req.params);
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      message: "ID user không hợp lệ",
+    });
+  }
+
+  const { id } = value;
+
+=======
   const { id } = req.params;
 
   if (!id) {
@@ -36,6 +60,7 @@ exports.deleteUser = (req, res) => {
     });
   }
 
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
   db.query("DELETE FROM users WHERE id = ?", [id], (err, result) => {
     if (err) {
       console.error("Lỗi deleteUser:", err);
@@ -65,6 +90,18 @@ exports.deleteUser = (req, res) => {
    UPDATE USER ROLE
 ====================== */
 exports.updateUserRole = (req, res) => {
+<<<<<<< HEAD
+  const idValidation = idSchema.validate(req.params);
+  if (idValidation.error) {
+    return res.status(400).json({
+      success: false,
+      message: "ID user không hợp lệ",
+    });
+  }
+
+  const roleValidation = updateRoleSchema.validate(req.body);
+  if (roleValidation.error) {
+=======
   const { id } = req.params;
   const { role } = req.body;
 
@@ -77,12 +114,19 @@ exports.updateUserRole = (req, res) => {
   }
 
   if (!["user", "admin"].includes(role)) {
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
     return res.status(400).json({
       success: false,
       message: "Role không hợp lệ",
     });
   }
 
+<<<<<<< HEAD
+  const { id } = idValidation.value;
+  const { role } = roleValidation.value;
+
+=======
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
   db.query(
     "UPDATE users SET role = ? WHERE id = ?",
     [role, id],

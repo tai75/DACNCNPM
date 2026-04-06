@@ -40,10 +40,19 @@ function Login() {
         // ✅ lưu token và user
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
+<<<<<<< HEAD
+        window.dispatchEvent(new Event("auth-changed"));
+=======
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 
         // điều hướng
         if (data.user.role === "admin") {
           navigate("/admin/dashboard");
+<<<<<<< HEAD
+        } else if (data.user.role === "staff") {
+          navigate("/staff/bookings");
+=======
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
         } else {
           navigate("/");
         }
@@ -59,6 +68,39 @@ function Login() {
   };
 
   return (
+<<<<<<< HEAD
+    <div className="flex min-h-full w-full items-center justify-center py-8 md:py-12">
+      <div className="card-soft grid w-full max-w-5xl overflow-hidden md:grid-cols-2">
+        <div className="relative hidden p-10 text-white md:block">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: "url('/images/background.webp')" }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/80 to-emerald-600/75" />
+          <div className="relative z-10">
+            <h1 className="flex items-center gap-2 text-3xl font-extrabold"><FaLeaf /> Garden Care</h1>
+            <p className="mt-4 text-emerald-50">Đăng nhập để theo dõi lịch sử đặt lịch và quản lý dịch vụ của bạn.</p>
+            <p className="mt-8 rounded-xl border border-white/25 bg-white/10 p-4 text-sm leading-6 text-emerald-50">
+              "Mỗi lần chăm đúng kỹ thuật là một lần giúp khu vườn khỏe bền hơn."
+            </p>
+          </div>
+        </div>
+
+        <div className="p-7 md:p-10">
+          <h2 className="text-3xl font-bold text-slate-800">Đăng nhập</h2>
+          <p className="mt-1 text-sm text-slate-500">Chào mừng bạn quay lại.</p>
+
+          <form onSubmit={handleLogin} className="mt-6 space-y-4">
+            <div>
+              <label className="mb-1 block text-sm text-slate-600">Email</label>
+              <input
+                type="email"
+                name="email"
+                autoComplete="email"
+                value={form.email}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+=======
     <div className="min-h-screen flex items-center justify-center p-4
       bg-gradient-to-br from-green-100 via-green-200 to-green-400 animate-fade-in">
       <div className="grid md:grid-cols-2 max-w-4xl w-full rounded-3xl overflow-hidden
@@ -92,11 +134,23 @@ function Login() {
                 value={form.email}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm"
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
                 placeholder="email@cuaban.com"
                 required
               />
             </div>
 
+<<<<<<< HEAD
+            <div>
+              <label className="mb-1 block text-sm text-slate-600">Mật khẩu</label>
+              <input
+                type="password"
+                name="password"
+                autoComplete="current-password"
+                value={form.password}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+=======
             {/* PASSWORD */}
             <div className="animate-slide-up" style={{ animationDelay: '0.5s' }}>
               <label className="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
@@ -106,11 +160,26 @@ function Login() {
                 value={form.password}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm"
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
                 placeholder="••••••••"
                 required
               />
             </div>
 
+<<<<<<< HEAD
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+            </button>
+          </form>
+
+          <p className="mt-5 text-sm text-slate-600">
+            Chưa có tài khoản?{" "}
+            <a href="/register" className="font-semibold text-emerald-700 hover:underline">
+=======
             {/* BUTTON */}
             <button
               type="submit"
@@ -132,6 +201,7 @@ function Login() {
           <p className="text-center mt-6 text-gray-600 animate-fade-in" style={{ animationDelay: '0.7s' }}>
             Chưa có tài khoản?{" "}
             <a href="/register" className="text-green-600 hover:text-green-800 font-semibold transition-colors">
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
               Đăng ký ngay
             </a>
           </p>

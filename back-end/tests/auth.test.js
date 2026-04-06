@@ -24,9 +24,17 @@ const createMockResponse = () => {
 };
 
 describe("Auth Controller", () => {
+<<<<<<< HEAD
+  const strongTestSecret = ["A", "b", "3", "!", "x".repeat(40)].join("");
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env.JWT_SECRET = strongTestSecret;
+=======
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.JWT_SECRET = "test-secret";
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
   });
 
   test("register should reject invalid payload", async () => {
@@ -49,7 +57,11 @@ describe("Auth Controller", () => {
         name: "User A",
         email: "usera@example.com",
         phone: "0912345678",
+<<<<<<< HEAD
+        password: "12345678",
+=======
         password: "123456",
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
       },
     };
     const res = createMockResponse();
@@ -72,14 +84,22 @@ describe("Auth Controller", () => {
         name: "User B",
         email: "userb@example.com",
         phone: "0912345679",
+<<<<<<< HEAD
+        password: "12345678",
+=======
         password: "123456",
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
       },
     };
 
     const done = new Promise((resolve) => {
       const res = createMockResponse();
       res.json = jest.fn((payload) => {
+<<<<<<< HEAD
+        expect(bcrypt.hash).toHaveBeenCalledWith("12345678", 10);
+=======
         expect(bcrypt.hash).toHaveBeenCalledWith("123456", 10);
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
         expect(db.query).toHaveBeenNthCalledWith(
           2,
           "INSERT INTO users (name, email, phone, password) VALUES (?, ?, ?, ?)",
@@ -118,7 +138,11 @@ describe("Auth Controller", () => {
       res.json = jest.fn((payload) => {
         expect(jwt.sign).toHaveBeenCalledWith(
           { id: 1, role: "user" },
+<<<<<<< HEAD
+          strongTestSecret,
+=======
           "test-secret",
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
           { expiresIn: "7d" }
         );
         expect(payload).toEqual(
