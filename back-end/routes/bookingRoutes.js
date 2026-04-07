@@ -9,6 +9,7 @@ router.post("/", authMiddleware, bookingController.createBooking);
 // 👇 QUAN TRỌNG (đổi tên function)
 router.put("/:id/status", authMiddleware, bookingController.updateBookingStatus);
 router.put("/:id/payment", authMiddleware, bookingController.updatePaymentStatus);
+router.put("/:id/confirm-bank", authMiddleware, bookingController.confirmBankPaymentByUser);
 router.put("/:id/assign-staff", authMiddleware, bookingController.assignStaff);
 router.put("/:id/completion", authMiddleware, bookingController.updateCompletion);
 

@@ -20,7 +20,7 @@ function AdminStaff() {
       setStaffList(res.data?.data || []);
     } catch (err) {
       console.error("Lỗi lấy danh sách staff:", err);
-      alert("Không thể tải danh sách kỹ thuật viên");
+      alert("Không thể tải danh sách nhân viên");
     } finally {
       setLoading(false);
     }
@@ -125,8 +125,8 @@ function AdminStaff() {
   return (
     <div className="space-y-5">
       <div className="rounded-xl bg-white p-5 shadow-sm">
-        <h1 className="text-2xl font-semibold text-slate-800">Quản lý kỹ thuật viên</h1>
-        <p className="mt-1 text-sm text-slate-500">Theo dõi chuyên môn và trạng thái làm việc của đội ngũ kỹ thuật.</p>
+        <h1 className="text-2xl font-semibold text-slate-800">Quản lý nhân viên</h1>
+        <p className="mt-1 text-sm text-slate-500">Theo dõi chuyên môn và trạng thái làm việc của đội ngũ nhân viên.</p>
 
         <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
           <input
@@ -218,7 +218,7 @@ function AdminStaff() {
             {loading && (
               <tr>
                 <td colSpan="6" className="p-8 text-center text-slate-500">
-                  Đang tải danh sách kỹ thuật viên...
+                  Đang tải danh sách nhân viên...
                 </td>
               </tr>
             )}
@@ -226,7 +226,7 @@ function AdminStaff() {
             {!loading && paginatedStaff.length === 0 && (
               <tr>
                 <td colSpan="6" className="p-8 text-center text-slate-500">
-                  Không có kỹ thuật viên phù hợp.
+                  Không có nhân viên phù hợp.
                 </td>
               </tr>
             )}
@@ -282,7 +282,7 @@ function AdminStaff() {
           <div className="w-full max-w-5xl rounded-2xl bg-white p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-slate-800">Lịch làm việc kỹ thuật viên</h2>
+                <h2 className="text-xl font-semibold text-slate-800">Lịch làm việc nhân viên</h2>
                 <p className="text-sm text-slate-500">
                   {selectedStaff.name} - {selectedStaff.phone || "Chưa có số điện thoại"}
                 </p>

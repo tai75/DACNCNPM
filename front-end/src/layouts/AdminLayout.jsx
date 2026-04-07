@@ -20,7 +20,7 @@ function AdminLayout() {
   const menuItems = [
     { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/admin/users", label: "Quản lý người dùng", icon: Users },
-    { to: "/admin/staff", label: "Quản lý kỹ thuật viên", icon: Users },
+    { to: "/admin/staff", label: "Quản lý nhân viên", icon: Users },
     { to: "/admin/services", label: "Quản lý dịch vụ", icon: Sprout },
     { to: "/admin/reviews", label: "Đánh giá khách hàng", icon: Star },
     { to: "/admin/bookings", label: "Quản lý đơn hàng", icon: ClipboardList },
@@ -61,18 +61,26 @@ function AdminLayout() {
                   className={({ isActive }) =>
                     `group flex items-center justify-between rounded-xl px-3 py-3 transition-all ${
                       isActive
-                        ? "bg-cyan-400/15 text-white shadow-[inset_0_0_0_1px_rgba(56,189,248,0.45)]"
+                        ? "bg-emerald-500 text-white shadow-[0_8px_24px_rgba(16,185,129,0.35)]"
                         : "text-slate-300 hover:bg-white/10 hover:text-white"
                     }`
                   }
                 >
-                  <span className="flex items-center gap-3">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-slate-200 group-hover:bg-white/10">
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <span className="font-normal tracking-wide">{item.label}</span>
-                  </span>
-                  <ChevronRight className="h-4 w-4 text-slate-500 group-hover:text-slate-200" />
+                  {({ isActive }) => (
+                    <>
+                      <span className="flex items-center gap-3">
+                        <span
+                          className={`inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-200 transition ${
+                            isActive ? "bg-white/20" : "bg-white/5 group-hover:bg-white/10"
+                          }`}
+                        >
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        <span className="font-normal tracking-wide">{item.label}</span>
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-slate-500 group-hover:text-slate-200" />
+                    </>
+                  )}
                 </NavLink>
               </li>
             );
@@ -121,7 +129,7 @@ function AdminLayout() {
         </div>
 
         {/* CONTENT */}
-        <div className="p-4 md:p-6">
+        <div className="p-5 md:p-8">
           <Outlet />
         </div>
 

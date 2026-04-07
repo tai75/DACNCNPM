@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
   name VARCHAR(100) NOT NULL,
   email VARCHAR(191) NOT NULL,
   phone VARCHAR(20) NOT NULL,
+  address VARCHAR(255) DEFAULT NULL,
   password VARCHAR(255) NOT NULL,
   role ENUM('user', 'staff', 'admin') NOT NULL DEFAULT 'user',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -35,6 +36,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   user_id INT UNSIGNED NOT NULL,
   service_id INT UNSIGNED NOT NULL,
   staff_id INT UNSIGNED DEFAULT NULL,
+  secondary_staff_id INT UNSIGNED DEFAULT NULL,
   booking_date DATE NOT NULL,
   time_slot ENUM('morning', 'afternoon', 'evening') NOT NULL,
   address VARCHAR(500) NOT NULL,
@@ -56,8 +58,12 @@ CREATE TABLE IF NOT EXISTS bookings (
   CONSTRAINT fk_bookings_staff FOREIGN KEY (staff_id)
     REFERENCES users(id)
     ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_bookings_secondary_staff FOREIGN KEY (secondary_staff_id)
+    REFERENCES users(id)
+    ON DELETE SET NULL ON UPDATE CASCADE,
   KEY idx_bookings_user_id (user_id),
   KEY idx_bookings_staff_id (staff_id),
+  KEY idx_bookings_secondary_staff_id (secondary_staff_id),
   KEY idx_bookings_service_id (service_id),
   KEY idx_bookings_status (status),
   KEY idx_bookings_booking_date (booking_date)
