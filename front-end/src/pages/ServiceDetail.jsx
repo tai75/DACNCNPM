@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../config/axios";
-import { Minus, Plus, Star } from "lucide-react";
+import { Star } from "lucide-react";
 
 function ServiceDetail() {
   const { id } = useParams();
@@ -9,7 +9,6 @@ function ServiceDetail() {
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("intro");
 
   const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -47,11 +46,10 @@ function ServiceDetail() {
   }, [service]);
 
   const basePrice = Number(service?.price || 0);
-  const finalPrice = basePrice * quantity;
+  const finalPrice = basePrice;
 
   const includedItems = [
-    "Khảo sát hiện trạng sân vườn trước khi thực hiện",
-    "Dụng cụ và vật tư chăm sóc cơ bản theo gói",
+    "Khảo sát hiện trạng trước khi thực hiện",
     "Kỹ thuật viên theo dõi và tư vấn sau dịch vụ",
     "Dọn vệ sinh khu vực sau khi hoàn tất",
     "Hỗ trợ hướng dẫn chăm cây tại nhà 24/7",
@@ -184,28 +182,7 @@ function ServiceDetail() {
 
           <aside className="space-y-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 md:p-5 lg:sticky lg:top-24">
-              <h3 className="text-3xl font-bold text-slate-800">Đặt dịch vụ nhanh</h3>
-
-              <div className="mt-4">
-                <label className="mb-2 block text-sm font-semibold text-slate-600">Số lượng</label>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="inline-flex h-9 min-w-[42px] items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 font-semibold text-slate-700">
-                    {quantity}
-                  </span>
-                  <button
-                    onClick={() => setQuantity((q) => q + 1)}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
+              <h3 className="text-3xl font-bold text-slate-800">Đặt lịch ngay</h3>
 
               <div className="mt-4 rounded-xl bg-slate-100 p-3 text-sm">
                 <div className="border-t border-slate-300 pt-2">
@@ -223,7 +200,7 @@ function ServiceDetail() {
                       id: service.id,
                       service: service.name,
                       price: finalPrice,
-                      quantity,
+                      image: service.image,
                     },
                   })
                 }

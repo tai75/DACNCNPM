@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { Clock3, MapPin, Star } from "lucide-react";
+import { Clock3, Star } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
@@ -8,8 +7,6 @@ import "swiper/css/pagination";
 
 function Home() {
   const navigate = useNavigate();
-  const [selectedService, setSelectedService] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
 
   const heroImage = "/images/hero-garden.webp";
 
@@ -23,7 +20,7 @@ function Home() {
       rating: 4.8,
     },
     {
-      name: "Bón phân định kỳ",
+      name: "Bón phân",
       img: "/images/service-fertilizing.webp",
       area: "Thủ Đức, Quận 2, Quận 9",
       price: "320k/lần",
@@ -39,7 +36,7 @@ function Home() {
       rating: 4.9,
     },
     {
-      name: "Tưới cây tự động",
+      name: "Tưới cây",
       img: "/images/service-watering.webp",
       area: "Quận 7, Nhà Bè, Bình Chánh",
       price: "650k/lần",
@@ -61,6 +58,22 @@ function Home() {
       price: "280k/lần",
       duration: "1 buổi",
       rating: 4.5,
+    },
+    {
+      name: "Dọn dẹp và vệ sinh sân vườn",
+      img: "/images/dondep.avif",
+      area: "Toàn TP.HCM",
+      price: "400k/lần",
+      duration: "1 buổi",
+      rating: 4.8,
+    },
+    {
+      name: "Trang trí sân vườn",
+      img: "/images/trangtri.jpg",
+      area: "Toàn TP.HCM",
+      price: "750k/lần",
+      duration: "Theo nhu cầu",
+      rating: 4.9,
     },
   ];
 
@@ -126,14 +139,6 @@ function Home() {
     "/images/background.webp",
   ];
 
-  const handleQuickBooking = () => {
-    const params = new URLSearchParams();
-    if (selectedService.trim()) params.set("service", selectedService.trim());
-    if (selectedDate) params.set("date", selectedDate);
-    const query = params.toString();
-    navigate(query ? `/booking?${query}` : "/booking");
-  };
-
   const renderStars = (rating) => {
     const fullStars = Math.round(rating);
     return (
@@ -158,7 +163,7 @@ function Home() {
   return (
     <div className="w-full space-y-16 py-8 md:space-y-20 md:py-10">
       <section
-        className="relative left-1/2 mt-16 flex w-screen -translate-x-1/2 min-h-[85vh] items-center justify-center overflow-visible bg-cover bg-center pb-28"
+        className="relative left-1/2 mt-16 flex w-screen -translate-x-1/2 min-h-[85vh] items-center justify-center overflow-visible bg-cover bg-center pb-8"
         style={{ backgroundImage: `url(${heroImage})` }}
       >
         <div className="absolute inset-0 z-0 bg-cover bg-center">
@@ -175,27 +180,6 @@ function Home() {
           </p>
         </div>
 
-        <div className="absolute -bottom-12 left-1/2 z-20 w-full max-w-5xl transform -translate-x-1/2 px-4 md:px-0">
-          <div className="flex w-full flex-col overflow-hidden rounded-2xl border border-white/25 bg-white/95 p-2 shadow-[0_18px_45px_rgba(15,23,42,0.32)] backdrop-blur md:flex-row md:items-center">
-            <div className="flex-1 rounded-xl border-b border-slate-200 px-5 py-3 md:border-b-0 md:border-r">
-              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Dịch vụ</p>
-              <input
-                type="text"
-                value={selectedService}
-                onChange={(e) => setSelectedService(e.target.value)}
-                placeholder="Chọn dịch vụ"
-                className="w-full bg-transparent text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400"
-              />
-            </div>
-
-            <button
-              onClick={handleQuickBooking}
-              className="m-1 rounded-xl bg-orange-500 px-8 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
-            >
-              Tìm kiếm
-            </button>
-          </div>
-        </div>
       </section>
 
       <section className="grid gap-4 md:grid-cols-4">

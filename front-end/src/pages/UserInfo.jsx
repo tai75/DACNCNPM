@@ -9,6 +9,7 @@ function UserInfo() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [totalBookings, setTotalBookings] = useState(0);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -19,12 +20,28 @@ function UserInfo() {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const storedUser = localStorage.getItem("user");
-        if (!storedUser) {
+        const token = localStorage.getItem("token");
+        if (!token) {
           navigate("/login");
           return;
         }
-        const userData = JSON.parse(storedUser);
+
+        const profileRes = await axios.get("/users/profile");
+        const userData = profileRes.data?.data;
+
+        const bookingsRes = await axios.get("/bookings", { params: { page: 1, limit: 1 } });
+        setTotalBookings(bookingsRes.data?.pagination?.totalItems || 0);
+
+        if (!userData) {
+          setError("Không thể tải thông tin người dùng");
+          setLoading(false);
+          return;
+        }
+
+        const storedUser = localStorage.getItem("user");
+        const parsedStoredUser = storedUser ? JSON.parse(storedUser) : {};
+        localStorage.setItem("user", JSON.stringify({ ...parsedStoredUser, ...userData }));
+
         setUser(userData);
         setFormData({
           name: userData.name || "",
@@ -53,18 +70,24 @@ function UserInfo() {
   const handleSave = async () => {
     try {
       setError("");
-      const response = await axios.put("/users/profile", {
+      await axios.put("/users/profile", {
         name: formData.name,
         phone: formData.phone,
         address: formData.address,
       });
 
-      const updatedUser = {
-        ...user,
-        ...formData,
-      };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      const profileRes = await axios.get("/users/profile");
+      const updatedUser = profileRes.data?.data || { ...user, ...formData };
+      const storedUser = localStorage.getItem("user");
+      const parsedStoredUser = storedUser ? JSON.parse(storedUser) : {};
+      localStorage.setItem("user", JSON.stringify({ ...parsedStoredUser, ...updatedUser }));
       setUser(updatedUser);
+      setFormData({
+        name: updatedUser.name || "",
+        email: updatedUser.email || "",
+        phone: updatedUser.phone || "",
+        address: updatedUser.address || "",
+      });
       setIsEditing(false);
     } catch (err) {
       setError(err.response?.data?.message || "Không thể cập nhật thông tin");
@@ -251,6 +274,10 @@ function UserInfo() {
             <p className="mt-2 text-lg font-semibold text-slate-800">
               {user?.role === "user" ? "Khách hàng" : user?.role || "---"}
             </p>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm md:col-span-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">Số đơn đã đặt</p>
+            <p className="mt-2 text-lg font-semibold text-slate-800">{totalBookings}</p>
           </div>
         </div>
       </div>
