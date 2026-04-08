@@ -44,13 +44,11 @@ const ensureUserAddressColumn = (callback) => {
   });
 };
 
-/* ======================
-   GET MY PROFILE
-====================== */
+/* Get user profile */
 exports.getProfile = (req, res) => {
   ensureUserAddressColumn((columnErr) => {
     if (columnErr) {
-      console.error("Lỗi kiểm tra cột address users:", columnErr);
+      console.error("Error checking users.address column:", columnErr);
       return res.status(500).json({ success: false, message: "Lỗi server" });
     }
 
@@ -58,7 +56,7 @@ exports.getProfile = (req, res) => {
 
     db.query(selectSql, [req.user.id], (err, rows) => {
       if (err) {
-        console.error("Lỗi getProfile:", err);
+        console.error("Get profile error:", err);
         return res.status(500).json({ success: false, message: "Lỗi server" });
       }
 
@@ -71,9 +69,7 @@ exports.getProfile = (req, res) => {
   });
 };
 
-/* ======================
-   UPDATE MY PROFILE
-====================== */
+/* Update user profile */
 exports.updateProfile = (req, res) => {
   const { error, value } = updateProfileSchema.validate(req.body);
   if (error) {
@@ -87,7 +83,7 @@ exports.updateProfile = (req, res) => {
 
   ensureUserAddressColumn((columnErr) => {
     if (columnErr) {
-      console.error("Lỗi kiểm tra cột address users:", columnErr);
+      console.error("Error checking users.address column:", columnErr);
       return res.status(500).json({ success: false, message: "Lỗi server" });
     }
 
@@ -98,6 +94,8 @@ exports.updateProfile = (req, res) => {
     db.query(updateSql, params, (err, result) => {
       if (err) {
         console.error("Lỗi updateProfile:", err);
+        return res.status(500).json({ success: false, message: "Lỗi server" });
+      }Update profile error:", err);
         return res.status(500).json({ success: false, message: "Lỗi server" });
       }
 
@@ -113,15 +111,13 @@ exports.updateProfile = (req, res) => {
   });
 };
 
-/* ======================
-   GET ALL USERS
-====================== */
+/* Get all users */
 exports.getUsers = (req, res) => {
   db.query(
     "SELECT id, name, email, phone, role FROM users",
     (err, result) => {
       if (err) {
-        console.error("Lỗi getUsers:", err);
+        console.error("Get users error:", err);
         return res.status(500).json({
           success: false,
           message: "Lỗi server",
@@ -136,9 +132,7 @@ exports.getUsers = (req, res) => {
   );
 };
 
-/* ======================
-   DELETE USER
-====================== */
+/* Delete user */
 exports.deleteUser = (req, res) => {
   const { error, value } = idSchema.validate(req.params);
   if (error) {
@@ -152,14 +146,14 @@ exports.deleteUser = (req, res) => {
 
   db.query("DELETE FROM users WHERE id = ?", [id], (err, result) => {
     if (err) {
-      console.error("Lỗi deleteUser:", err);
+      console.error("Delete user error:", err);
       return res.status(500).json({
         success: false,
         message: "Lỗi server",
       });
     }
 
-    // nếu không có user nào bị xóa
+    // Check if user exists
     if (result.affectedRows === 0) {
       return res.status(404).json({
         success: false,
@@ -170,14 +164,11 @@ exports.deleteUser = (req, res) => {
     res.json({
       success: true,
       message: "Xóa user thành công",
-
-      
     });
   });
 };
-/* ======================
-   UPDATE USER ROLE
-====================== */
+
+/* Update user role */
 exports.updateUserRole = (req, res) => {
   const idValidation = idSchema.validate(req.params);
   if (idValidation.error) {
@@ -203,7 +194,7 @@ exports.updateUserRole = (req, res) => {
     [role, id],
     (err, result) => {
       if (err) {
-        console.error("Lỗi updateUserRole:", err);
+        console.error("Update user role error:", err);
         return res.status(500).json({
           success: false,
           message: "Lỗi server",
@@ -220,6 +211,10 @@ exports.updateUserRole = (req, res) => {
       res.json({
         success: true,
         message: "Cập nhật role thành công",
+      });
+    }
+  );
+}; "Cập nhật role thành công",
       });
     }
   );

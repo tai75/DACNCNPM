@@ -14,27 +14,32 @@ const servicePayloadSchema = Joi.object({
 // ================= GET ALL =================
 exports.getAll = (req, res) => {
   db.query("SELECT * FROM services", (err, result) => {
-    if (err) return res.status(500).json({ message: "Lỗi server" });
-    res.json(result);
+    if (err) {
+      console.error("Get all services error:", err);
+      return res.status(500).json({ success: false, message: "Lỗi server" });
+    }
+    res.json({ success: true, data: result });
   });
 };
 
 // ================= GET ONE =================
 exports.getOne = (req, res) => {
   const { error, value } = serviceIdSchema.validate(req.params);
-  if (error) return res.status(400).json({ message: "ID dịch vụ không hợp lệ" });
+  if (error) return res.status(400).json({ success: false, message: "ID dịch vụ không hợp lệ" });
 
   const { id } = value;
   db.query("SELECT * FROM services WHERE id = ?", [id], (err, result) => {
-    if (err) return res.status(500).json({ message: "Lỗi server" });
-    if (result.length === 0) return res.status(404).json({ message: "Không tìm thấy dịch vụ" });
-    res.json(result[0]);
+    if (err) {
+      console.error("Get service error:", err);
+      return res.status(500).json({ success: false, message: "Lỗi server" });
+    }
+    if (result.length === 0) return res.status(404).json({ success: false, message: "Không tìm thấy dịch vụ" });
+    res.json({ success: true, data: result[0] });
   });
 };
-
-// ================= CREATE =================
-exports.create = (req, res) => {
-  // req.body có thể undefined nếu frontend gửi FormData
+const body = req.body || {};
+  const { error, value } = servicePayloadSchema.validate(body);
+  if (error) return res.status(400).json({ success: false,d gửi FormData
   const body = req.body || {};
   const { error, value } = servicePayloadSchema.validate(body);
   if (error) return res.status(400).json({ message: "Dữ liệu không hợp lệ" });
@@ -42,34 +47,28 @@ exports.create = (req, res) => {
   const { name, price, description } = value;
   const image = req.file ? req.file.filename : null;
 
-  console.log("CREATE BODY:", body);
-  console.log("CREATE FILE:", req.file);
-
   const sql = "INSERT INTO services (name, price, description, image) VALUES (?, ?, ?, ?)";
   db.query(sql, [name, price, description, image], (err, result) => {
     if (err) {
-      console.log(err);
+      console.error("Create service error:", err);
       return res.status(500).json({ message: "Lỗi thêm dịch vụ" });
+    }success: false, message: "Lỗi thêm dịch vụ" });
     }
-    res.status(201).json({ message: "Thêm dịch vụ thành công", id: result.insertId });
-  });
+    res.status(201).json({ success: true, message: "Thêm dịch vụ thành công", data: { id: result.insertId }
 };
 
 // ================= UPDATE =================
 exports.update = (req, res) => {
   const idValidation = serviceIdSchema.validate(req.params);
   if (idValidation.error) return res.status(400).json({ message: "ID dịch vụ không hợp lệ" });
+success: false, message: "ID dịch vụ không hợp lệ" });
 
   const body = req.body || {};
   const bodyValidation = servicePayloadSchema.validate(body);
-  if (bodyValidation.error) return res.status(400).json({ message: "Dữ liệu không hợp lệ" });
-
+  if (bodyValidation.error) return res.status(400).json({ success: false,
   const { id } = idValidation.value;
   const { name, price, description } = bodyValidation.value;
   const image = req.file ? req.file.filename : null;
-
-  console.log("UPDATE BODY:", body);
-  console.log("UPDATE FILE:", req.file);
 
   const sql = `
     UPDATE services
@@ -82,7 +81,7 @@ exports.update = (req, res) => {
       console.log(err);
       return res.status(500).json({ message: "Lỗi cập nhật" });
     }
-    if (result.affectedRows === 0)
+    if (resulterror("Update service error:", ectedRows === 0)
       return res.status(404).json({ message: "Không tìm thấy dịch vụ" });
     res.json({ message: "Cập nhật thành công" });
   });
@@ -91,12 +90,15 @@ exports.update = (req, res) => {
 // ================= DELETE =================
 exports.remove = (req, res) => {
   const { error, value } = serviceIdSchema.validate(req.params);
-  if (error) return res.status(400).json({ message: "ID dịch vụ không hợp lệ" });
+  if (error) return res.status(400).json({ success: false, message: "ID dịch vụ không hợp lệ" });
 
   const { id } = value;
   db.query("DELETE FROM services WHERE id = ?", [id], (err, result) => {
-    if (err) return res.status(500).json({ message: "Lỗi xóa" });
-    if (result.affectedRows === 0) return res.status(404).json({ message: "Không tìm thấy dịch vụ" });
-    res.json({ message: "Xóa thành công" });
+    if (err) {
+      console.error("Delete service error:", err);
+      return res.status(500).json({ success: false, message: "Lỗi xóa" });
+    }
+    if (result.affectedRows === 0) return res.status(404).json({ success: false, message: "Không tìm thấy dịch vụ" });
+    res.json({ success: true, message: "Xóa thành công" });
   });
 };

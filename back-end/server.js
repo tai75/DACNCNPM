@@ -8,10 +8,10 @@ const swaggerUi = require("swagger-ui-express");
 
 const app = express();
 
-// 👇 KẾT NỐI DB
+// Database connection
 const db = require("./config/db");
 
-// 👇 ROUTES
+// Routes
 const authRoutes = require("./routes/authRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
 const userRoutes = require("./routes/userRoutes");
@@ -92,12 +92,7 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-/* TEST */
-app.get("/", (req, res) => {
-  res.send("API đang chạy...");
-});
-
-/* ROUTES */
+/* API Routes */
 app.use("/api", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api/services", serviceRoutes);
@@ -105,8 +100,9 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/revenue", revenueRoutes);
 
-/* RUN SERVER */
+/* Start Server */
 const PORT = process.env.API_PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server chạy tại http://localhost:${PORT}`);
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`📚 API docs available at http://localhost:${PORT}/api-docs`);
 });
