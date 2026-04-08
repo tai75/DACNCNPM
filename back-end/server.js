@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ path: require("path").resolve(__dirname, ".env") });
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -20,16 +20,43 @@ const employeeRoutes = require("./routes/employeesRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const revenueRoutes = require("./routes/revenueRoutes");
 
-app.use(helmet());
+const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow tools or same-origin requests that may not send Origin.
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+};
+
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 app.use(morgan("combined"));
-app.use(cors());
+app.use(cors(corsOptions));
 
 // 🔥 QUAN TRỌNG (thiếu cái này là lỗi req.body)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 🔥 LOAD ẢNH
-app.use("/uploads", express.static("uploads"));
+app.use(
+  "/uploads",
+  express.static("uploads", {
+    setHeaders: (res) => {
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+    },
+  })
+);
 
 // Swagger setup
 const swaggerOptions = {

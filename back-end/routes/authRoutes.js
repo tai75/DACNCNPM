@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const router = express.Router();
 const authController = require("../controller/authController");
 const { createRateLimiter } = require("../middleware/rateLimit");
@@ -19,8 +19,8 @@ const loginLimiter = createRateLimiter({
  * @swagger
  * /register:
  *   post:
- *     summary: Đăng ký người dùng mới
- *     tags: [Xác thực]
+ *     summary: ÄÄƒng kÃ½ ngÆ°á»i dÃ¹ng má»›i
+ *     tags: [XÃ¡c thá»±c]
  *     requestBody:
  *       required: true
  *       content:
@@ -45,12 +45,12 @@ const loginLimiter = createRateLimiter({
  *                 pattern: '^[0-9]{10,11}$'
  *               password:
  *                 type: string
- *                 minLength: 6
+ *                 minLength: 8
  *     responses:
  *       200:
- *         description: Đăng ký thành công
+ *         description: ÄÄƒng kÃ½ thÃ nh cÃ´ng
  *       400:
- *         description: Dữ liệu không hợp lệ
+ *         description: Dá»¯ liá»‡u khÃ´ng há»£p lá»‡
  */
 router.post("/register", registerLimiter, authController.register);
 
@@ -58,8 +58,8 @@ router.post("/register", registerLimiter, authController.register);
  * @swagger
  * /login:
  *   post:
- *     summary: Đăng nhập người dùng
- *     tags: [Xác thực]
+ *     summary: ÄÄƒng nháº­p ngÆ°á»i dÃ¹ng
+ *     tags: [XÃ¡c thá»±c]
  *     requestBody:
  *       required: true
  *       content:
@@ -77,7 +77,7 @@ router.post("/register", registerLimiter, authController.register);
  *                 type: string
  *     responses:
  *       200:
- *         description: Đăng nhập thành công
+ *         description: ÄÄƒng nháº­p thÃ nh cÃ´ng
  *         content:
  *           application/json:
  *             schema:
@@ -90,7 +90,7 @@ router.post("/register", registerLimiter, authController.register);
  *                 user:
  *                   $ref: '#/components/schemas/User'
  *       401:
- *         description: Thông tin đăng nhập không đúng
+ *         description: ThÃ´ng tin Ä‘Äƒng nháº­p khÃ´ng Ä‘Ãºng
  */
 router.post("/login", loginLimiter, authController.login);
 

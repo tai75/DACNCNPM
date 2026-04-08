@@ -1,4 +1,13 @@
-const db = require("../config/db");
+﻿const db = require("../config/db");
+const Joi = require("joi");
+
+const idSchema = Joi.object({
+  id: Joi.number().integer().positive().required(),
+});
+
+const updateRoleSchema = Joi.object({
+  role: Joi.string().valid("user", "staff", "admin").required(),
+});
 
 /* ======================
    GET ALL USERS
@@ -8,10 +17,10 @@ exports.getUsers = (req, res) => {
     "SELECT id, name, email, phone, role FROM users",
     (err, result) => {
       if (err) {
-        console.error("Lỗi getUsers:", err);
+        console.error("Lá»—i getUsers:", err);
         return res.status(500).json({
           success: false,
-          message: "Lỗi server",
+          message: "Lá»—i server",
         });
       }
 
@@ -27,35 +36,36 @@ exports.getUsers = (req, res) => {
    DELETE USER
 ====================== */
 exports.deleteUser = (req, res) => {
-  const { id } = req.params;
-
-  if (!id) {
+  const { error, value } = idSchema.validate(req.params);
+  if (error) {
     return res.status(400).json({
       success: false,
-      message: "Thiếu ID user",
+      message: "ID user khÃ´ng há»£p lá»‡",
     });
   }
 
+  const { id } = value;
+
   db.query("DELETE FROM users WHERE id = ?", [id], (err, result) => {
     if (err) {
-      console.error("Lỗi deleteUser:", err);
+      console.error("Lá»—i deleteUser:", err);
       return res.status(500).json({
         success: false,
-        message: "Lỗi server",
+        message: "Lá»—i server",
       });
     }
 
-    // nếu không có user nào bị xóa
+    // náº¿u khÃ´ng cÃ³ user nÃ o bá»‹ xÃ³a
     if (result.affectedRows === 0) {
       return res.status(404).json({
         success: false,
-        message: "User không tồn tại",
+        message: "User khÃ´ng tá»“n táº¡i",
       });
     }
 
     res.json({
       success: true,
-      message: "Xóa user thành công",
+      message: "XÃ³a user thÃ nh cÃ´ng",
 
       
     });
@@ -65,46 +75,47 @@ exports.deleteUser = (req, res) => {
    UPDATE USER ROLE
 ====================== */
 exports.updateUserRole = (req, res) => {
-  const { id } = req.params;
-  const { role } = req.body;
-
-  // validate
-  if (!id || !role) {
+  const idValidation = idSchema.validate(req.params);
+  if (idValidation.error) {
     return res.status(400).json({
       success: false,
-      message: "Thiếu id hoặc role",
+      message: "ID user khÃ´ng há»£p lá»‡",
     });
   }
 
-  if (!["user", "admin"].includes(role)) {
+  const roleValidation = updateRoleSchema.validate(req.body);
+  if (roleValidation.error) {
     return res.status(400).json({
       success: false,
-      message: "Role không hợp lệ",
+      message: "Role khÃ´ng há»£p lá»‡",
     });
   }
+
+  const { id } = idValidation.value;
+  const { role } = roleValidation.value;
 
   db.query(
     "UPDATE users SET role = ? WHERE id = ?",
     [role, id],
     (err, result) => {
       if (err) {
-        console.error("Lỗi updateUserRole:", err);
+        console.error("Lá»—i updateUserRole:", err);
         return res.status(500).json({
           success: false,
-          message: "Lỗi server",
+          message: "Lá»—i server",
         });
       }
 
       if (result.affectedRows === 0) {
         return res.status(404).json({
           success: false,
-          message: "User không tồn tại",
+          message: "User khÃ´ng tá»“n táº¡i",
         });
       }
 
       res.json({
         success: true,
-        message: "Cập nhật role thành công",
+        message: "Cáº­p nháº­t role thÃ nh cÃ´ng",
       });
     }
   );

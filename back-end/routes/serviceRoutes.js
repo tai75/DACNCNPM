@@ -1,8 +1,9 @@
-const express = require("express");
+﻿const express = require("express");
 const router = express.Router();
 const serviceController = require("../controller/serviceController");
 const multer = require("multer");
 const path = require("path");
+const { authMiddleware, adminMiddleware } = require("../middleware/auth");
 
 // ===== MULTER =====
 const storage = multer.diskStorage({
@@ -16,8 +17,8 @@ const upload = multer({ storage });
 // ===== ROUTES =====
 router.get("/", serviceController.getAll);
 router.get("/:id", serviceController.getOne);
-router.post("/", upload.single("image"), serviceController.create); // "image" phải đúng với frontend
-router.put("/:id", upload.single("image"), serviceController.update);
-router.delete("/:id", serviceController.remove);
+router.post("/", authMiddleware, adminMiddleware, upload.single("image"), serviceController.create); // "image" pháº£i Ä‘Ãºng vá»›i frontend
+router.put("/:id", authMiddleware, adminMiddleware, upload.single("image"), serviceController.update);
+router.delete("/:id", authMiddleware, adminMiddleware, serviceController.remove);
 
 module.exports = router;

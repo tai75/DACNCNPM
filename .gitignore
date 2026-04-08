@@ -11,9 +11,12 @@ node_modules
 dist
 dist-ssr
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
 .vite/
 =======
 >>>>>>> 3c8cca920b7fd8be9ad0bd0ff6fd54132941450d
+>>>>>>> 9e7fdb6cbb05df1d5d8f41030d4d221d96a45577
 *.local
 
 # Editor directories and files

@@ -1,8 +1,9 @@
-const express = require("express");
+﻿const express = require("express");
 const router = express.Router();
 const revenueController = require("../controller/revenueController");
+const { authMiddleware, adminMiddleware } = require("../middleware/auth");
 
-router.get("/", revenueController.getRevenue);
-router.get("/by-date", revenueController.getRevenueByDate);
+router.get("/", authMiddleware, adminMiddleware, revenueController.getRevenue);
+router.get("/by-date", authMiddleware, adminMiddleware, revenueController.getRevenueByDate);
 
 module.exports = router;

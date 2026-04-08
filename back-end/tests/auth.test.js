@@ -1,4 +1,4 @@
-jest.mock("../config/db", () => ({
+﻿jest.mock("../config/db", () => ({
   query: jest.fn(),
 }));
 
@@ -24,9 +24,11 @@ const createMockResponse = () => {
 };
 
 describe("Auth Controller", () => {
+  const strongTestSecret = ["A", "b", "3", "!", "x".repeat(40)].join("");
+
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.JWT_SECRET = "test-secret";
+    process.env.JWT_SECRET = strongTestSecret;
   });
 
   test("register should reject invalid payload", async () => {
@@ -49,7 +51,7 @@ describe("Auth Controller", () => {
         name: "User A",
         email: "usera@example.com",
         phone: "0912345678",
-        password: "123456",
+        password: "12345678",
       },
     };
     const res = createMockResponse();
@@ -62,7 +64,7 @@ describe("Auth Controller", () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Email đã được sử dụng" })
+      expect.objectContaining({ message: "Email Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng" })
     );
   });
 
@@ -72,21 +74,21 @@ describe("Auth Controller", () => {
         name: "User B",
         email: "userb@example.com",
         phone: "0912345679",
-        password: "123456",
+        password: "12345678",
       },
     };
 
     const done = new Promise((resolve) => {
       const res = createMockResponse();
       res.json = jest.fn((payload) => {
-        expect(bcrypt.hash).toHaveBeenCalledWith("123456", 10);
+        expect(bcrypt.hash).toHaveBeenCalledWith("12345678", 10);
         expect(db.query).toHaveBeenNthCalledWith(
           2,
           "INSERT INTO users (name, email, phone, password) VALUES (?, ?, ?, ?)",
           ["User B", "userb@example.com", "0912345679", "hashed-password"],
           expect.any(Function)
         );
-        expect(payload).toEqual({ success: true, message: "Đăng ký thành công" });
+        expect(payload).toEqual({ success: true, message: "ÄÄƒng kÃ½ thÃ nh cÃ´ng" });
         resolve();
       });
 
@@ -118,7 +120,7 @@ describe("Auth Controller", () => {
       res.json = jest.fn((payload) => {
         expect(jwt.sign).toHaveBeenCalledWith(
           { id: 1, role: "user" },
-          "test-secret",
+          strongTestSecret,
           { expiresIn: "7d" }
         );
         expect(payload).toEqual(

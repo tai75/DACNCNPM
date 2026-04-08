@@ -1,9 +1,14 @@
-jest.mock("jsonwebtoken", () => ({
+﻿jest.mock("jsonwebtoken", () => ({
   verify: jest.fn(),
 }));
 
 const jwt = require("jsonwebtoken");
-const { authMiddleware, adminMiddleware } = require("../middleware/auth");
+const {
+  authMiddleware,
+  adminMiddleware,
+  staffMiddleware,
+  adminOrStaffMiddleware,
+} = require("../middleware/auth");
 
 const createMockResponse = () => {
   const res = {};
@@ -14,10 +19,11 @@ const createMockResponse = () => {
 
 describe("authMiddleware", () => {
   const originalJwtSecret = process.env.JWT_SECRET;
+  const strongTestSecret = ["A", "b", "3", "!", "x".repeat(40)].join("");
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.JWT_SECRET = "test-secret";
+    process.env.JWT_SECRET = strongTestSecret;
   });
 
   afterAll(() => {
@@ -81,7 +87,7 @@ describe("authMiddleware", () => {
 
     authMiddleware(req, res, next);
 
-    expect(jwt.verify).toHaveBeenCalledWith("valid-token", "test-secret");
+    expect(jwt.verify).toHaveBeenCalledWith("valid-token", strongTestSecret);
     expect(req.user).toEqual({ id: 1, role: "user" });
     expect(next).toHaveBeenCalledTimes(1);
   });
@@ -108,6 +114,68 @@ describe("adminMiddleware", () => {
     const next = jest.fn();
 
     adminMiddleware(req, res, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("staffMiddleware", () => {
+  test("should return 403 for non-staff user", () => {
+    const req = { user: { id: 1, role: "user" } };
+    const res = createMockResponse();
+    const next = jest.fn();
+
+    staffMiddleware(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ success: false, message: "Staff access required" })
+    );
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test("should call next for staff user", () => {
+    const req = { user: { id: 2, role: "staff" } };
+    const res = createMockResponse();
+    const next = jest.fn();
+
+    staffMiddleware(req, res, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("adminOrStaffMiddleware", () => {
+  test("should return 403 for normal user", () => {
+    const req = { user: { id: 1, role: "user" } };
+    const res = createMockResponse();
+    const next = jest.fn();
+
+    adminOrStaffMiddleware(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ success: false, message: "Admin or staff access required" })
+    );
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test("should call next for admin", () => {
+    const req = { user: { id: 1, role: "admin" } };
+    const res = createMockResponse();
+    const next = jest.fn();
+
+    adminOrStaffMiddleware(req, res, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  test("should call next for staff", () => {
+    const req = { user: { id: 2, role: "staff" } };
+    const res = createMockResponse();
+    const next = jest.fn();
+
+    adminOrStaffMiddleware(req, res, next);
 
     expect(next).toHaveBeenCalledTimes(1);
   });

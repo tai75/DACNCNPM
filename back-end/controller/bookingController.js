@@ -58,6 +58,13 @@ exports.getBookings = (req, res) => {
       u.name AS user_name,
       s.name AS service_name,
       s.price AS service_price
+    FROM bookings b
+    JOIN users u ON b.user_id = u.id
+    JOIN services s ON b.service_id = s.id
+  `;
+
+  let countSql = "SELECT COUNT(*) as total FROM bookings";
+  const params = [];
   const countParams = [];
 
   if (req.user.role !== "admin") {
@@ -205,6 +212,8 @@ exports.updatePaymentStatus = (req, res) => {
 };
 
 /* ======================
+  UPDATE BOOKING STATUS (ADMIN)
+====================== */
 exports.updateBookingStatus = (req, res) => {
   if (req.user.role !== "admin") {
     return res.status(403).json({
