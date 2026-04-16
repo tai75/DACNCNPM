@@ -27,6 +27,7 @@ import AdminBookings from "./pages/admin/AdminBookings";
 import AdminRevenue from "./pages/admin/AdminRevenue";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminStaff from "./pages/admin/AdminStaff";
+import AdminContacts from "./pages/admin/AdminContacts";
 import AdminRoute from "./routes/Adminroute";
 import StaffLayout from "./layouts/StaffLayout";
 import StaffRoute from "./routes/StaffRoute";
@@ -119,6 +120,7 @@ function App() {
           <Route path="staff" element={<AdminStaff />} />
           <Route path="services" element={<AdminServices />} />
           <Route path="reviews" element={<AdminReviews />} />
+          <Route path="contacts" element={<AdminContacts />} />
           <Route path="bookings" element={<AdminBookings />} />
           <Route path="revenue" element={<AdminRevenue />} />
         </Route>

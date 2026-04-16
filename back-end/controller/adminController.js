@@ -35,20 +35,77 @@ const query = (sql, values = []) => {
   });
 };
 
+const ensureBookingStaffAssignmentsTable = async () => {
+  await query(`
+    CREATE TABLE IF NOT EXISTS booking_staff_assignments (
+      id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      booking_id INT UNSIGNED NOT NULL,
+      staff_id INT UNSIGNED NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_booking_staff_assignments_booking FOREIGN KEY (booking_id)
+        REFERENCES bookings(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT fk_booking_staff_assignments_staff FOREIGN KEY (staff_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+      UNIQUE KEY uq_booking_staff (booking_id, staff_id),
+      KEY idx_booking_staff_assignments_booking_id (booking_id),
+      KEY idx_booking_staff_assignments_staff_id (staff_id)
+    ) ENGINE=InnoDB
+  `);
+
+  await query(`
+    INSERT IGNORE INTO booking_staff_assignments (booking_id, staff_id)
+    SELECT id, staff_id FROM bookings WHERE staff_id IS NOT NULL
+  `);
+
+  await query(`
+    INSERT IGNORE INTO booking_staff_assignments (booking_id, staff_id)
+    SELECT id, secondary_staff_id FROM bookings WHERE secondary_staff_id IS NOT NULL
+  `);
+};
+
 exports.getDashboardStats = async (req, res) => {
   try {
+    let revenueTotal = 0;
+
+    try {
+      const revenueResult = await query(`
+        SELECT SUM(COALESCE(bi_totals.booking_total, s.price)) AS total
+        FROM bookings b
+        JOIN services s ON b.service_id = s.id
+        LEFT JOIN (
+          SELECT booking_id, SUM(quantity * unit_price) AS booking_total
+          FROM booking_items
+          GROUP BY booking_id
+        ) bi_totals ON bi_totals.booking_id = b.id
+        WHERE b.status <> 'cancelled'
+          AND (b.status = 'completed' OR b.payment_status = 'paid')
+      `);
+
+      revenueTotal = revenueResult[0]?.total || 0;
+    } catch (revenueErr) {
+      if (revenueErr.code !== "ER_NO_SUCH_TABLE") {
+        throw revenueErr;
+      }
+
+      const fallbackRevenueResult = await query(`
+        SELECT SUM(s.price) AS total
+        FROM bookings b
+        JOIN services s ON b.service_id = s.id
+        WHERE b.status <> 'cancelled'
+          AND (b.status = 'completed' OR b.payment_status = 'paid')
+      `);
+
+      revenueTotal = fallbackRevenueResult[0]?.total || 0;
+    }
+
     // Run all queries in parallel for better performance
-    const [usersResult, servicesResult, bookingsResult, completedResult, revenueResult] = await Promise.all([
+    const [usersResult, servicesResult, bookingsResult, completedResult] = await Promise.all([
       query("SELECT COUNT(*) AS total FROM users"),
       query("SELECT COUNT(*) AS total FROM services"),
       query("SELECT COUNT(*) AS total FROM bookings"),
       query("SELECT COUNT(*) AS total FROM bookings WHERE status = 'completed'"),
-      query(`
-        SELECT SUM(s.price) AS total
-        FROM bookings b
-        JOIN services s ON b.service_id = s.id
-        WHERE b.status = 'completed'
-      `),
     ]);
 
     const totalBookings = bookingsResult[0].total;
@@ -61,7 +118,7 @@ exports.getDashboardStats = async (req, res) => {
       completionRate: totalBookings > 0 
         ? Number(((completedBookings / totalBookings) * 100).toFixed(2))
         : 0,
-      revenue: revenueResult[0].total || 0,
+      revenue: revenueTotal,
     };
 
     res.json({
@@ -157,6 +214,8 @@ exports.deleteReview = async (req, res) => {
 
 exports.getStaffList = async (req, res) => {
   try {
+    await ensureBookingStaffAssignmentsTable();
+
     const staffs = await query(
       `
         SELECT
@@ -166,9 +225,14 @@ exports.getStaffList = async (req, res) => {
           CASE
             WHEN EXISTS (
               SELECT 1
-              FROM bookings b
-              WHERE b.staff_id = u.id
+              FROM booking_staff_assignments bsa
+              WHERE bsa.staff_id = u.id
+                AND EXISTS (
+                  SELECT 1
+                  FROM bookings b
+                  WHERE b.id = bsa.booking_id
                 AND b.status IN ('confirmed', 'in_progress')
+                )
             ) THEN 'busy'
             ELSE 'available'
           END AS status,
@@ -177,7 +241,8 @@ exports.getStaffList = async (req, res) => {
             ''
           ) AS specialties
         FROM users u
-        LEFT JOIN bookings b2 ON b2.staff_id = u.id
+        LEFT JOIN booking_staff_assignments bsa2 ON bsa2.staff_id = u.id
+        LEFT JOIN bookings b2 ON b2.id = bsa2.booking_id
         LEFT JOIN services s ON s.id = b2.service_id
         WHERE u.role = 'staff'
         GROUP BY u.id, u.name, u.phone
@@ -206,6 +271,8 @@ exports.getStaffSchedule = async (req, res) => {
   }
 
   try {
+    await ensureBookingStaffAssignmentsTable();
+
     const staffRows = await query(
       "SELECT id, name, phone FROM users WHERE id = ? AND role = 'staff' LIMIT 1",
       [value.id]
@@ -226,9 +293,10 @@ exports.getStaffSchedule = async (req, res) => {
           u.name AS customer_name,
           s.name AS service_name
         FROM bookings b
+        JOIN booking_staff_assignments bsa ON bsa.booking_id = b.id
         JOIN users u ON u.id = b.user_id
         JOIN services s ON s.id = b.service_id
-        WHERE b.staff_id = ?
+        WHERE bsa.staff_id = ?
         ORDER BY b.booking_date DESC, FIELD(b.time_slot, 'morning', 'afternoon', 'evening') ASC
       `,
       [value.id]

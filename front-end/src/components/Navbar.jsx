@@ -1,10 +1,12 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { getCartCount } from "../utils/cart";
 
 function Navbar() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   const getStoredUser = () => {
     try {
@@ -17,14 +19,21 @@ function Navbar() {
 
   useEffect(() => {
     const syncAuthState = () => setUser(getStoredUser());
+    const syncCartState = () => setCartCount(getCartCount());
 
     syncAuthState();
+    syncCartState();
+
     window.addEventListener("storage", syncAuthState);
     window.addEventListener("auth-changed", syncAuthState);
+    window.addEventListener("storage", syncCartState);
+    window.addEventListener("cart-changed", syncCartState);
 
     return () => {
       window.removeEventListener("storage", syncAuthState);
       window.removeEventListener("auth-changed", syncAuthState);
+      window.removeEventListener("storage", syncCartState);
+      window.removeEventListener("cart-changed", syncCartState);
     };
   }, []);
 
@@ -65,10 +74,6 @@ function Navbar() {
             Dịch vụ
           </NavLink>
 
-          <NavLink to="/booking" className={desktopLinkClass}>
-            Đặt lịch
-          </NavLink>
-
           <NavLink to="/about" className={desktopLinkClass}>
             Giới thiệu
           </NavLink>
@@ -91,6 +96,19 @@ function Navbar() {
         </div>
 
         <div className="relative z-10 hidden items-center gap-3 md:flex">
+          <button
+            onClick={() => navigate("/booking")}
+            className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white transition hover:bg-slate-100"
+            aria-label="Giỏ hàng"
+          >
+            <img src="/images/giohang.png" alt="Giỏ hàng" className="h-6 w-6 object-contain" />
+            {cartCount > 0 && (
+              <span className="absolute -right-1 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-600 px-1 text-[11px] font-bold text-white">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
+          </button>
+
           {user ? (
             <>
               <span
@@ -139,7 +157,7 @@ function Navbar() {
           <div className="grid gap-2 text-sm text-slate-700">
             <NavLink to="/" onClick={closeMobileMenu} className="rounded-lg px-3 py-2 hover:bg-slate-100">Trang chủ</NavLink>
             <NavLink to="/services" onClick={closeMobileMenu} className="rounded-lg px-3 py-2 hover:bg-slate-100">Dịch vụ</NavLink>
-            <NavLink to="/booking" onClick={closeMobileMenu} className="rounded-lg px-3 py-2 hover:bg-slate-100">Đặt lịch</NavLink>
+            <NavLink to="/booking" onClick={closeMobileMenu} className="rounded-lg px-3 py-2 hover:bg-slate-100">Giỏ hàng</NavLink>
             <NavLink to="/bookings" onClick={closeMobileMenu} className="rounded-lg px-3 py-2 hover:bg-slate-100">Lịch sử</NavLink>
             <NavLink to="/about" onClick={closeMobileMenu} className="rounded-lg px-3 py-2 hover:bg-slate-100">Giới thiệu</NavLink>
             <NavLink to="/contact" onClick={closeMobileMenu} className="rounded-lg px-3 py-2 hover:bg-slate-100">Liên hệ</NavLink>

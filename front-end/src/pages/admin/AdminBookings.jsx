@@ -7,13 +7,21 @@ function AdminBookings() {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedStaffByBooking, setSelectedStaffByBooking] = useState({});
 
   // ================= LOAD DATA =================
   const fetchBookings = async () => {
     try {
       setLoading(true);
       const res = await api.get("/bookings");
-      setBookings(res.data.data || res.data);
+      const nextBookings = res.data.data || res.data;
+      setBookings(nextBookings);
+      setSelectedStaffByBooking(
+        nextBookings.reduce((accumulator, booking) => {
+          accumulator[booking.id] = Array.isArray(booking.staff_ids) ? booking.staff_ids.map(Number) : [];
+          return accumulator;
+        }, {})
+      );
     } catch (err) {
       console.error("Lỗi load bookings:", err);
     } finally {
@@ -69,30 +77,25 @@ function AdminBookings() {
     }
   };
 
-  const handleAssignStaff = async (id, staff_id) => {
-    if (!staff_id) return;
+  const handleAssignStaff = async (id, staffIds) => {
+    if (!Array.isArray(staffIds) || staffIds.length === 0) return;
     try {
-      await api.put(`/bookings/${id}/assign-staff`, { staff_ids: [Number(staff_id)] });
+      await api.put(`/bookings/${id}/assign-staff`, { staff_ids: staffIds.map((value) => Number(value)).filter(Boolean) });
       fetchBookings();
     } catch (err) {
       console.error("Lỗi gán nhân viên:", err);
     }
   };
 
-  const handleAssignTwoStaff = async (bookingId, primaryStaffId, secondaryStaffId) => {
-    const selectedIds = [primaryStaffId, secondaryStaffId]
-      .map((value) => Number(value))
-      .filter((value) => Number.isInteger(value) && value > 0);
+  const handleStaffSelectionChange = (bookingId, staffId, checked) => {
+    setSelectedStaffByBooking((prev) => {
+      const current = Array.isArray(prev[bookingId]) ? prev[bookingId] : [];
+      const next = checked
+        ? [...new Set([...current, Number(staffId)])]
+        : current.filter((value) => Number(value) !== Number(staffId));
 
-    const uniqueIds = [...new Set(selectedIds)].slice(0, 2);
-    if (uniqueIds.length === 0) return;
-
-    try {
-      await api.put(`/bookings/${bookingId}/assign-staff`, { staff_ids: uniqueIds });
-      fetchBookings();
-    } catch (err) {
-      console.error("Lỗi gán 2 nhân viên:", err);
-    }
+      return { ...prev, [bookingId]: next };
+    });
   };
 
   const timeSlotLabel = (slot) => {
@@ -102,9 +105,26 @@ function AdminBookings() {
     return slot;
   };
 
+  const getServiceItems = (booking) => {
+    if (Array.isArray(booking?.service_items) && booking.service_items.length > 0) {
+      return booking.service_items;
+    }
+
+    return [
+      {
+        service_name: booking.service_name,
+        unit_price: booking.service_price,
+        quantity: 1,
+      },
+    ];
+  };
+
   const filteredBookings = bookings.filter((booking) => {
     const matchStatus = statusFilter === "all" || booking.status === statusFilter;
-    const keyword = `${booking.user_name || ""} ${booking.service_name || ""} ${booking.staff_name || ""}`.toLowerCase();
+    const servicesKeyword = getServiceItems(booking)
+      .map((item) => item.service_name || "")
+      .join(" ");
+    const keyword = `${booking.user_name || ""} ${booking.service_name || ""} ${servicesKeyword} ${booking.staff_name || ""}`.toLowerCase();
     const matchSearch = keyword.includes(searchText.trim().toLowerCase());
     return matchStatus && matchSearch;
   });
@@ -214,6 +234,14 @@ function AdminBookings() {
                 </td>
                 <td className="px-4 py-4">
                   <div className="font-medium text-slate-800">{booking.service_name}</div>
+                  <div className="mt-1 space-y-1 text-xs text-slate-500">
+                    {getServiceItems(booking).map((item, index) => (
+                      <div key={`${booking.id}-${item.service_id || item.service_name || index}`}>
+                        {index + 1}. {item.service_name}
+                        {Number(item.quantity || 1) > 1 ? ` x${item.quantity}` : ""}
+                      </div>
+                    ))}
+                  </div>
                   <div className="text-sm text-slate-500">{new Date(booking.booking_date).toLocaleDateString("vi-VN")}</div>
                 </td>
                 <td className="px-4 py-4 text-sm text-slate-600">
@@ -223,40 +251,40 @@ function AdminBookings() {
                   </div>
                 </td>
                 <td className="px-4 py-4">
-                  <div className="space-y-2">
-                    <select
-                      value={booking.staff_id || ""}
-                      onChange={(e) => handleAssignTwoStaff(booking.id, e.target.value, booking.secondary_staff_id || "")}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
-                    >
-                      <option value="">Nhân viên 1 (chưa gán)</option>
-                      {staffs.map((staff) => (
-                        <option key={staff.id} value={staff.id}>
-                          {staff.name}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="max-h-40 space-y-2 overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    {staffs.map((staff) => {
+                      const checked = (selectedStaffByBooking[booking.id] || []).includes(Number(staff.id));
+                      return (
+                        <label key={staff.id} className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(event) => handleStaffSelectionChange(booking.id, staff.id, event.target.checked)}
+                            className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                          />
+                          <span>{staff.name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
 
-                    <select
-                      value={booking.secondary_staff_id || ""}
-                      onChange={(e) => handleAssignTwoStaff(booking.id, booking.staff_id || "", e.target.value)}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                    <span>
+                      Đã chọn: {(selectedStaffByBooking[booking.id] || []).length} nhân viên
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleAssignStaff(booking.id, selectedStaffByBooking[booking.id] || [])}
+                      className="rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white transition hover:bg-emerald-700"
                     >
-                      <option value="">Nhân viên 2 (tuỳ chọn)</option>
-                      {staffs
-                        .filter((staff) => Number(staff.id) !== Number(booking.staff_id || 0))
-                        .map((staff) => (
-                          <option key={staff.id} value={staff.id}>
-                            {staff.name}
-                          </option>
-                        ))}
-                    </select>
+                      Gán staff
+                    </button>
                   </div>
 
                   <div className="mt-2 text-xs text-slate-400">
                     {booking.staff_names?.length
                       ? `Đã gán: ${booking.staff_names.join(", ")}`
-                      : "Admin gán staff cho từng booking (tối đa 2 người)"}
+                      : "Admin có thể gán nhiều nhân viên cho 1 booking"}
                   </div>
                 </td>
                 <td className="px-4 py-4 text-sm text-slate-700">{booking.payment_method_vietnamese}</td>

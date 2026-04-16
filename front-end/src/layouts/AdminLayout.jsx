@@ -11,6 +11,7 @@ import {
   LogOut,
   ShieldCheck,
   ChevronRight,
+  MessageSquare,
 } from "lucide-react";
 
 function AdminLayout() {
@@ -23,6 +24,7 @@ function AdminLayout() {
     { to: "/admin/staff", label: "Quản lý nhân viên", icon: Users },
     { to: "/admin/services", label: "Quản lý dịch vụ", icon: Sprout },
     { to: "/admin/reviews", label: "Đánh giá khách hàng", icon: Star },
+    { to: "/admin/contacts", label: "Quản lý liên hệ", icon: MessageSquare },
     { to: "/admin/bookings", label: "Quản lý đơn hàng", icon: ClipboardList },
     { to: "/admin/revenue", label: "Doanh thu", icon: BarChart3 },
   ];

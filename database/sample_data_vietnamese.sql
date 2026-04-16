@@ -22,3 +22,15 @@ INSERT INTO bookings (user_id, service_id, booking_date, time_slot, address, sta
 (2, 3, '2024-04-05', 'afternoon', '456 Đường XYZ, Quận 2, TP.HCM', 'confirmed'),
 (3, 2, '2024-04-10', 'evening', '789 Đường DEF, Quận 3, TP.HCM', 'pending'),
 (3, 4, '2024-04-15', 'morning', '321 Đường GHI, Quận 4, TP.HCM', 'pending');
+
+-- Chèn dữ liệu mẫu cho bảng booking_items (mỗi booking có thể nhiều dịch vụ)
+INSERT INTO booking_items (booking_id, service_id, quantity, unit_price) VALUES
+(1, 1, 1, 150000),
+(2, 3, 1, 200000),
+(3, 2, 1, 100000),
+(4, 4, 1, 300000);
+
+-- Chèn dữ liệu mẫu cho bảng contacts
+INSERT INTO contacts (full_name, email, phone, subject, message, status) VALUES
+('Nguyễn Minh Anh', 'minhanh@gmail.com', '0901234567', 'Tư vấn dịch vụ', 'Mình muốn tư vấn gói chăm sóc định kỳ cho sân vườn khoảng 120m2.', 'new'),
+('Trần Đức Huy', 'huytran@gmail.com', '0912345678', 'Đặt lịch hẹn', 'Cho mình hỏi lịch trống cuối tuần này để xử lý sâu bệnh cho cây cảnh.', 'in_progress');

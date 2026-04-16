@@ -1,6 +1,66 @@
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import { useState } from "react";
+import api from "../config/axios";
 
 function Contact() {
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState("");
+  const [submitError, setSubmitError] = useState("");
+
+  const handleChange = (event) => {
+    setFormData((prev) => ({
+      ...prev,
+      [event.target.name]: event.target.value,
+    }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (submitting) return;
+
+    try {
+      setSubmitting(true);
+      setSubmitMessage("");
+      setSubmitError("");
+
+      const payload = {
+        full_name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        subject: formData.subject,
+        message: formData.message,
+      };
+
+      const res = await api.post("/contacts", payload);
+      if (res.data?.success) {
+        setSubmitMessage("Cảm ơn bạn, yêu cầu liên hệ đã được gửi thành công.");
+        setFormData({
+          fullName: "",
+          email: "",
+          phone: "",
+          subject: "",
+          message: "",
+        });
+        return;
+      }
+
+      setSubmitError(res.data?.message || "Gửi liên hệ thất bại. Vui lòng thử lại.");
+    } catch (error) {
+      console.error("Create contact error:", error);
+      setSubmitError(error.response?.data?.message || "Không thể gửi liên hệ lúc này.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">
       {/* Hero Section */}
@@ -95,13 +155,17 @@ function Contact() {
           <div>
             <div className="rounded-2xl border border-emerald-200 bg-white p-8 shadow-lg">
               <h2 className="mb-6 text-2xl font-bold text-slate-800">Gửi liên hệ</h2>
-              <form className="space-y-5">
+              <form className="space-y-5" onSubmit={handleSubmit}>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Họ và tên</label>
                   <input
                     type="text"
+                    name="fullName"
                     placeholder="Nhập họ và tên của bạn"
+                    value={formData.fullName}
+                    onChange={handleChange}
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+                    required
                   />
                 </div>
 
@@ -109,7 +173,10 @@ function Contact() {
                   <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
                   <input
                     type="email"
+                    name="email"
                     placeholder="your@email.com"
+                    value={formData.email}
+                    onChange={handleChange}
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                   />
                 </div>
@@ -118,33 +185,61 @@ function Contact() {
                   <label className="block text-sm font-medium text-slate-700 mb-2">Số điện thoại</label>
                   <input
                     type="tel"
+                    name="phone"
                     placeholder="0123 456 789"
+                    value={formData.phone}
+                    onChange={handleChange}
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Chủ đề</label>
-                  <select className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100">
+                  <select
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+                  >
                     <option value="">-- Chọn chủ đề --</option>
-                    <option value="service">Tư vấn dịch vụ</option>
-                    <option value="booking">Đặt lịch hẹn</option>
-                    <option value="feedback">Phản hồi & góp ý</option>
-                    <option value="other">Khác</option>
+                    <option value="Tư vấn dịch vụ">Tư vấn dịch vụ</option>
+                    <option value="Đặt lịch hẹn">Đặt lịch hẹn</option>
+                    <option value="Phản hồi và góp ý">Phản hồi & góp ý</option>
+                    <option value="Khác">Khác</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Nội dung</label>
                   <textarea
+                    name="message"
                     placeholder="Hãy cho chúng tôi biết chi tiết về vấn đề của bạn..."
                     rows="5"
+                    value={formData.message}
+                    onChange={handleChange}
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 resize-none"
+                    required
                   ></textarea>
                 </div>
 
-                <button className="w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white transition hover:bg-emerald-700 active:scale-95">
-                  Gửi liên hệ
+                {submitMessage && (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                    {submitMessage}
+                  </div>
+                )}
+
+                {submitError && (
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {submitError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white transition hover:bg-emerald-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {submitting ? "Đang gửi..." : "Gửi liên hệ"}
                 </button>
               </form>
             </div>
