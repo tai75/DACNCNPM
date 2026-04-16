@@ -69,6 +69,24 @@ CREATE TABLE IF NOT EXISTS bookings (
   KEY idx_bookings_booking_date (booking_date)
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS booking_items (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  booking_id INT UNSIGNED NOT NULL,
+  service_id INT UNSIGNED NOT NULL,
+  quantity INT UNSIGNED NOT NULL DEFAULT 1,
+  unit_price DECIMAL(12,2) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_booking_items_booking FOREIGN KEY (booking_id)
+    REFERENCES bookings(id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_booking_items_service FOREIGN KEY (service_id)
+    REFERENCES services(id)
+    ON DELETE RESTRICT ON UPDATE CASCADE,
+  UNIQUE KEY uq_booking_service (booking_id, service_id),
+  KEY idx_booking_items_booking_id (booking_id),
+  KEY idx_booking_items_service_id (service_id)
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS reviews (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id INT UNSIGNED NOT NULL,
@@ -127,4 +145,18 @@ CREATE TABLE IF NOT EXISTS notifications (
     ON DELETE SET NULL ON UPDATE CASCADE,
   KEY idx_notifications_user_read (user_id, is_read),
   KEY idx_notifications_created_at (created_at)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS contacts (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  full_name VARCHAR(120) NOT NULL,
+  email VARCHAR(191) DEFAULT NULL,
+  phone VARCHAR(20) DEFAULT NULL,
+  subject VARCHAR(150) DEFAULT NULL,
+  message TEXT NOT NULL,
+  status ENUM('new', 'in_progress', 'resolved') NOT NULL DEFAULT 'new',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_contacts_status (status),
+  KEY idx_contacts_created_at (created_at)
 ) ENGINE=InnoDB;

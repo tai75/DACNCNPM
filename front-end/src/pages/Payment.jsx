@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import api from "../config/axios";
+import { clearCart } from "../utils/cart";
 
 function Payment() {
   const location = useLocation();
@@ -19,6 +20,16 @@ function Payment() {
 
   const customerName = bookingData?.fullName || "Khách hàng";
   const customerPhone = bookingData?.phone || "Chưa cập nhật";
+  const selectedServices = Array.isArray(bookingData?.services)
+    ? bookingData.services
+    : [
+        {
+          id: bookingData?.service_id,
+          name: bookingData?.service || "Dịch vụ chăm sóc sân vườn",
+          price: bookingData?.price || 0,
+          image: bookingData?.image || "",
+        },
+      ];
   const totalPrice = Number(bookingData?.price || 0);
   const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const imageBaseUrl = rawApiUrl.replace(/\/+$/, "").replace(/\/api$/, "");
@@ -28,6 +39,8 @@ function Payment() {
     if (/^https?:\/\//i.test(image)) return image;
     return `${imageBaseUrl}/uploads/${image}`;
   };
+
+  const stackedPreviewServices = selectedServices.slice(0, 3);
 
   if (!bookingData) {
     return (
@@ -51,22 +64,31 @@ function Payment() {
 
       // Chi gui cac truong backend cho phep de tranh loi Joi "is not allowed"
       const bookingPayload = {
-        service_id: bookingData.service_id,
+        service_id: selectedServices[0]?.id,
+        service_ids: selectedServices.map((item) => item.id).filter(Boolean),
         booking_date: bookingData.booking_date,
         time_slot: bookingData.time_slot,
         address: bookingData.address,
-        payment_method: paymentMethod
+        payment_method: paymentMethod,
+        note:
+          bookingData?.note ||
+          `Đặt cùng lúc ${selectedServices.length} dịch vụ: ${selectedServices
+            .map((item) => item.name)
+            .join(", ")}`,
       };
 
       const res = await api.post("/bookings", bookingPayload);
 
       if (res.data.success) {
+        clearCart();
+
         if (paymentMethod === "cod") {
           navigate("/bookings");
         } else if (paymentMethod === "bank") {
           navigate("/bank-payment", {
             state: {
               ...bookingData,
+              services: selectedServices,
               booking_id: res.data.booking_id
             }
           });
@@ -98,14 +120,40 @@ function Payment() {
       <div className="grid gap-6 lg:grid-cols-[1.05fr_1.5fr]">
         <aside className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <h2 className="border-b border-slate-200 px-5 py-4 text-2xl font-bold text-slate-800">Tóm tắt đơn đặt</h2>
-          <img
-            src={getServiceImageUrl(bookingData.image)}
-            alt="Tóm tắt dịch vụ"
-            className="h-44 w-full object-cover"
-          />
+
+          <div className="border-b border-slate-200 bg-slate-50 px-5 py-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Ảnh dịch vụ</p>
+            <div className="mt-3 flex items-center">
+              {stackedPreviewServices.map((item, index) => (
+                <img
+                  key={item.id || item.name || index}
+                  src={getServiceImageUrl(item.image)}
+                  alt={item.name || "Dịch vụ"}
+                  className={`h-14 w-14 rounded-xl border-2 border-white object-cover shadow-sm ${index > 0 ? "-ml-4" : ""}`}
+                />
+              ))}
+
+              {selectedServices.length > 3 && (
+                <div className="-ml-4 inline-flex h-14 w-14 items-center justify-center rounded-xl border-2 border-white bg-emerald-600 text-sm font-bold text-white shadow-sm">
+                  +{selectedServices.length - 3}
+                </div>
+              )}
+            </div>
+          </div>
 
           <div className="space-y-3 px-5 py-4 text-sm text-slate-700">
-            <h3 className="text-xl font-bold text-slate-800">{bookingData.service || "Dịch vụ chăm sóc sân vườn"}</h3>
+            <h3 className="text-xl font-bold text-slate-800">{selectedServices.length} dịch vụ trong đơn</h3>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              {selectedServices.map((item) => (
+                <div key={item.id || item.name} className="flex items-center justify-between gap-3 py-1 text-sm">
+                  <span className="line-clamp-1 text-slate-700">{item.name}</span>
+                  <span className="shrink-0 font-semibold text-emerald-700">
+                    {Number(item.price || 0).toLocaleString("vi-VN")} đ
+                  </span>
+                </div>
+              ))}
+            </div>
 
             <div className="flex items-start justify-between gap-4 border-b border-dashed border-slate-200 pb-2">
               <span>Ngày đặt</span>

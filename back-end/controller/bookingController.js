@@ -2,13 +2,14 @@ const db = require("../config/db");
 const Joi = require("joi");
 
 const bookingSchema = Joi.object({
-  service_id: Joi.number().integer().positive().required(),
+  service_id: Joi.number().integer().positive(),
+  service_ids: Joi.array().items(Joi.number().integer().positive()).min(1).max(20).unique(),
   booking_date: Joi.date().greater("now").required(),
   time_slot: Joi.string().valid("morning", "afternoon", "evening").required(),
   address: Joi.string().min(10).max(500).required(),
   note: Joi.string().allow("", null).max(1000),
   payment_method: Joi.string().valid("cod", "bank").default("cod"),
-});
+}).or("service_id", "service_ids");
 
 const statusSchema = Joi.object({
   status: Joi.string()
@@ -25,7 +26,7 @@ const bookingIdSchema = Joi.object({
 });
 
 const assignStaffSchema = Joi.object({
-  staff_ids: Joi.array().items(Joi.number().integer().positive()).min(1).max(2).unique().required(),
+  staff_ids: Joi.array().items(Joi.number().integer().positive()).min(1).max(20).unique().required(),
 });
 
 const completionSchema = Joi.object({
@@ -103,6 +104,90 @@ const ensureSecondaryStaffColumn = (callback) => {
   });
 };
 
+const ensureBookingStaffAssignmentsTable = (callback) => {
+  const createTableSql = `
+    CREATE TABLE IF NOT EXISTS booking_staff_assignments (
+      id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      booking_id INT UNSIGNED NOT NULL,
+      staff_id INT UNSIGNED NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_booking_staff_assignments_booking FOREIGN KEY (booking_id)
+        REFERENCES bookings(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT fk_booking_staff_assignments_staff FOREIGN KEY (staff_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+      UNIQUE KEY uq_booking_staff (booking_id, staff_id),
+      KEY idx_booking_staff_assignments_booking_id (booking_id),
+      KEY idx_booking_staff_assignments_staff_id (staff_id)
+    ) ENGINE=InnoDB
+  `;
+
+  db.query(createTableSql, (createErr) => {
+    if (createErr) {
+      return callback(createErr);
+    }
+
+    const backfillPrimarySql = `
+      INSERT IGNORE INTO booking_staff_assignments (booking_id, staff_id)
+      SELECT id, staff_id
+      FROM bookings
+      WHERE staff_id IS NOT NULL
+    `;
+
+    db.query(backfillPrimarySql, (primaryErr) => {
+      if (primaryErr) {
+        return callback(primaryErr);
+      }
+
+      const backfillSecondarySql = `
+        INSERT IGNORE INTO booking_staff_assignments (booking_id, staff_id)
+        SELECT id, secondary_staff_id
+        FROM bookings
+        WHERE secondary_staff_id IS NOT NULL
+      `;
+
+      db.query(backfillSecondarySql, (secondaryErr) => {
+        if (secondaryErr) {
+          return callback(secondaryErr);
+        }
+
+        return callback(null);
+      });
+    });
+  });
+};
+
+const ensureBookingItemsTable = (callback) => {
+  const createTableSql = `
+    CREATE TABLE IF NOT EXISTS booking_items (
+      id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      booking_id INT UNSIGNED NOT NULL,
+      service_id INT UNSIGNED NOT NULL,
+      quantity INT UNSIGNED NOT NULL DEFAULT 1,
+      unit_price DECIMAL(12,2) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_booking_items_booking FOREIGN KEY (booking_id)
+        REFERENCES bookings(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT fk_booking_items_service FOREIGN KEY (service_id)
+        REFERENCES services(id)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+      UNIQUE KEY uq_booking_service (booking_id, service_id),
+      KEY idx_booking_items_booking_id (booking_id),
+      KEY idx_booking_items_service_id (service_id)
+    ) ENGINE=InnoDB
+  `;
+
+  db.query(createTableSql, (createErr) => {
+    if (createErr) {
+      return callback(createErr);
+    }
+
+    return callback(null);
+  });
+};
+
 exports.getBookings = (req, res) => {
   const { error, value } = bookingsQuerySchema.validate(req.query);
   if (error) {
@@ -121,90 +206,183 @@ exports.getBookings = (req, res) => {
       return res.status(500).json({ success: false, message: "Loi server" });
     }
 
-    let sql = `
-      SELECT
-        b.id,
-        b.booking_date,
-        b.time_slot,
-        b.address,
-        b.note,
-        b.status,
-        b.payment_method,
-        b.payment_status,
-        b.staff_id,
-        b.secondary_staff_id,
-        b.completion_note,
-        b.before_image,
-        b.after_image,
-        b.created_at,
-        u.name AS user_name,
-        st.name AS staff_name,
-        st2.name AS secondary_staff_name,
-        s.name AS service_name,
-        s.price AS service_price,
-        s.image AS service_image
-      FROM bookings b
-      JOIN users u ON b.user_id = u.id
-      JOIN services s ON b.service_id = s.id
-      LEFT JOIN users st ON b.staff_id = st.id
-      LEFT JOIN users st2 ON b.secondary_staff_id = st2.id
-    `;
-
-    let countSql = "SELECT COUNT(*) AS total FROM bookings b";
-    const params = [];
-    const countParams = [];
-
-    if (req.user.role === "staff") {
-      sql += " WHERE (b.staff_id = ? OR b.secondary_staff_id = ?)";
-      countSql += " WHERE (b.staff_id = ? OR b.secondary_staff_id = ?)";
-      params.push(req.user.id, req.user.id);
-      countParams.push(req.user.id, req.user.id);
-    } else if (req.user.role !== "admin") {
-      sql += " WHERE b.user_id = ?";
-      countSql += " WHERE b.user_id = ?";
-      params.push(req.user.id);
-      countParams.push(req.user.id);
-    }
-
-    sql += " ORDER BY b.created_at DESC LIMIT ? OFFSET ?";
-    params.push(limit, offset);
-
-    db.query(countSql, countParams, (countErr, countResult) => {
-      if (countErr) {
-        console.error("Count bookings error:", countErr);
+    ensureBookingStaffAssignmentsTable((staffTableErr) => {
+      if (staffTableErr) {
+        console.error("Ensure booking_staff_assignments table error:", staffTableErr);
         return res.status(500).json({ success: false, message: "Loi server" });
       }
 
-      const total = countResult[0].total;
-      const totalPages = Math.ceil(total / limit);
+      ensureBookingItemsTable((tableErr) => {
+      if (tableErr) {
+        console.error("Ensure booking_items table error:", tableErr);
+        return res.status(500).json({ success: false, message: "Loi server" });
+      }
 
-      db.query(sql, params, (listErr, result) => {
-        if (listErr) {
-          console.error("Get bookings error:", listErr);
+      let sql = `
+        SELECT
+          b.id,
+          b.service_id,
+          b.booking_date,
+          b.time_slot,
+          b.address,
+          b.note,
+          b.status,
+          b.payment_method,
+          b.payment_status,
+          b.completion_note,
+          b.before_image,
+          b.after_image,
+          b.created_at,
+          u.name AS user_name,
+          GROUP_CONCAT(DISTINCT bsa.staff_id ORDER BY bsa.staff_id SEPARATOR ',') AS staff_ids,
+          COALESCE(NULLIF(GROUP_CONCAT(DISTINCT st.name ORDER BY st.name SEPARATOR ', '), ''), '') AS staff_name,
+          COALESCE(NULLIF(GROUP_CONCAT(DISTINCT si.name ORDER BY si.id SEPARATOR ', '), ''), s.name) AS service_name,
+          COALESCE(NULLIF(MAX(si.image), ''), s.image) AS service_image,
+          COALESCE(SUM(bi.quantity * bi.unit_price), s.price) AS service_price
+        FROM bookings b
+        JOIN users u ON b.user_id = u.id
+        JOIN services s ON b.service_id = s.id
+        LEFT JOIN booking_staff_assignments bsa ON bsa.booking_id = b.id
+        LEFT JOIN users st ON st.id = bsa.staff_id
+        LEFT JOIN booking_items bi ON bi.booking_id = b.id
+        LEFT JOIN services si ON si.id = bi.service_id
+      `;
+
+      let countSql = "SELECT COUNT(*) AS total FROM bookings b";
+      const params = [];
+      const countParams = [];
+
+      if (req.user.role === "staff") {
+        sql += " WHERE EXISTS (SELECT 1 FROM booking_staff_assignments bsa2 WHERE bsa2.booking_id = b.id AND bsa2.staff_id = ?)";
+        countSql += " WHERE EXISTS (SELECT 1 FROM booking_staff_assignments bsa2 WHERE bsa2.booking_id = b.id AND bsa2.staff_id = ?)";
+        params.push(req.user.id);
+        countParams.push(req.user.id);
+      } else if (req.user.role !== "admin") {
+        sql += " WHERE b.user_id = ?";
+        countSql += " WHERE b.user_id = ?";
+        params.push(req.user.id);
+        countParams.push(req.user.id);
+      }
+
+      sql += " GROUP BY b.id ORDER BY b.created_at DESC LIMIT ? OFFSET ?";
+      params.push(limit, offset);
+
+      db.query(countSql, countParams, (countErr, countResult) => {
+        if (countErr) {
+          console.error("Count bookings error:", countErr);
           return res.status(500).json({ success: false, message: "Loi server" });
         }
 
-        return res.json({
-          success: true,
-          data: result.map((booking) => {
-            const staffNames = [booking.staff_name, booking.secondary_staff_name].filter(Boolean);
-            return {
-              ...booking,
-              staff_names: staffNames,
-              status_vietnamese: statusTranslations[booking.status] || booking.status,
-              payment_method_vietnamese:
-                paymentMethodTranslations[booking.payment_method] || booking.payment_method,
-              payment_status_vietnamese:
-                paymentStatusTranslations[booking.payment_status] || booking.payment_status,
-            };
-          }),
-          pagination: {
-            currentPage: page,
-            totalPages,
-            totalItems: total,
-            itemsPerPage: limit,
-          },
+        const total = countResult[0].total;
+        const totalPages = Math.ceil(total / limit);
+
+        db.query(sql, params, (listErr, result) => {
+          if (listErr) {
+            console.error("Get bookings error:", listErr);
+            return res.status(500).json({ success: false, message: "Loi server" });
+          }
+
+          const bookingIds = result.map((booking) => booking.id);
+          if (bookingIds.length === 0) {
+            return res.json({
+              success: true,
+              data: [],
+              pagination: {
+                currentPage: page,
+                totalPages,
+                totalItems: total,
+                itemsPerPage: limit,
+              },
+            });
+          }
+
+          const placeholders = bookingIds.map(() => "?").join(", ");
+          const itemsSql = `
+            SELECT
+              bi.booking_id,
+              bi.service_id,
+              bi.quantity,
+              bi.unit_price,
+              s.name AS service_name,
+              s.image AS service_image
+            FROM booking_items bi
+            JOIN services s ON s.id = bi.service_id
+            WHERE bi.booking_id IN (${placeholders})
+            ORDER BY bi.id ASC
+          `;
+
+          db.query(itemsSql, bookingIds, (itemsErr, itemsRows) => {
+            if (itemsErr) {
+              console.error("Get booking items error:", itemsErr);
+              return res.status(500).json({ success: false, message: "Loi server" });
+            }
+
+            const itemsByBookingId = itemsRows.reduce((acc, row) => {
+              if (!acc[row.booking_id]) {
+                acc[row.booking_id] = [];
+              }
+
+              acc[row.booking_id].push({
+                service_id: row.service_id,
+                service_name: row.service_name,
+                service_image: row.service_image,
+                quantity: Number(row.quantity || 1),
+                unit_price: Number(row.unit_price || 0),
+              });
+
+              return acc;
+            }, {});
+
+            return res.json({
+              success: true,
+              data: result.map((booking) => {
+                const serviceItems =
+                  itemsByBookingId[booking.id] && itemsByBookingId[booking.id].length > 0
+                    ? itemsByBookingId[booking.id]
+                    : [
+                        {
+                          service_id: booking.service_id,
+                          service_name: booking.service_name,
+                          service_image: booking.service_image,
+                          quantity: 1,
+                          unit_price: Number(booking.service_price || 0),
+                        },
+                      ];
+
+                return {
+                  ...booking,
+                  service_price: Number(booking.service_price || 0),
+                  service_items: serviceItems,
+                  service_ids: serviceItems.map((item) => item.service_id),
+                  staff_ids: booking.staff_ids
+                    ? String(booking.staff_ids)
+                        .split(",")
+                        .map((id) => Number(id))
+                        .filter((id) => Number.isInteger(id) && id > 0)
+                    : [],
+                  staff_names: booking.staff_name
+                    ? String(booking.staff_name)
+                        .split(",")
+                        .map((name) => name.trim())
+                        .filter(Boolean)
+                    : [],
+                  status_vietnamese: statusTranslations[booking.status] || booking.status,
+                  payment_method_vietnamese:
+                    paymentMethodTranslations[booking.payment_method] || booking.payment_method,
+                  payment_status_vietnamese:
+                    paymentStatusTranslations[booking.payment_status] || booking.payment_status,
+                };
+              }),
+              pagination: {
+                currentPage: page,
+                totalPages,
+                totalItems: total,
+                itemsPerPage: limit,
+              },
+            });
+          });
         });
+      });
       });
     });
   });
@@ -219,59 +397,155 @@ exports.createBooking = (req, res) => {
     });
   }
 
-  const { service_id, booking_date, time_slot, address, note, payment_method } = value;
+  const { service_id, service_ids, booking_date, time_slot, address, note, payment_method } = value;
 
-  const checkConflictSql = `
-    SELECT id
-    FROM bookings
-    WHERE user_id = ?
-      AND DATE(booking_date) = DATE(?)
-      AND time_slot = ?
-      AND status IN ('pending', 'confirmed', 'in_progress')
-    LIMIT 1
-  `;
+  const normalizedServiceIds =
+    Array.isArray(service_ids) && service_ids.length > 0
+      ? [...new Set(service_ids.map((id) => Number(id)).filter(Boolean))]
+      : [Number(service_id)].filter(Boolean);
 
-  db.query(checkConflictSql, [req.user.id, booking_date, time_slot], (checkErr, checkRows) => {
-    if (checkErr) {
-      console.error("Check conflict error:", checkErr);
+  if (normalizedServiceIds.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Can it nhat 1 dich vu de dat lich",
+    });
+  }
+
+  ensureBookingItemsTable((tableErr) => {
+    if (tableErr) {
+      console.error("Ensure booking_items table error:", tableErr);
       return res.status(500).json({ success: false, message: "Loi may chu" });
     }
 
-    if (checkRows.length > 0) {
-      return res.status(409).json({
-        success: false,
-        message: "Ban da co lich hen trong khung gio nay. Vui long chon khung gio khac",
-      });
-    }
+    const placeholders = normalizedServiceIds.map(() => "?").join(", ");
+    const servicesSql = `SELECT id, name, price FROM services WHERE id IN (${placeholders})`;
 
-    const insertSql = `
-      INSERT INTO bookings
-      (user_id, service_id, booking_date, time_slot, address, note, payment_method, payment_status, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')
-    `;
+    db.query(servicesSql, normalizedServiceIds, (servicesErr, servicesRows) => {
+      if (servicesErr) {
+        console.error("Validate services error:", servicesErr);
+        return res.status(500).json({ success: false, message: "Loi may chu" });
+      }
 
-    db.query(
-      insertSql,
-      [req.user.id, service_id, booking_date, time_slot, address, note || null, payment_method],
-      (insertErr, result) => {
-        if (insertErr) {
-          console.error("Create booking error:", insertErr);
+      if (servicesRows.length !== normalizedServiceIds.length) {
+        return res.status(400).json({
+          success: false,
+          message: "Co dich vu khong ton tai hoac da ngung hoat dong",
+        });
+      }
+
+      const serviceById = servicesRows.reduce((acc, row) => {
+        acc[row.id] = row;
+        return acc;
+      }, {});
+
+      const checkConflictSql = `
+        SELECT id
+        FROM bookings
+        WHERE user_id = ?
+          AND DATE(booking_date) = DATE(?)
+          AND time_slot = ?
+          AND status IN ('pending', 'confirmed', 'in_progress')
+        LIMIT 1
+      `;
+
+      db.query(checkConflictSql, [req.user.id, booking_date, time_slot], (checkErr, checkRows) => {
+        if (checkErr) {
+          console.error("Check conflict error:", checkErr);
           return res.status(500).json({ success: false, message: "Loi may chu" });
         }
 
-        createNotification(
-          req.user.id,
-          "Booking moi da duoc tao va dang cho xac nhan",
-          result.insertId
-        );
+        if (checkRows.length > 0) {
+          return res.status(409).json({
+            success: false,
+            message: "Ban da co lich hen trong khung gio nay. Vui long chon khung gio khac",
+          });
+        }
 
-        return res.json({
-          success: true,
-          message: "Dat lich thanh cong",
-          booking_id: result.insertId,
+        db.beginTransaction((txStartErr) => {
+          if (txStartErr) {
+            console.error("Begin transaction create booking error:", txStartErr);
+            return res.status(500).json({ success: false, message: "Loi may chu" });
+          }
+
+          const primaryServiceId = normalizedServiceIds[0];
+          const serviceNames = normalizedServiceIds.map((id) => serviceById[id]?.name).filter(Boolean);
+          const generatedMultiServiceNote =
+            normalizedServiceIds.length > 1
+              ? `Dich vu trong don: ${serviceNames.join(", ")}`
+              : null;
+
+          const insertSql = `
+            INSERT INTO bookings
+            (user_id, service_id, booking_date, time_slot, address, note, payment_method, payment_status, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')
+          `;
+
+          db.query(
+            insertSql,
+            [
+              req.user.id,
+              primaryServiceId,
+              booking_date,
+              time_slot,
+              address,
+              note || generatedMultiServiceNote,
+              payment_method,
+            ],
+            (insertErr, result) => {
+              if (insertErr) {
+                return db.rollback(() => {
+                  console.error("Create booking error:", insertErr);
+                  return res.status(500).json({ success: false, message: "Loi may chu" });
+                });
+              }
+
+              const bookingId = result.insertId;
+              const bookingItemValues = normalizedServiceIds.map((serviceIdItem) => [
+                bookingId,
+                serviceIdItem,
+                1,
+                Number(serviceById[serviceIdItem]?.price || 0),
+              ]);
+
+              const bookingItemsSql = `
+                INSERT INTO booking_items (booking_id, service_id, quantity, unit_price)
+                VALUES ?
+              `;
+
+              db.query(bookingItemsSql, [bookingItemValues], (itemsErr) => {
+                if (itemsErr) {
+                  return db.rollback(() => {
+                    console.error("Create booking items error:", itemsErr);
+                    return res.status(500).json({ success: false, message: "Loi may chu" });
+                  });
+                }
+
+                return db.commit((commitErr) => {
+                  if (commitErr) {
+                    return db.rollback(() => {
+                      console.error("Commit create booking error:", commitErr);
+                      return res.status(500).json({ success: false, message: "Loi may chu" });
+                    });
+                  }
+
+                  createNotification(
+                    req.user.id,
+                    "Booking moi da duoc tao va dang cho xac nhan",
+                    bookingId
+                  );
+
+                  return res.json({
+                    success: true,
+                    message: "Dat lich thanh cong",
+                    booking_id: bookingId,
+                  });
+                });
+              });
+            }
+          );
         });
-      }
-    );
+      });
+    });
   });
 };
 
@@ -393,52 +667,87 @@ exports.updateBookingStatus = (req, res) => {
   const { id } = idValidation.value;
   const { status } = bodyValidation.value;
 
-  db.query("SELECT id, user_id, staff_id, secondary_staff_id, status FROM bookings WHERE id = ?", [id], (findErr, rows) => {
-    if (findErr) {
-      console.error("Find booking error:", findErr);
+  ensureBookingStaffAssignmentsTable((staffTableErr) => {
+    if (staffTableErr) {
+      console.error("Ensure booking_staff_assignments error:", staffTableErr);
       return res.status(500).json({ success: false, message: "Loi server" });
     }
 
-    if (rows.length === 0) {
-      return res.status(404).json({ success: false, message: "Booking khong ton tai" });
-    }
-
-    const booking = rows[0];
-
-    if (req.user.role === "staff") {
-      const allowedStaffIds = [booking.staff_id, booking.secondary_staff_id].filter(Boolean);
-      if (allowedStaffIds.length > 0 && !allowedStaffIds.includes(req.user.id)) {
-        return res.status(403).json({ success: false, message: "Booking khong thuoc pham vi cua ban" });
+    db.query("SELECT id, user_id, status FROM bookings WHERE id = ?", [id], (findErr, rows) => {
+      if (findErr) {
+        console.error("Find booking error:", findErr);
+        return res.status(500).json({ success: false, message: "Loi server" });
       }
 
-      const allowedTargets = allowedTransitionsByStaff[booking.status] || [];
-      if (!allowedTargets.includes(status)) {
-        return res.status(400).json({
-          success: false,
-          message: `Khong the chuyen trang thai tu ${booking.status} sang ${status}`,
+      if (rows.length === 0) {
+        return res.status(404).json({ success: false, message: "Booking khong ton tai" });
+      }
+
+      const booking = rows[0];
+
+      const validateStaffAccess = (callback) => {
+        if (req.user.role !== "staff") {
+          return callback(null);
+        }
+
+        db.query(
+          "SELECT 1 FROM booking_staff_assignments WHERE booking_id = ? AND staff_id = ? LIMIT 1",
+          [id, req.user.id],
+          (assignmentErr, assignmentRows) => {
+            if (assignmentErr) {
+              console.error("Check booking assignment error:", assignmentErr);
+              return callback(assignmentErr);
+            }
+
+            if (assignmentRows.length === 0) {
+              return callback(new Error("forbidden"));
+            }
+
+            return callback(null);
+          }
+        );
+      };
+
+      validateStaffAccess((accessErr) => {
+        if (accessErr && accessErr.message === "forbidden") {
+          return res.status(403).json({ success: false, message: "Booking khong thuoc pham vi cua ban" });
+        }
+
+        if (accessErr) {
+          return res.status(500).json({ success: false, message: "Loi server" });
+        }
+
+        if (req.user.role === "staff") {
+          const allowedTargets = allowedTransitionsByStaff[booking.status] || [];
+          if (!allowedTargets.includes(status)) {
+            return res.status(400).json({
+              success: false,
+              message: `Khong the chuyen trang thai tu ${booking.status} sang ${status}`,
+            });
+          }
+        }
+
+        const sql = `
+          UPDATE bookings
+          SET status = ?, staff_id = COALESCE(staff_id, ?)
+          WHERE id = ?
+        `;
+
+        db.query(sql, [status, req.user.role === "staff" ? req.user.id : null, id], (err, result) => {
+          if (err) {
+            console.error("Update booking status error:", err);
+            return res.status(500).json({ success: false, message: "Loi server" });
+          }
+
+          if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: "Booking khong ton tai" });
+          }
+
+          createNotification(booking.user_id, `Booking #${id} duoc cap nhat trang thai: ${status}`, id);
+
+          return res.json({ success: true, message: "Cap nhat trang thai thanh cong" });
         });
-      }
-    }
-
-    const sql = `
-      UPDATE bookings
-      SET status = ?, staff_id = COALESCE(staff_id, ?)
-      WHERE id = ?
-    `;
-
-    db.query(sql, [status, req.user.role === "staff" ? req.user.id : booking.staff_id, id], (err, result) => {
-    if (err) {
-      console.error("Update booking status error:", err);
-      return res.status(500).json({ success: false, message: "Loi server" });
-    }
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: "Booking khong ton tai" });
-    }
-
-    createNotification(booking.user_id, `Booking #${id} duoc cap nhat trang thai: ${status}`, id);
-
-    return res.json({ success: true, message: "Cap nhat trang thai thanh cong" });
+      });
     });
   });
 };
@@ -460,7 +769,7 @@ exports.assignStaff = (req, res) => {
 
   const { id } = idValidation.value;
   const rawStaffIds = bodyValidation.value.staff_ids || [];
-  const staffIds = [...new Set(rawStaffIds.map((id) => Number(id)).filter(Boolean))].slice(0, 2);
+  const staffIds = [...new Set(rawStaffIds.map((id) => Number(id)).filter(Boolean))];
 
   if (staffIds.length === 0) {
     return res.status(400).json({ success: false, message: "Can it nhat 1 staff hop le" });
@@ -474,43 +783,84 @@ exports.assignStaff = (req, res) => {
 
     const placeholders = staffIds.map(() => "?").join(", ");
     db.query(`SELECT id, role FROM users WHERE id IN (${placeholders})`, staffIds, (staffErr, staffRows) => {
-    if (staffErr) {
-      console.error("Find staff error:", staffErr);
-      return res.status(500).json({ success: false, message: "Loi server" });
-    }
-
-    if (staffRows.length !== staffIds.length || staffRows.some((row) => row.role !== "staff")) {
-      return res.status(400).json({ success: false, message: "Danh sach staff khong hop le" });
-    }
-
-    const primaryStaffId = staffIds[0];
-    const secondaryStaffId = staffIds[1] || null;
-
-    const sql = `
-      UPDATE bookings
-      SET staff_id = ?,
-          secondary_staff_id = ?,
-          status = CASE WHEN status = 'pending' THEN 'confirmed' ELSE status END
-      WHERE id = ?
-    `;
-
-    db.query(sql, [primaryStaffId, secondaryStaffId, id], (err, result) => {
-      if (err) {
-        console.error("Assign staff error:", err);
+      if (staffErr) {
+        console.error("Find staff error:", staffErr);
         return res.status(500).json({ success: false, message: "Loi server" });
       }
 
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ success: false, message: "Booking khong ton tai" });
+      if (staffRows.length !== staffIds.length || staffRows.some((row) => row.role !== "staff")) {
+        return res.status(400).json({ success: false, message: "Danh sach staff khong hop le" });
       }
 
-      staffIds.forEach((staffId) => {
-        createNotification(staffId, `Ban duoc phan cong booking #${id}`, id);
-      });
+      const primaryStaffId = staffIds[0] || null;
+      const secondaryStaffId = staffIds[1] || null;
 
-      return res.json({ success: true, message: "Gan nhan vien thanh cong" });
+      db.beginTransaction((txErr) => {
+        if (txErr) {
+          console.error("Begin assign transaction error:", txErr);
+          return res.status(500).json({ success: false, message: "Loi server" });
+        }
+
+        const updateBookingSql = `
+          UPDATE bookings
+          SET staff_id = ?,
+              secondary_staff_id = ?,
+              status = CASE WHEN status = 'pending' THEN 'confirmed' ELSE status END
+          WHERE id = ?
+        `;
+
+        db.query(updateBookingSql, [primaryStaffId, secondaryStaffId, id], (updateErr, updateResult) => {
+          if (updateErr) {
+            return db.rollback(() => {
+              console.error("Assign staff update error:", updateErr);
+              return res.status(500).json({ success: false, message: "Loi server" });
+            });
+          }
+
+          if (updateResult.affectedRows === 0) {
+            return db.rollback(() => res.status(404).json({ success: false, message: "Booking khong ton tai" }));
+          }
+
+          db.query("DELETE FROM booking_staff_assignments WHERE booking_id = ?", [id], (deleteErr) => {
+            if (deleteErr) {
+              return db.rollback(() => {
+                console.error("Clear booking assignments error:", deleteErr);
+                return res.status(500).json({ success: false, message: "Loi server" });
+              });
+            }
+
+            const assignmentValues = staffIds.map((staffId) => [id, staffId]);
+            db.query(
+              "INSERT INTO booking_staff_assignments (booking_id, staff_id) VALUES ?",
+              [assignmentValues],
+              (insertErr) => {
+                if (insertErr) {
+                  return db.rollback(() => {
+                    console.error("Insert booking assignments error:", insertErr);
+                    return res.status(500).json({ success: false, message: "Loi server" });
+                  });
+                }
+
+                db.commit((commitErr) => {
+                  if (commitErr) {
+                    return db.rollback(() => {
+                      console.error("Commit assign staff error:", commitErr);
+                      return res.status(500).json({ success: false, message: "Loi server" });
+                    });
+                  }
+
+                  staffIds.forEach((staffId) => {
+                    createNotification(staffId, `Ban duoc phan cong booking #${id}`, id);
+                  });
+
+                  return res.json({ success: true, message: "Gan nhan vien thanh cong" });
+                });
+              }
+            );
+          });
+        });
+      });
     });
-  });
   });
 };
 
@@ -532,7 +882,13 @@ exports.updateCompletion = (req, res) => {
   const { id } = idValidation.value;
   const { completion_note, before_image, after_image, status } = bodyValidation.value;
 
-  db.query("SELECT id, user_id, staff_id, secondary_staff_id FROM bookings WHERE id = ?", [id], (findErr, rows) => {
+  ensureBookingStaffAssignmentsTable((staffTableErr) => {
+    if (staffTableErr) {
+      console.error("Ensure booking_staff_assignments error:", staffTableErr);
+      return res.status(500).json({ success: false, message: "Loi server" });
+    }
+
+    db.query("SELECT id, user_id FROM bookings WHERE id = ?", [id], (findErr, rows) => {
     if (findErr) {
       console.error("Find booking for completion error:", findErr);
       return res.status(500).json({ success: false, message: "Loi server" });
@@ -542,39 +898,59 @@ exports.updateCompletion = (req, res) => {
       return res.status(404).json({ success: false, message: "Booking khong ton tai" });
     }
 
-    const booking = rows[0];
-    const allowedStaffIds = [booking.staff_id, booking.secondary_staff_id].filter(Boolean);
-    if (req.user.role === "staff" && allowedStaffIds.length > 0 && !allowedStaffIds.includes(req.user.id)) {
-      return res.status(403).json({ success: false, message: "Booking khong thuoc pham vi cua ban" });
-    }
+      const booking = rows[0];
 
-    const sql = `
-      UPDATE bookings
-      SET completion_note = ?,
-          before_image = COALESCE(?, before_image),
-          after_image = COALESCE(?, after_image),
-          status = ?,
-          staff_id = COALESCE(staff_id, ?)
-      WHERE id = ?
-    `;
+      if (req.user.role === "staff") {
+        db.query(
+          "SELECT 1 FROM booking_staff_assignments WHERE booking_id = ? AND staff_id = ? LIMIT 1",
+          [id, req.user.id],
+          (assignmentErr, assignmentRows) => {
+            if (assignmentErr) {
+              console.error("Check booking assignment error:", assignmentErr);
+              return res.status(500).json({ success: false, message: "Loi server" });
+            }
 
-    db.query(
-      sql,
-      [completion_note || null, before_image || null, after_image || null, status, req.user.role === "staff" ? req.user.id : booking.staff_id, id],
-      (err, result) => {
-        if (err) {
-          console.error("Update completion error:", err);
-          return res.status(500).json({ success: false, message: "Loi server" });
-        }
+            if (assignmentRows.length === 0) {
+              return res.status(403).json({ success: false, message: "Booking khong thuoc pham vi cua ban" });
+            }
 
-        if (result.affectedRows === 0) {
-          return res.status(404).json({ success: false, message: "Booking khong ton tai" });
-        }
-
-        createNotification(booking.user_id, `Booking #${id} da duoc cap nhat ket qua cham soc`, id);
-        return res.json({ success: true, message: "Cap nhat ket qua cham soc thanh cong" });
+            applyCompletionUpdate(booking);
+          }
+        );
+      } else {
+        applyCompletionUpdate(booking);
       }
-    );
+
+      function applyCompletionUpdate(currentBooking) {
+        const sql = `
+          UPDATE bookings
+          SET completion_note = ?,
+              before_image = COALESCE(?, before_image),
+              after_image = COALESCE(?, after_image),
+              status = ?,
+              staff_id = COALESCE(staff_id, ?)
+          WHERE id = ?
+        `;
+
+        db.query(
+          sql,
+          [completion_note || null, before_image || null, after_image || null, status, req.user.role === "staff" ? req.user.id : null, id],
+          (err, result) => {
+            if (err) {
+              console.error("Update completion error:", err);
+              return res.status(500).json({ success: false, message: "Loi server" });
+            }
+
+            if (result.affectedRows === 0) {
+              return res.status(404).json({ success: false, message: "Booking khong ton tai" });
+            }
+
+            createNotification(currentBooking.user_id, `Booking #${id} da duoc cap nhat ket qua cham soc`, id);
+            return res.json({ success: true, message: "Cap nhat ket qua cham soc thanh cong" });
+          }
+        );
+      }
+    });
   });
 };
 

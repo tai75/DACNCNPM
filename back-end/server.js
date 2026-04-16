@@ -18,6 +18,8 @@ const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const revenueRoutes = require("./routes/revenueRoutes");
+const contactRoutes = require("./routes/contactRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 
 const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:5173")
   .split(",")
@@ -104,6 +106,8 @@ app.use("/api/services", serviceRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/revenue", revenueRoutes);
+app.use("/api/contacts", contactRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 /* RUN SERVER */
 const PORT = process.env.API_PORT || 5000;

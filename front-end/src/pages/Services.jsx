@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import api from "../config/axios";
 
 function Services() {
   const navigate = useNavigate();
   const [services, setServices] = useState([]);
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [loading, setLoading] = useState(true);
   const imageBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -23,6 +24,17 @@ function Services() {
     fetchServices();
   }, []);
 
+  const filteredServices = useMemo(() => {
+    const keyword = searchKeyword.trim().toLowerCase();
+    if (!keyword) return services;
+
+    return services.filter((service) => {
+      const name = String(service.name || "").toLowerCase();
+      const description = String(service.description || "").toLowerCase();
+      return name.includes(keyword) || description.includes(keyword);
+    });
+  }, [searchKeyword, services]);
+
   if (loading) {
     return (
       <div className="flex min-h-[45vh] w-full items-center justify-center py-8">
@@ -39,10 +51,38 @@ function Services() {
         <p className="mt-3 max-w-3xl text-sm text-slate-600 md:text-base">
           Mỗi gói đều có quy trình rõ ràng, kỹ thuật viên phụ trách và báo cáo sau khi hoàn thành.
         </p>
+
+        <div className="mt-6 max-w-xl">
+          <label htmlFor="services-search" className="mb-2 block text-sm font-semibold text-slate-700">
+            Tìm kiếm dịch vụ
+          </label>
+          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm transition focus-within:border-emerald-300 focus-within:ring-2 focus-within:ring-emerald-100">
+            <input
+              id="services-search"
+              type="text"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="Nhập tên dịch vụ hoặc mô tả..."
+              className="w-full bg-transparent px-1 py-1.5 text-sm text-slate-800 outline-none placeholder:text-slate-400"
+            />
+            {searchKeyword && (
+              <button
+                type="button"
+                onClick={() => setSearchKeyword("")}
+                className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-200"
+              >
+                Xóa
+              </button>
+            )}
+          </div>
+          <p className="mt-2 text-xs text-slate-500">
+            {filteredServices.length} / {services.length} dịch vụ phù hợp
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {services.map((service, index) => (
+        {filteredServices.map((service, index) => (
           <article
             key={service.id}
             onClick={() => navigate(`/services/${service.id}`)}
@@ -93,6 +133,22 @@ function Services() {
                 Đặt lịch ngay
               </button>
             </div>
+          </div>
+        )}
+
+        {services.length > 0 && filteredServices.length === 0 && (
+          <div className="card-soft sm:col-span-2 lg:col-span-3 p-8 text-center">
+            <h2 className="text-xl font-semibold text-slate-800">Không tìm thấy dịch vụ phù hợp</h2>
+            <p className="mt-2 text-sm text-slate-500">
+              Hãy thử từ khóa khác hoặc xóa bộ lọc tìm kiếm.
+            </p>
+            <button
+              type="button"
+              onClick={() => setSearchKeyword("")}
+              className="mt-4 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+            >
+              Xóa tìm kiếm
+            </button>
           </div>
         )}
       </div>

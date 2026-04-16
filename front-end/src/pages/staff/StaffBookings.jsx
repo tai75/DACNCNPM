@@ -32,6 +32,27 @@ function StaffBookings() {
     },
   };
 
+  const timeSlotLabel = (slot) => {
+    if (slot === "morning") return "Buổi sáng";
+    if (slot === "afternoon") return "Buổi chiều";
+    if (slot === "evening") return "Buổi tối";
+    return slot || "Chưa cập nhật";
+  };
+
+  const getServiceItems = (booking) => {
+    if (Array.isArray(booking?.service_items) && booking.service_items.length > 0) {
+      return booking.service_items;
+    }
+
+    return [
+      {
+        service_name: booking.service_name,
+        unit_price: booking.service_price,
+        quantity: 1,
+      },
+    ];
+  };
+
   const fetchBookings = async () => {
     try {
       setLoading(true);
@@ -122,12 +143,25 @@ function StaffBookings() {
                     </td>
                     <td className="px-4 py-4">
                       <div className="font-medium text-slate-800">{b.service_name}</div>
+                      <div className="mt-1 space-y-1 text-xs text-slate-500">
+                        {getServiceItems(b).map((item, index) => (
+                          <div key={`${b.id}-${item.service_id || item.service_name || index}`}>
+                            {index + 1}. {item.service_name}
+                            {Number(item.quantity || 1) > 1 ? ` x${item.quantity}` : ""}
+                          </div>
+                        ))}
+                      </div>
+                      {Array.isArray(b.staff_names) && b.staff_names.length > 0 && (
+                        <div className="mt-2 text-xs text-emerald-700">
+                          Staff: {b.staff_names.join(", ")}
+                        </div>
+                      )}
                       <div className="text-sm text-slate-500">{new Date(b.booking_date).toLocaleDateString("vi-VN")}</div>
                     </td>
                     <td className="px-4 py-4 text-sm text-slate-600">
                       <div>{new Date(b.booking_date).toLocaleDateString("vi-VN")}</div>
                       <div className="mt-1 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                        {b.time_slot}
+                        {timeSlotLabel(b.time_slot)}
                       </div>
                     </td>
                     <td className="px-4 py-4">

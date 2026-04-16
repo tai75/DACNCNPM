@@ -88,33 +88,39 @@ function AdminRevenue() {
 
       <div className="card-soft min-w-0">
         <h4 className="text-lg font-semibold text-slate-800">Bảng thống kê doanh thu</h4>
-        <div className="mt-4 h-80 w-full min-w-0">
-          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-            <ComposedChart data={chartData} margin={{ top: 10, right: 18, left: 6, bottom: 0 }}>
-              <defs>
-                <linearGradient id="dashboardRevenueBar" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.95} />
-                  <stop offset="100%" stopColor="#059669" stopOpacity={0.6} />
-                </linearGradient>
-                <linearGradient id="dashboardRevenueArea" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#34d399" stopOpacity={0.32} />
-                  <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="displayDate" tick={{ fontSize: 12 }} />
-              <YAxis tickFormatter={(value) => Number(value).toLocaleString("vi-VN")} tick={{ fontSize: 12 }} />
-              <Tooltip
-                formatter={(value) => formatCurrencyVND(value)}
-                labelFormatter={(label) => `Ngày: ${label}`}
-                contentStyle={{ borderRadius: "10px", border: "1px solid #dbe7df" }}
-              />
-              <Legend />
-              <Area type="monotone" dataKey="revenue" fill="url(#dashboardRevenueArea)" stroke="transparent" name="Xu hướng" />
-              <Bar dataKey="revenue" fill="url(#dashboardRevenueBar)" radius={[10, 10, 0, 0]} name="Doanh thu" />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </div>
+        {chartData.length > 0 ? (
+          <div className="mt-4 h-80 min-h-[320px] w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
+              <ComposedChart data={chartData} margin={{ top: 10, right: 18, left: 6, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="dashboardRevenueBar" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#059669" stopOpacity={0.6} />
+                  </linearGradient>
+                  <linearGradient id="dashboardRevenueArea" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#34d399" stopOpacity={0.32} />
+                    <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="displayDate" tick={{ fontSize: 12 }} />
+                <YAxis tickFormatter={(value) => Number(value).toLocaleString("vi-VN")} tick={{ fontSize: 12 }} />
+                <Tooltip
+                  formatter={(value) => formatCurrencyVND(value)}
+                  labelFormatter={(label) => `Ngày: ${label}`}
+                  contentStyle={{ borderRadius: "10px", border: "1px solid #dbe7df" }}
+                />
+                <Legend />
+                <Area type="monotone" dataKey="revenue" fill="url(#dashboardRevenueArea)" stroke="transparent" name="Xu hướng" />
+                <Bar dataKey="revenue" fill="url(#dashboardRevenueBar)" radius={[10, 10, 0, 0]} name="Doanh thu" />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
+            Chưa có dữ liệu doanh thu để hiển thị biểu đồ.
+          </div>
+        )}
       </div>
 
       <div className="card-soft">
