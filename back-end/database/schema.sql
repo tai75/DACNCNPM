@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   staff_id INT UNSIGNED DEFAULT NULL,
   secondary_staff_id INT UNSIGNED DEFAULT NULL,
   booking_date DATE NOT NULL,
-  time_slot ENUM('morning', 'afternoon', 'evening') NOT NULL,
+  time_slot ENUM('morning', 'afternoon') NOT NULL,
   address VARCHAR(500) NOT NULL,
   note TEXT,
   status ENUM('pending', 'confirmed', 'in_progress', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',

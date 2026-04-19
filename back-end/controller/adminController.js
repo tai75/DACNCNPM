@@ -297,7 +297,7 @@ exports.getStaffSchedule = async (req, res) => {
         JOIN users u ON u.id = b.user_id
         JOIN services s ON s.id = b.service_id
         WHERE bsa.staff_id = ?
-        ORDER BY b.booking_date DESC, FIELD(b.time_slot, 'morning', 'afternoon', 'evening') ASC
+        ORDER BY b.booking_date DESC, FIELD(b.time_slot, 'morning', 'afternoon') ASC
       `,
       [value.id]
     );
