@@ -102,7 +102,6 @@ function AdminStaff() {
   const timeSlotLabel = (timeSlot) => {
     if (timeSlot === "morning") return "Sáng";
     if (timeSlot === "afternoon") return "Chiều";
-    if (timeSlot === "evening") return "Tối";
     return timeSlot;
   };
 

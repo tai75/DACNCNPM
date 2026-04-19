@@ -35,7 +35,6 @@ function StaffBookings() {
   const timeSlotLabel = (slot) => {
     if (slot === "morning") return "Buổi sáng";
     if (slot === "afternoon") return "Buổi chiều";
-    if (slot === "evening") return "Buổi tối";
     return slot || "Chưa cập nhật";
   };
 

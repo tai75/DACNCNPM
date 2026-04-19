@@ -8,6 +8,25 @@ function AdminBookings() {
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedStaffByBooking, setSelectedStaffByBooking] = useState({});
+  const [scheduleByBooking, setScheduleByBooking] = useState({});
+
+  const toDateInputValue = (value) => {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const todayInputValue = (() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  })();
 
   // ================= LOAD DATA =================
   const fetchBookings = async () => {
@@ -19,6 +38,15 @@ function AdminBookings() {
       setSelectedStaffByBooking(
         nextBookings.reduce((accumulator, booking) => {
           accumulator[booking.id] = Array.isArray(booking.staff_ids) ? booking.staff_ids.map(Number) : [];
+          return accumulator;
+        }, {})
+      );
+      setScheduleByBooking(
+        nextBookings.reduce((accumulator, booking) => {
+          accumulator[booking.id] = {
+            booking_date: toDateInputValue(booking.booking_date),
+            time_slot: booking.time_slot || "morning",
+          };
           return accumulator;
         }, {})
       );
@@ -87,6 +115,36 @@ function AdminBookings() {
     }
   };
 
+  const handleScheduleInputChange = (bookingId, field, value) => {
+    setScheduleByBooking((prev) => ({
+      ...prev,
+      [bookingId]: {
+        booking_date: prev?.[bookingId]?.booking_date || "",
+        time_slot: prev?.[bookingId]?.time_slot || "morning",
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleReschedule = async (bookingId) => {
+    const form = scheduleByBooking[bookingId];
+    if (!form?.booking_date || !form?.time_slot) {
+      window.alert("Vui lòng chọn đủ ngày và khung giờ trước khi đổi lịch");
+      return;
+    }
+
+    try {
+      await api.put(`/bookings/${bookingId}/schedule`, {
+        booking_date: form.booking_date,
+        time_slot: form.time_slot,
+      });
+      fetchBookings();
+    } catch (err) {
+      console.error("Lỗi đổi lịch booking:", err);
+      window.alert(err?.message || "Đổi lịch thất bại");
+    }
+  };
+
   const handleStaffSelectionChange = (bookingId, staffId, checked) => {
     setSelectedStaffByBooking((prev) => {
       const current = Array.isArray(prev[bookingId]) ? prev[bookingId] : [];
@@ -101,7 +159,6 @@ function AdminBookings() {
   const timeSlotLabel = (slot) => {
     if (slot === "morning") return "Buổi sáng";
     if (slot === "afternoon") return "Buổi chiều";
-    if (slot === "evening") return "Buổi tối";
     return slot;
   };
 
@@ -319,12 +376,39 @@ function AdminBookings() {
                   </select>
                 </td>
                 <td className="px-4 py-4">
-                  <button
-                    onClick={() => handleDelete(booking.id)}
-                    className="rounded-xl bg-rose-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-rose-600"
-                  >
-                    Xóa
-                  </button>
+                  <div className="space-y-2">
+                    <input
+                      type="date"
+                      min={todayInputValue}
+                      value={scheduleByBooking[booking.id]?.booking_date || ""}
+                      onChange={(e) => handleScheduleInputChange(booking.id, "booking_date", e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+                    />
+
+                    <select
+                      value={scheduleByBooking[booking.id]?.time_slot || "morning"}
+                      onChange={(e) => handleScheduleInputChange(booking.id, "time_slot", e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+                    >
+                      <option value="morning">Buổi sáng</option>
+                      <option value="afternoon">Buổi chiều</option>
+                    </select>
+
+                    <button
+                      type="button"
+                      onClick={() => handleReschedule(booking.id)}
+                      className="w-full rounded-xl bg-slate-800 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-900"
+                    >
+                      Đổi lịch
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(booking.id)}
+                      className="w-full rounded-xl bg-rose-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-rose-600"
+                    >
+                      Xóa
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

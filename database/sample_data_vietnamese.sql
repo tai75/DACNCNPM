@@ -20,7 +20,7 @@ INSERT INTO users (name, email, phone, password, role) VALUES
 INSERT INTO bookings (user_id, service_id, booking_date, time_slot, address, status) VALUES
 (2, 1, '2024-04-01', 'morning', '123 Đường ABC, Quận 1, TP.HCM', 'completed'),
 (2, 3, '2024-04-05', 'afternoon', '456 Đường XYZ, Quận 2, TP.HCM', 'confirmed'),
-(3, 2, '2024-04-10', 'evening', '789 Đường DEF, Quận 3, TP.HCM', 'pending'),
+(3, 2, '2024-04-10', 'afternoon', '789 Đường DEF, Quận 3, TP.HCM', 'pending'),
 (3, 4, '2024-04-15', 'morning', '321 Đường GHI, Quận 4, TP.HCM', 'pending');
 
 -- Chèn dữ liệu mẫu cho bảng booking_items (mỗi booking có thể nhiều dịch vụ)

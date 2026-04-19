@@ -12,6 +12,7 @@ import Services from "./pages/Services";
 import ServiceDetail from "./pages/ServiceDetail";
 import Booking from "./pages/Booking";
 import Bookings from "./pages/Bookings";
+import BookingDetail from "./pages/BookingDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Payment from "./pages/Payment";
@@ -108,6 +109,7 @@ function App() {
           <Route path="booking" element={<Booking />} />
           <Route path="profile" element={<ProtectedRoute><UserInfo /></ProtectedRoute>} />
           <Route path="bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
+          <Route path="bookings/:id" element={<ProtectedRoute><BookingDetail /></ProtectedRoute>} />
 
           <Route path="payment" element={<Payment />} />
           <Route path="bank-payment" element={<BankPayment />} />
