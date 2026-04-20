@@ -86,3 +86,7 @@ Tai cau truc va nang cap du an Garden Care theo huong production-ready, giu tuon
 - Chua co assign staff trong API
 - Frontend admin dashboard goi /api/admin/bookings nhung backend chua co
 - Staff page cho phep update status qua rong, chua rang buoc theo workflow
+
+## 10) Demo focus
+- Uu tien cho demo: auth, booking workflow, assign staff, revenue summary.
+- Neu can demo nhanh, bo qua phan realtime va gateway thanh toan.
