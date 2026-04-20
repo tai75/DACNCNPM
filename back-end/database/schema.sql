@@ -1,6 +1,7 @@
 CREATE DATABASE IF NOT EXISTS garden_care CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE garden_care;
 
+-- Core actors
 CREATE TABLE IF NOT EXISTS users (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
@@ -14,6 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
   KEY idx_users_role (role)
 ) ENGINE=InnoDB;
 
+-- Service catalog
 CREATE TABLE IF NOT EXISTS services (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(150) NOT NULL,
@@ -30,6 +32,7 @@ CREATE TABLE IF NOT EXISTS services (
   KEY idx_services_active (is_active)
 ) ENGINE=InnoDB;
 
+-- Booking workflow
 CREATE TABLE IF NOT EXISTS bookings (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id INT UNSIGNED NOT NULL,
@@ -67,6 +70,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   KEY idx_bookings_created_at (created_at)
 ) ENGINE=InnoDB;
 
+-- Customer feedback
 CREATE TABLE IF NOT EXISTS reviews (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id INT UNSIGNED NOT NULL,
@@ -92,6 +96,7 @@ CREATE TABLE IF NOT EXISTS reviews (
   KEY idx_reviews_user_id (user_id)
 ) ENGINE=InnoDB;
 
+-- Payment tracking
 CREATE TABLE IF NOT EXISTS payments (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   booking_id INT UNSIGNED NOT NULL,
@@ -110,6 +115,7 @@ CREATE TABLE IF NOT EXISTS payments (
   KEY idx_payments_status (status)
 ) ENGINE=InnoDB;
 
+-- In-app notifications
 CREATE TABLE IF NOT EXISTS notifications (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id INT UNSIGNED NOT NULL,
