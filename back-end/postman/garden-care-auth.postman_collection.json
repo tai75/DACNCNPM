@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Garden Care Auth + JWT",
-    "description": "Collection to test register, login JWT, and protected booking endpoints.",
+    "description": "Collection to test auth flow, token persistence, and protected booking endpoints for local development demos.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
