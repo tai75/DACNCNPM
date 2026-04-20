@@ -233,3 +233,5 @@ Distributed under the MIT License. See `LICENSE` for more information.
 ---
 
 Made with ❤️ for beautiful gardens everywhere 🌱
+
+Cap nhat tai lieu: bo sung ghi chu tong quan de dong bo README tren nhanh dev.
