@@ -1,3 +1,4 @@
+const bcrypt = require("bcrypt");
 const db = require("../config/db");
 const Joi = require("joi");
 
@@ -13,6 +14,14 @@ const updateProfileSchema = Joi.object({
   name: Joi.string().trim().min(2).max(100).required(),
   phone: Joi.string().trim().min(8).max(20).required(),
   address: Joi.string().trim().allow("", null).max(255),
+});
+
+const changePasswordSchema = Joi.object({
+  currentPassword: Joi.string().min(1).required(),
+  newPassword: Joi.string().min(8).required(),
+  confirmPassword: Joi.string().valid(Joi.ref("newPassword")).required().messages({
+    "any.only": "Mật khẩu xác nhận không khớp",
+  }),
 });
 
 const hasUserAddressColumn = (callback) => {
@@ -110,6 +119,57 @@ exports.updateProfile = (req, res) => {
         message: "Cập nhật thông tin thành công",
       });
     });
+  });
+};
+
+/* ======================
+   CHANGE PASSWORD
+====================== */
+exports.changePassword = (req, res) => {
+  const { error, value } = changePasswordSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      message: "Dữ liệu không hợp lệ: " + error.details[0].message,
+    });
+  }
+
+  const { currentPassword, newPassword } = value;
+
+  db.query("SELECT password FROM users WHERE id = ? LIMIT 1", [req.user.id], async (err, rows) => {
+    if (err) {
+      console.error("Lỗi changePassword - get user:", err);
+      return res.status(500).json({ success: false, message: "Lỗi server" });
+    }
+
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: "User không tồn tại" });
+    }
+
+    try {
+      const isMatch = await bcrypt.compare(currentPassword, rows[0].password);
+      if (!isMatch) {
+        return res.status(400).json({ success: false, message: "Mật khẩu hiện tại không đúng" });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      db.query("UPDATE users SET password = ? WHERE id = ?", [hashedPassword, req.user.id], (updateErr, result) => {
+        if (updateErr) {
+          console.error("Lỗi changePassword - update:", updateErr);
+          return res.status(500).json({ success: false, message: "Lỗi server" });
+        }
+
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ success: false, message: "User không tồn tại" });
+        }
+
+        return res.json({ success: true, message: "Đổi mật khẩu thành công" });
+      });
+    } catch (compareErr) {
+      console.error("Lỗi changePassword - compare:", compareErr);
+      return res.status(500).json({ success: false, message: "Lỗi server" });
+    }
   });
 };
 

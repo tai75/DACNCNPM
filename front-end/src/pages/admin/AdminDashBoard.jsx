@@ -122,7 +122,7 @@ function AdminDashBoard() {
               <h2 className="mb-6 text-xl font-bold text-gray-800">Thống kê số lượng</h2>
 
               <div className="h-[300px] min-h-[300px] min-w-0">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={260}>
+                <ResponsiveContainer width="99%" height={300} minWidth={0} minHeight={260}>
                   <ComposedChart data={chartData}>
                     <defs>
                       <linearGradient id="dashboardBar" x1="0" y1="0" x2="0" y2="1">
@@ -160,7 +160,7 @@ function AdminDashBoard() {
               <h2 className="mb-6 text-xl font-bold text-gray-800">Thống kê doanh thu</h2>
 
               <div className="h-[300px] min-h-[300px] min-w-0">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={260}>
+                <ResponsiveContainer width="99%" height={300} minWidth={0} minHeight={260}>
                   <ComposedChart data={revenueChartData}>
                     <defs>
                       <linearGradient id="revenueBar" x1="0" y1="0" x2="0" y2="1">

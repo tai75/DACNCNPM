@@ -90,7 +90,7 @@ function AdminRevenue() {
         <h4 className="text-lg font-semibold text-slate-800">Bảng thống kê doanh thu</h4>
         {chartData.length > 0 ? (
           <div className="mt-4 h-80 min-h-[320px] w-full min-w-0">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
+            <ResponsiveContainer width="99%" height={300} minWidth={0} minHeight={280}>
               <ComposedChart data={chartData} margin={{ top: 10, right: 18, left: 6, bottom: 0 }}>
                 <defs>
                   <linearGradient id="dashboardRevenueBar" x1="0" y1="0" x2="0" y2="1">

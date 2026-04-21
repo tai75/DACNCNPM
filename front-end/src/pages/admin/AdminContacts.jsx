@@ -18,11 +18,13 @@ function AdminContacts() {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [loadError, setLoadError] = useState("");
 
   const fetchContacts = async () => {
     try {
       setLoading(true);
-      const params = { page: 1, limit: 200 };
+      setLoadError("");
+      const params = { page: 1, limit: 100 };
       if (statusFilter !== "all") params.status = statusFilter;
       if (searchText.trim()) params.q = searchText.trim();
 
@@ -30,6 +32,7 @@ function AdminContacts() {
       setContacts(res.data?.data || []);
     } catch (error) {
       console.error("Load contacts error:", error);
+      setLoadError(error?.response?.data?.message || error?.message || "Không thể tải danh sách liên hệ");
     } finally {
       setLoading(false);
     }
@@ -141,6 +144,11 @@ function AdminContacts() {
       </div>
 
       <div className="table-wrap">
+        {loadError && (
+          <div className="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {loadError}
+          </div>
+        )}
         <table className="w-full min-w-[1100px]">
           <thead className="bg-slate-50 text-left text-xs uppercase tracking-[0.14em] text-slate-500">
             <tr>

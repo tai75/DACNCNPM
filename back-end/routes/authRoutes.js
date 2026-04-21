@@ -6,13 +6,13 @@ const { createRateLimiter } = require("../middleware/rateLimit");
 const registerLimiter = createRateLimiter({
 	windowMs: 15 * 60 * 1000,
 	max: 20,
-	message: "Too many register attempts. Please try again later.",
+	message: "Bạn đã thử đăng ký quá nhiều lần. Vui lòng thử lại sau.",
 });
 
 const loginLimiter = createRateLimiter({
 	windowMs: 15 * 60 * 1000,
 	max: 10,
-	message: "Too many login attempts. Please try again later.",
+	message: "Bạn đã đăng nhập sai quá nhiều lần. Vui lòng thử lại sau.",
 });
 
 /**

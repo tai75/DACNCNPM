@@ -34,6 +34,7 @@ import StaffLayout from "./layouts/StaffLayout";
 import StaffRoute from "./routes/StaffRoute";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import StaffBookings from "./pages/staff/StaffBookings";
+import AdminRefunds from "./pages/admin/AdminRefunds";
 
 /* ======================
    USER LAYOUT
@@ -124,6 +125,7 @@ function App() {
           <Route path="reviews" element={<AdminReviews />} />
           <Route path="contacts" element={<AdminContacts />} />
           <Route path="bookings" element={<AdminBookings />} />
+          <Route path="refunds" element={<AdminRefunds />} />
           <Route path="revenue" element={<AdminRevenue />} />
         </Route>
 

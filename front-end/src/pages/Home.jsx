@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Clock3, Star } from "lucide-react";
+import { Clock3 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
@@ -139,21 +139,6 @@ function Home() {
     "/images/background.webp",
   ];
 
-  const renderStars = (rating) => {
-    const fullStars = Math.round(rating);
-    return (
-      <div className="flex items-center gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`h-4 w-4 ${star <= fullStars ? "fill-amber-400 text-amber-400" : "text-amber-200"}`}
-          />
-        ))}
-        <span className="ml-1 text-xs font-medium text-slate-500">{rating}</span>
-      </div>
-    );
-  };
-
   const handleAvatarError = (event, index) => {
     const fallback = avatarFallbacks[index % avatarFallbacks.length];
     if (event.currentTarget.src.endsWith(fallback)) return;
@@ -232,12 +217,8 @@ function Home() {
                   <span>Lịch linh hoạt theo khung giờ</span>
                 </div>
 
-                <div className="flex items-center justify-end">
-                  {renderStars(service.rating)}
-                </div>
-
                 <button
-                  onClick={() => navigate("/booking")}
+                  onClick={() => navigate("/services")}
                   className="w-full rounded-lg bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
                 >
                   Xem nhanh

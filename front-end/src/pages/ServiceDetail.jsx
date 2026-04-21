@@ -14,12 +14,19 @@ function ServiceDetail() {
   const [reviews, setReviews] = useState([]);
   const [reviewStats, setReviewStats] = useState(null);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [showAllReviews, setShowAllReviews] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewHoverRating, setReviewHoverRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState("");
+  const [reviewError, setReviewError] = useState("");
 
   const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const imageBaseUrl = rawApiUrl.replace(/\/+$/, "").replace(/\/api$/, "");
 
   const getImageUrl = (image) => {
-    if (!image) return "/images/hero-garden.webp";
+    if (!image) return "/images/hero4.avif";
     if (/^https?:\/\//i.test(image)) return image;
     return `${imageBaseUrl}/uploads/${image}`;
   };
@@ -43,32 +50,32 @@ function ServiceDetail() {
   }, [id]);
 
   useEffect(() => {
-    if (activeTab === "reviews" && !reviewsLoading && !reviews.length) {
-      const fetchReviews = async () => {
-        try {
-          setReviewsLoading(true);
-          const res = await api.get(`/reviews/service/${id}`);
-          setReviews(res.data.reviews || []);
-          setReviewStats(res.data.stats || null);
-        } catch (err) {
-          console.error("Load reviews error:", err);
-        } finally {
-          setReviewsLoading(false);
-        }
-      };
-      fetchReviews();
-    }
-  }, [activeTab, id, reviews.length, reviewsLoading]);
+    const fetchReviews = async () => {
+      try {
+        setReviewsLoading(true);
+        const res = await api.get(`/reviews/service/${id}`);
+        setReviews(res.data.reviews || []);
+        setReviewStats(res.data.stats || null);
+      } catch (err) {
+        console.error("Load reviews error:", err);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, [id]);
 
   const serviceImages = useMemo(() => {
     if (!service) return [];
-    const cover = getImageUrl(service.image);
-
-    return [cover];
+    return [getImageUrl(service.image)];
   }, [service]);
 
   const basePrice = Number(service?.price || 0);
   const finalPrice = basePrice;
+  const avgRating = Number(reviewStats?.avg_rating || 0);
+  const totalReviews = Number(reviewStats?.total_reviews || 0);
+  const visibleReviews = showAllReviews ? reviews : reviews.slice(0, 3);
 
   const handleAddToCart = () => {
     if (!service) return;
@@ -95,24 +102,55 @@ function ServiceDetail() {
     "Hỗ trợ hướng dẫn chăm cây tại nhà 24/7",
   ];
 
-  const renderStars = (rating) => {
-    return (
-      <div className="flex gap-0.5">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            size={16}
-            className={star <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
-          />
-        ))}
-      </div>
-    );
+  const renderStars = (rating) => (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          size={16}
+          className={star <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
+        />
+      ))}
+    </div>
+  );
+
+  const handleSubmitReview = async (event) => {
+    event.preventDefault();
+
+    if (reviewRating === 0) {
+      setReviewError("Vui lòng chọn số sao đánh giá.");
+      return;
+    }
+
+    try {
+      setReviewSubmitting(true);
+      setReviewError("");
+      setReviewMessage("");
+
+      await api.post("/reviews", {
+        service_id: Number(id),
+        rating: reviewRating,
+        comment: reviewComment.trim() || null,
+      });
+
+      setReviewMessage("Cảm ơn bạn đã đánh giá dịch vụ này.");
+      setReviewRating(0);
+      setReviewHoverRating(0);
+      setReviewComment("");
+
+      const res = await api.get(`/reviews/service/${id}`);
+      setReviews(res.data.reviews || []);
+      setReviewStats(res.data.stats || null);
+    } catch (err) {
+      setReviewError(err.response?.data?.message || "Lỗi gửi đánh giá");
+    } finally {
+      setReviewSubmitting(false);
+    }
   };
 
   const tabItems = [
     { key: "intro", label: "Giới thiệu" },
     { key: "process", label: "Quy trình" },
-    { key: "reviews", label: "Đánh giá" },
   ];
 
   if (loading) {
@@ -165,7 +203,7 @@ function ServiceDetail() {
               <h1 className="text-3xl font-extrabold text-slate-800">{service.name}</h1>
               {reviewStats && reviewStats.total_reviews > 0 ? (
                 <p className="mt-2 text-sm text-slate-500">
-                  {reviewStats.avg_rating.toFixed(1)} ({reviewStats.total_reviews} đánh giá)
+                  {avgRating.toFixed(1)} ({totalReviews} đánh giá)
                 </p>
               ) : (
                 <p className="mt-2 text-sm text-slate-500">0.0 (0 đánh giá)</p>
@@ -230,38 +268,6 @@ function ServiceDetail() {
                   </ol>
                 </>
               )}
-
-              {activeTab === "reviews" && (
-                <>
-                  <h2 className="text-2xl font-bold text-slate-800">Đánh giá</h2>
-                  {reviewsLoading ? (
-                    <div className="mt-4 flex items-center justify-center">
-                      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-emerald-600" />
-                    </div>
-                  ) : reviews.length === 0 ? (
-                    <p className="mt-4 text-slate-600">Chưa có đánh giá nào cho dịch vụ này.</p>
-                  ) : (
-                    <div className="mt-4 space-y-4">
-                      {reviews.map((review) => (
-                        <div key={review.id} className="border-t border-slate-200 pt-4 first:border-t-0 first:pt-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="font-semibold text-slate-800">{review.user_name}</p>
-                              <div className="mt-1">{renderStars(review.rating)}</div>
-                            </div>
-                            <p className="text-sm text-slate-500">
-                              {new Date(review.created_at).toLocaleDateString("vi-VN")}
-                            </p>
-                          </div>
-                          {review.comment && (
-                            <p className="mt-2 text-slate-600">{review.comment}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
             </div>
           </section>
 
@@ -287,25 +293,120 @@ function ServiceDetail() {
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <h3 className="text-2xl font-bold text-slate-800">Đánh giá nhanh</h3>
-              <p className="mt-1 text-4xl font-extrabold text-slate-800">
-                {reviewStats ? reviewStats.avg_rating.toFixed(1) : "0.0"} / 5.0
-              </p>
-              <div className="mt-2 flex items-center gap-1 text-amber-500">
-                {[1, 2, 3, 4, 5].map((item) => (
-                  <Star
-                    key={item}
-                    className={`h-4 w-4 ${
-                      reviewStats && item <= reviewStats.avg_rating
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "text-gray-300"
-                    }`}
-                  />
-                ))}
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-2xl font-bold text-slate-800">Đánh giá</h3>
+                  <p className="mt-1 text-sm text-slate-500">{`${totalReviews} khách đã đánh giá dịch vụ này.`}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-4xl font-extrabold text-slate-800">{avgRating.toFixed(1)}</p>
+                  <div className="mt-1 flex items-center justify-end gap-1 text-amber-500">
+                    {[1, 2, 3, 4, 5].map((item) => (
+                      <Star
+                        key={item}
+                        className={`h-4 w-4 ${
+                          item <= avgRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
-              <p className="mt-1 text-sm text-slate-500">
-                {reviewStats ? `${reviewStats.total_reviews} khách đã đánh giá dịch vụ này.` : "0 khách đã đánh giá dịch vụ này."}
-              </p>
+
+              <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h4 className="text-lg font-bold text-slate-800">Viết đánh giá</h4>
+                    <p className="mt-1 text-sm text-slate-500">Chia sẻ trải nghiệm của bạn về dịch vụ này.</p>
+                  </div>
+                </div>
+
+                <form className="mt-4 space-y-4" onSubmit={handleSubmitReview}>
+                  <div>
+                    <p className="mb-2 text-sm font-semibold text-slate-700">Đánh giá sao</p>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => {
+                        const active = star <= (reviewHoverRating || reviewRating);
+
+                        return (
+                          <button
+                            key={star}
+                            type="button"
+                            onMouseEnter={() => setReviewHoverRating(star)}
+                            onMouseLeave={() => setReviewHoverRating(0)}
+                            onClick={() => setReviewRating(star)}
+                            className="rounded-md p-1 transition active:scale-95"
+                            aria-label={`${star} sao`}
+                          >
+                            <Star
+                              size={24}
+                              className={active ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
+                            />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">Nội dung đánh giá</label>
+                    <textarea
+                      value={reviewComment}
+                      onChange={(event) => setReviewComment(event.target.value)}
+                      rows={4}
+                      maxLength={1000}
+                      placeholder="Chia sẻ trải nghiệm của bạn..."
+                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-emerald-500"
+                    />
+                  </div>
+
+                  {reviewError && <p className="text-sm font-medium text-rose-600">{reviewError}</p>}
+                  {reviewMessage && <p className="text-sm font-medium text-emerald-700">{reviewMessage}</p>}
+
+                  <button
+                    type="submit"
+                    disabled={reviewSubmitting || reviewRating === 0}
+                    className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {reviewSubmitting ? "Đang gửi..." : "Gửi đánh giá"}
+                  </button>
+                </form>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {reviewsLoading ? (
+                  <div className="flex items-center justify-center py-6">
+                    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-emerald-600" />
+                  </div>
+                ) : reviews.length === 0 ? (
+                  <p className="text-sm text-slate-600">Chưa có đánh giá nào cho dịch vụ này.</p>
+                ) : (
+                  visibleReviews.map((review) => (
+                    <div key={review.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="font-semibold text-slate-800">{review.user_name}</p>
+                          <div className="mt-1">{renderStars(review.rating)}</div>
+                        </div>
+                        <p className="text-xs text-slate-500">
+                          {new Date(review.created_at).toLocaleDateString("vi-VN")}
+                        </p>
+                      </div>
+                      {review.comment && <p className="mt-2 text-sm text-slate-600">{review.comment}</p>}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {reviews.length > 3 && !reviewsLoading && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllReviews((prev) => !prev)}
+                  className="mt-4 w-full rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  {showAllReviews ? "Thu gọn đánh giá" : `Xem thêm ${reviews.length - 3} đánh giá`}
+                </button>
+              )}
             </div>
           </aside>
         </div>

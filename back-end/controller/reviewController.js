@@ -3,7 +3,7 @@ const Joi = require("joi");
 
 const reviewSchema = Joi.object({
   service_id: Joi.number().integer().positive().required(),
-  booking_id: Joi.number().integer().positive().required(),
+  booking_id: Joi.number().integer().positive().allow(null),
   rating: Joi.number().integer().min(1).max(5).required(),
   comment: Joi.string().allow("", null).max(1000),
 });
@@ -35,43 +35,34 @@ exports.create = async (req, res) => {
     const { service_id, booking_id, rating, comment } = value;
     const user_id = req.user.id;
 
-    // Verify booking belongs to user and is completed
-    const bookingResult = await query("SELECT * FROM bookings WHERE id = ? AND user_id = ?", [booking_id, user_id]);
-    if (bookingResult.length === 0) {
-      return res.status(403).json({ message: "Không có quyền đánh giá booking này" });
-    }
+    if (booking_id) {
+      const bookingResult = await query("SELECT * FROM bookings WHERE id = ? AND user_id = ?", [booking_id, user_id]);
+      if (bookingResult.length === 0) {
+        return res.status(403).json({ message: "Không có quyền đánh giá booking này" });
+      }
 
-    if (bookingResult[0].status !== "completed") {
-      return res.status(400).json({ message: "Chỉ có thể đánh giá sau khi dịch vụ hoàn thành" });
-    }
+      const serviceInBooking = await query(
+        "SELECT COUNT(*) AS count FROM booking_items WHERE booking_id = ? AND service_id = ?",
+        [booking_id, service_id]
+      );
 
-    // Check if service matches booking
-    const serviceInBooking = await query(
-      "SELECT COUNT(*) AS count FROM booking_items WHERE booking_id = ? AND service_id = ?",
-      [booking_id, service_id]
-    );
-
-    if (serviceInBooking[0].count === 0) {
-      // Legacy single-service booking
-      if (bookingResult[0].service_id !== service_id) {
+      if (serviceInBooking[0].count === 0 && Number(bookingResult[0].service_id) !== Number(service_id)) {
         return res.status(400).json({ message: "Dịch vụ không trùng khớp với booking" });
       }
     }
 
-    // Check if user already reviewed this booking
-    const existingReview = await query(
-      "SELECT id FROM reviews WHERE user_id = ? AND booking_id = ?",
-      [user_id, booking_id]
-    );
+    const existingReview = booking_id
+      ? await query("SELECT id FROM reviews WHERE user_id = ? AND booking_id = ?", [user_id, booking_id])
+      : await query("SELECT id FROM reviews WHERE user_id = ? AND service_id = ? AND booking_id IS NULL", [user_id, service_id]);
 
     if (existingReview.length > 0) {
-      return res.status(400).json({ message: "Bạn đã đánh giá booking này rồi" });
+      return res.status(400).json({ message: booking_id ? "Bạn đã đánh giá booking này rồi" : "Bạn đã đánh giá dịch vụ này rồi" });
     }
 
     // Insert review
     const insertSql = `
       INSERT INTO reviews (user_id, service_id, booking_id, rating, comment, is_visible)
-      VALUES (?, ?, ?, ?, ?, 1)
+      VALUES (?, ?, ?, ?, ?, 0)
     `;
 
     await query(insertSql, [user_id, service_id, booking_id, rating, comment || null]);

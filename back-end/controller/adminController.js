@@ -231,7 +231,7 @@ exports.getStaffList = async (req, res) => {
                   SELECT 1
                   FROM bookings b
                   WHERE b.id = bsa.booking_id
-                AND b.status IN ('confirmed', 'in_progress')
+                AND b.status IN ('pending', 'confirmed', 'in_progress')
                 )
             ) THEN 'busy'
             ELSE 'available'

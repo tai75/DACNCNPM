@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../config/axios";
 
 function AdminBookings() {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [staffs, setStaffs] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -27,6 +29,14 @@ function AdminBookings() {
     const day = String(today.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   })();
+
+  // Hàm xóa dấu tiếng Việt để tìm kiếm chính xác
+  const removeVietnameseTones = (str) => {
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+  };
 
   // ================= LOAD DATA =================
   const fetchBookings = async () => {
@@ -73,11 +83,16 @@ function AdminBookings() {
   }, []);
 
   // ================= DELETE =================
-  const handleDelete = async (id) => {
-    if (!window.confirm("Xóa đơn này?")) return;
+  const handleDelete = async (booking) => {
+    const confirmMessage =
+      booking.payment_method === "bank" && booking.payment_status === "paid"
+        ? "Đơn này đã thanh toán qua ngân hàng. Khi hủy, hệ thống sẽ chuyển sang trạng thái chờ hoàn tiền. Bạn có chắc muốn hủy không?"
+        : "Bạn có chắc muốn hủy đơn này?";
+
+    if (!window.confirm(confirmMessage)) return;
 
     try {
-      await api.delete(`/bookings/${id}`);
+      await api.delete(`/bookings/${booking.id}`);
       fetchBookings();
     } catch (err) {
       console.error("Lỗi xóa:", err);
@@ -86,6 +101,10 @@ function AdminBookings() {
 
   // ================= UPDATE PAYMENT STATUS =================
   const handlePaymentStatusChange = async (id, payment_status) => {
+    if (payment_status === "refunded" && !window.confirm("Xác nhận hoàn tiền cho booking đã hủy này?")) {
+      return;
+    }
+
     try {
       await api.put(`/bookings/${id}/payment`, {
         payment_status,
@@ -176,13 +195,34 @@ function AdminBookings() {
     ];
   };
 
+  const getPaymentStatusMeta = (booking) => {
+    if (booking.payment_status === "paid") {
+      return {
+        label: "Đã thanh toán",
+        cls: "bg-emerald-100 text-emerald-700",
+      };
+    }
+
+    if (booking.payment_status === "refunded") {
+      return {
+        label: "Đã hoàn tiền",
+        cls: "bg-rose-100 text-rose-700",
+      };
+    }
+
+    return {
+      label: booking.payment_status_vietnamese || booking.payment_status || "Chưa cập nhật",
+      cls: "bg-amber-100 text-amber-700",
+    };
+  };
+
   const filteredBookings = bookings.filter((booking) => {
     const matchStatus = statusFilter === "all" || booking.status === statusFilter;
     const servicesKeyword = getServiceItems(booking)
       .map((item) => item.service_name || "")
       .join(" ");
-    const keyword = `${booking.user_name || ""} ${booking.service_name || ""} ${servicesKeyword} ${booking.staff_name || ""}`.toLowerCase();
-    const matchSearch = keyword.includes(searchText.trim().toLowerCase());
+    const keyword = removeVietnameseTones(`${booking.user_name || ""} ${booking.service_name || ""} ${servicesKeyword} ${booking.staff_name || ""}`);
+    const matchSearch = keyword.includes(removeVietnameseTones(searchText.trim()));
     return matchStatus && matchSearch;
   });
 
@@ -346,21 +386,19 @@ function AdminBookings() {
                 </td>
                 <td className="px-4 py-4 text-sm text-slate-700">{booking.payment_method_vietnamese}</td>
                 <td className="px-4 py-4">
-                  <select
-                    value={booking.payment_status}
-                    onChange={(e) => handlePaymentStatusChange(booking.id, e.target.value)}
-                    className={`w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100 ${
-                      booking.payment_status === "paid"
-                        ? "bg-emerald-50 text-emerald-700"
-                        : booking.payment_status === "refunded"
-                        ? "bg-rose-50 text-rose-700"
-                        : "bg-amber-50 text-amber-700"
-                    }`}
-                  >
-                    <option value="pending">Chưa thanh toán</option>
-                    <option value="paid">Đã thanh toán</option>
-                    <option value="refunded">Đã hoàn tiền</option>
-                  </select>
+                  <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getPaymentStatusMeta(booking).cls}`}>
+                    {getPaymentStatusMeta(booking).label}
+                  </span>
+
+                  {booking.status === "cancelled" && booking.payment_method === "bank" && booking.payment_status === "paid" && (
+                    <button
+                      type="button"
+                      onClick={() => navigate("/admin/refunds")}
+                      className="mt-3 block rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-700"
+                    >
+                      Đi tới trang hoàn tiền
+                    </button>
+                  )}
                 </td>
                 <td className="px-4 py-4">
                   <select
@@ -403,10 +441,10 @@ function AdminBookings() {
                     </button>
 
                     <button
-                      onClick={() => handleDelete(booking.id)}
+                      onClick={() => handleDelete(booking)}
                       className="w-full rounded-xl bg-rose-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-rose-600"
                     >
-                      Xóa
+                      Hủy
                     </button>
                   </div>
                 </td>

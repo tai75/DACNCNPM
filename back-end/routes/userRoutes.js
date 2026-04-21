@@ -6,6 +6,7 @@ const { authMiddleware, adminMiddleware } = require("../middleware/auth");
 /* MY PROFILE */
 router.get("/users/profile", authMiddleware, userController.getProfile);
 router.put("/users/profile", authMiddleware, userController.updateProfile);
+router.put("/users/change-password", authMiddleware, userController.changePassword);
 
 /* USERS */
 router.get("/users", authMiddleware, adminMiddleware, userController.getUsers);

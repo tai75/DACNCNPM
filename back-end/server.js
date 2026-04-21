@@ -31,7 +31,7 @@ const corsOptions = {
     // Allow tools or same-origin requests that may not send Origin.
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error("Not allowed by CORS"));
+    return callback(new Error("Truy cập CORS không được phép"));
   },
   credentials: true,
 };
