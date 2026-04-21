@@ -4,6 +4,7 @@ import api from "../../config/axios";
 function StaffBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [payingBookingId, setPayingBookingId] = useState(null);
 
   const summary = bookings.reduce(
     (accumulator, booking) => {
@@ -36,6 +37,23 @@ function StaffBookings() {
     if (slot === "morning") return "Buổi sáng";
     if (slot === "afternoon") return "Buổi chiều";
     return slot || "Chưa cập nhật";
+  };
+
+  const paymentMethodLabel = (method) => {
+    if (method === "bank") return "Chuyển khoản";
+    if (method === "cod") return "Tiền mặt";
+    return method || "Chưa rõ";
+  };
+
+  const paymentStatusLabel = (status) => {
+    if (status === "paid") return "Đã thanh toán";
+    if (status === "pending") return "Chờ thanh toán";
+    if (status === "refunded") return "Đã hoàn tiền";
+    return status || "Chưa rõ";
+  };
+
+  const canStaffConfirmPayment = (booking) => {
+    return booking?.payment_method === "cod" && booking?.status === "completed" && booking?.payment_status !== "paid";
   };
 
   const getServiceItems = (booking) => {
@@ -74,6 +92,22 @@ function StaffBookings() {
       fetchBookings();
     } catch (err) {
       console.error("Update booking status error:", err);
+    }
+  };
+
+  const handlePaymentStatusChange = async (booking) => {
+    if (!canStaffConfirmPayment(booking)) return;
+
+    try {
+      setPayingBookingId(booking.id);
+      await api.put(`/bookings/${booking.id}/payment`, { payment_status: "paid" });
+      fetchBookings();
+    } catch (err) {
+      console.error("Update payment status error:", err);
+      const message = err?.response?.data?.message || "Không thể cập nhật trạng thái thanh toán";
+      window.alert(message);
+    } finally {
+      setPayingBookingId(null);
     }
   };
 
@@ -126,6 +160,7 @@ function StaffBookings() {
                 <th className="px-4 py-3">Dịch vụ</th>
                 <th className="px-4 py-3">Lịch hẹn</th>
                 <th className="px-4 py-3">Trạng thái</th>
+                <th className="px-4 py-3">Thanh toán</th>
                 <th className="px-4 py-3">Cập nhật</th>
               </tr>
             </thead>
@@ -167,6 +202,35 @@ function StaffBookings() {
                       <span className={`badge-status ${currentMeta.chip}`}>{currentMeta.label}</span>
                       <div className="mt-2 text-xs text-slate-400">Chỉ có 3 bước: xác nhận, thực hiện, hoàn thành</div>
                     </td>
+                    <td className="px-4 py-4 text-sm">
+                      <div className="mb-2 flex flex-wrap gap-2">
+                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${b.payment_method === "bank" ? "bg-sky-100 text-sky-700" : "bg-violet-100 text-violet-700"}`}>
+                          {paymentMethodLabel(b.payment_method)}
+                        </span>
+                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${b.payment_status === "paid" ? "bg-emerald-100 text-emerald-700" : b.payment_status === "refunded" ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"}`}>
+                          {paymentStatusLabel(b.payment_status)}
+                        </span>
+                      </div>
+
+                      {canStaffConfirmPayment(b) ? (
+                        <button
+                          type="button"
+                          onClick={() => handlePaymentStatusChange(b)}
+                          disabled={payingBookingId === b.id}
+                          className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                        >
+                          {payingBookingId === b.id ? "Đang cập nhật..." : "Xác nhận đã thanh toán"}
+                        </button>
+                      ) : (
+                        <div className="text-xs text-slate-400">
+                          {b.payment_method === "bank"
+                            ? "Booking chuyển khoản: không cần staff cập nhật"
+                            : b.status !== "completed"
+                            ? "Chỉ cập nhật sau khi hoàn thành"
+                            : "Đã cập nhật thanh toán"}
+                        </div>
+                      )}
+                    </td>
                     <td className="px-4 py-4">
                       <select
                         value={b.status}
@@ -184,7 +248,7 @@ function StaffBookings() {
 
               {(!loading && bookings.length === 0) && (
                 <tr>
-                  <td colSpan="6" className="px-4 py-12 text-center text-slate-500">
+                  <td colSpan="7" className="px-4 py-12 text-center text-slate-500">
                     Chưa có booking được phân công.
                   </td>
                 </tr>
@@ -192,7 +256,7 @@ function StaffBookings() {
 
               {loading && (
                 <tr>
-                  <td colSpan="6" className="px-4 py-12 text-center text-slate-500">
+                  <td colSpan="7" className="px-4 py-12 text-center text-slate-500">
                     Đang tải danh sách booking...
                   </td>
                 </tr>

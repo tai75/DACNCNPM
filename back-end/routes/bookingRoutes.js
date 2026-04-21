@@ -4,6 +4,8 @@ const bookingController = require("../controller/bookingController");
 const { authMiddleware } = require("../middleware/auth");
 
 router.get("/", authMiddleware, bookingController.getBookings);
+// Check staff availability must stay before /:id to avoid matching "check-availability" as an id
+router.get("/check-availability", authMiddleware, bookingController.checkStaffAvailabilityEndpoint);
 router.get("/:id", authMiddleware, bookingController.getBookingDetail);
 router.post("/", authMiddleware, bookingController.createBooking);
 

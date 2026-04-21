@@ -89,7 +89,7 @@ function AdminStaff() {
     return "rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700";
   };
 
-  const statusLabel = (status) => (status === "busy" ? "Đang có lịch" : "Đang rảnh");
+  const statusLabel = (status) => (status === "busy" ? "Đã có lịch" : "Đang rảnh");
 
   const bookingStatusMeta = (status) => {
     if (status === "completed") return { label: "Hoàn thành", cls: "bg-green-100 text-green-700" };
@@ -142,7 +142,7 @@ function AdminStaff() {
           >
             <option value="all">Tất cả trạng thái</option>
             <option value="available">Đang rảnh</option>
-            <option value="busy">Đang có lịch</option>
+            <option value="busy">Đã có lịch</option>
           </select>
 
           <select

@@ -5,9 +5,18 @@ import { getCartItems, getCartTotal, removeServiceFromCart } from "../utils/cart
 
 function Booking() {
   const navigate = useNavigate();
-  const today = new Date().toISOString().split("T")[0];
   const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const imageBaseUrl = rawApiUrl.replace(/\/+$/, "").replace(/\/api$/, "");
+
+  const formatDateInputValue = (value) => {
+    const date = value instanceof Date ? value : new Date(value);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const today = formatDateInputValue(new Date());
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -55,7 +64,7 @@ function Booking() {
     const blockedStatuses = new Set(["pending", "confirmed", "in_progress"]);
     return userBookings.some((booking) => {
       if (!blockedStatuses.has(booking.status)) return false;
-      const bookedDate = new Date(booking.booking_date).toISOString().slice(0, 10);
+      const bookedDate = formatDateInputValue(booking.booking_date);
       return bookedDate === formData.bookingDate && booking.time_slot === formData.timeSlot;
     });
   }, [formData.bookingDate, formData.timeSlot, userBookings]);

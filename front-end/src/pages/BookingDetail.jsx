@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../config/axios";
+import CancelServiceItemModal from "../components/CancelServiceItemModal";
+import CancelBookingModal from "../components/CancelBookingModal";
 
 function BookingDetail() {
   const { id } = useParams();
@@ -8,7 +10,34 @@ function BookingDetail() {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cancelingItemId, setCancelingItemId] = useState(null);
+  const [itemToCancel, setItemToCancel] = useState(null);
+  const [cancelBookingLoading, setCancelBookingLoading] = useState(false);
+  const [showCancelBookingModal, setShowCancelBookingModal] = useState(false);
   const imageBaseUrl = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "").replace(/\/api$/, "");
+
+  const normalizeText = (value) => String(value || "").trim().toLowerCase();
+
+  const normalizeBookingStatus = (status) => {
+    const normalized = normalizeText(status);
+
+    if (["da huy", "đã hủy", "huy", "cancelled", "canceled"].includes(normalized)) return "cancelled";
+    if (["da xac nhan", "đã xác nhận", "xac nhan", "confirmed"].includes(normalized)) return "confirmed";
+    if (["dang xu ly", "đang xử lý", "in_progress", "in progress"].includes(normalized)) return "in_progress";
+    if (["hoan thanh", "đã hoàn thành", "completed"].includes(normalized)) return "completed";
+    if (["da thanh toan", "đã thanh toán", "paid"].includes(normalized)) return "paid";
+    if (["da hoan tien", "đã hoàn tiền", "refunded"].includes(normalized)) return "refunded";
+
+    return normalized;
+  };
+
+  const normalizeItemStatus = (item) => {
+    const normalized = normalizeText(item?.status ?? item?.item_status ?? "active");
+
+    if (["da huy", "đã hủy", "huy", "cancelled", "canceled"].includes(normalized)) return "cancelled";
+    if (["active", "hoat dong", "đang hoạt động"].includes(normalized)) return "active";
+
+    return normalized;
+  };
 
   useEffect(() => {
     const fetchBookingDetail = async () => {
@@ -46,6 +75,32 @@ function BookingDetail() {
     []
   );
 
+  const getPaymentStatusMeta = () => {
+    const bookingStatus = normalizeBookingStatus(booking.status);
+    const paymentMethod = normalizeText(booking.payment_method);
+    const paymentStatus = normalizeBookingStatus(booking.payment_status);
+
+    if (bookingStatus === "cancelled" && paymentMethod === "bank" && paymentStatus === "paid") {
+      return {
+        label: "Chờ hoàn tiền",
+        className: "bg-amber-100 text-amber-700",
+      };
+    }
+
+    if (paymentStatus === "paid") {
+      return { label: "Đã thanh toán", className: "bg-emerald-100 text-emerald-700" };
+    }
+
+    if (paymentStatus === "refunded") {
+      return { label: "Đã hoàn tiền", className: "bg-rose-100 text-rose-700" };
+    }
+
+    return {
+      label: booking.payment_status_vietnamese || booking.payment_status || "Chưa cập nhật",
+      className: "bg-slate-100 text-slate-700",
+    };
+  };
+
   const timeSlotLabel = (slot) => {
     if (slot === "morning") return "Buổi sáng";
     if (slot === "afternoon") return "Buổi chiều";
@@ -58,10 +113,23 @@ function BookingDetail() {
     return `${imageBaseUrl}/uploads/${image}`;
   };
 
-  const handleCancelItem = async (itemId) => {
-    const accepted = window.confirm("Bạn có chắc muốn hủy dịch vụ này không?");
-    if (!accepted) return;
+  const getCancelItemConfirmMessage = () => {
+    if (normalizeText(booking.payment_method) === "bank" && normalizeBookingStatus(booking.payment_status) === "paid") {
+      return "Dịch vụ này thuộc đơn đã thanh toán qua ngân hàng. Khi hủy, hệ thống sẽ ghi nhận để admin xác nhận hoàn tiền. Bạn có chắc muốn hủy không?";
+    }
 
+    return "Bạn có chắc muốn hủy dịch vụ này không?";
+  };
+
+  const openCancelModal = (item) => {
+    setItemToCancel(item);
+  };
+
+  const closeCancelModal = () => {
+    setItemToCancel(null);
+  };
+
+  const handleCancelItem = async (itemId) => {
     try {
       setCancelingItemId(itemId);
       const res = await api.delete(`/bookings/${id}/items/${itemId}`);
@@ -72,6 +140,7 @@ function BookingDetail() {
           setBooking(reloadRes.data?.data);
         }
         alert("Hủy dịch vụ thành công!");
+        closeCancelModal();
       } else {
         alert(res.data?.message || "Không thể hủy dịch vụ");
       }
@@ -83,8 +152,49 @@ function BookingDetail() {
     }
   };
 
+  const canCancelBooking = (currentBooking) => {
+    const bookingStatus = normalizeBookingStatus(currentBooking?.status);
+    return currentBooking && ["pending", "confirmed"].includes(bookingStatus);
+  };
+
+  const openCancelBookingModal = () => {
+    setShowCancelBookingModal(true);
+  };
+
+  const closeCancelBookingModal = () => {
+    if (cancelBookingLoading) return;
+    setShowCancelBookingModal(false);
+  };
+
+  const handleCancelBooking = async () => {
+    if (!booking) return;
+
+    try {
+      setCancelBookingLoading(true);
+      const res = await api.delete(`/bookings/${id}`);
+
+      if (res.data?.success) {
+        const reloadRes = await api.get(`/bookings/${id}`);
+        if (reloadRes.data?.success) {
+          setBooking(reloadRes.data?.data);
+        }
+        alert("Hủy đặt lịch thành công!");
+        setShowCancelBookingModal(false);
+      } else {
+        alert(res.data?.message || "Không thể hủy đặt lịch");
+      }
+    } catch (error) {
+      console.error("Cancel booking error:", error);
+      alert(error.response?.data?.message || "Không thể hủy đặt lịch");
+    } finally {
+      setCancelBookingLoading(false);
+    }
+  };
+
   const canCancelItem = (booking, item) => {
-    return booking && ["pending", "confirmed"].includes(booking.status) && item.status === "active";
+    const bookingStatus = normalizeBookingStatus(booking?.status);
+    const itemStatus = normalizeItemStatus(item);
+    return booking && ["pending", "confirmed"].includes(bookingStatus) && itemStatus === "active";
   };
 
   if (loading) {
@@ -103,25 +213,39 @@ function BookingDetail() {
     );
   }
 
-  const activeItems = booking.service_items?.filter(item => item.status === "active") || [];
-  const cancelledItems = booking.service_items?.filter(item => item.status === "cancelled") || [];
+  const activeItems =
+    booking.service_items?.filter((item) => normalizeItemStatus(item) === "active") || [];
+  const cancelledItems =
+    booking.service_items?.filter((item) => normalizeItemStatus(item) === "cancelled") || [];
   const totalPrice = booking.total_price || 0;
 
   return (
     <section className="w-full py-8 md:py-10">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.14em] text-emerald-700">Chi tiết booking</p>
           <h1 className="mt-2 text-3xl font-bold text-slate-800">Mã #{booking.id}</h1>
           <p className="mt-2 text-sm text-slate-500">Xem chi tiết lịch sử đặt lịch và quản lý dịch vụ.</p>
         </div>
-        <button
-          type="button"
-          onClick={() => navigate("/bookings")}
-          className="rounded-lg bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-300"
-        >
-          ← Quay lại
-        </button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {canCancelBooking(booking) && (
+            <button
+              type="button"
+              onClick={openCancelBookingModal}
+              disabled={cancelBookingLoading}
+              className="rounded-lg border border-rose-300 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {cancelBookingLoading ? "Đang hủy..." : "Hủy đặt lịch"}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => navigate("/bookings")}
+            className="rounded-lg bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-300"
+          >
+            ← Quay lại
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -134,7 +258,7 @@ function BookingDetail() {
               <div>
                 <p className="text-xs font-semibold uppercase text-slate-500">Trạng thái booking</p>
                 <p className="mt-1">
-                  <span className={`rounded-full px-3 py-1 text-sm font-semibold ${statusStyle[booking.status] || "bg-slate-100 text-slate-700"}`}>
+                  <span className={`rounded-full px-3 py-1 text-sm font-semibold ${statusStyle[normalizeBookingStatus(booking.status)] || "bg-slate-100 text-slate-700"}`}>
                     {booking.status_vietnamese || booking.status}
                   </span>
                 </p>
@@ -142,8 +266,8 @@ function BookingDetail() {
               <div>
                 <p className="text-xs font-semibold uppercase text-slate-500">Trạng thái thanh toán</p>
                 <p className="mt-1">
-                  <span className={`rounded-full px-3 py-1 text-sm font-semibold ${statusStyle[booking.payment_status] || "bg-slate-100 text-slate-700"}`}>
-                    {booking.payment_status_vietnamese || booking.payment_status}
+                  <span className={`rounded-full px-3 py-1 text-sm font-semibold ${getPaymentStatusMeta().className}`}>
+                    {getPaymentStatusMeta().label}
                   </span>
                 </p>
               </div>
@@ -204,14 +328,14 @@ function BookingDetail() {
                     {canCancelItem(booking, item) && (
                       <button
                         type="button"
-                        onClick={() => handleCancelItem(item.id)}
+                        onClick={() => openCancelModal(item)}
                         disabled={cancelingItemId === item.id}
                         className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-1 text-sm font-semibold text-rose-600 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
                       >
                         {cancelingItemId === item.id ? "Đang hủy..." : "Hủy"}
                       </button>
                     )}
-                    {item.status === "cancelled" && (
+                    {normalizeItemStatus(item) === "cancelled" && (
                       <span className="rounded-full px-3 py-1 text-xs font-semibold bg-rose-100 text-rose-700">
                         Đã hủy
                       </span>
@@ -330,6 +454,30 @@ function BookingDetail() {
           </div>
         </div>
       </div>
+
+      {/* Cancel Service Item Modal */}
+      {itemToCancel && (
+        <CancelServiceItemModal
+          item={itemToCancel}
+          paymentLabel={booking.payment_method_vietnamese}
+          paymentMethod={booking.payment_method}
+          paymentStatus={booking.payment_status}
+          loading={cancelingItemId === itemToCancel.id}
+          onClose={closeCancelModal}
+          onConfirm={() => handleCancelItem(itemToCancel.id)}
+        />
+      )}
+
+      {showCancelBookingModal && booking && (
+        <CancelBookingModal
+          booking={booking}
+          serviceItems={booking.service_items || []}
+          paymentLabel={booking.payment_method_vietnamese || booking.payment_method}
+          loading={cancelBookingLoading}
+          onClose={closeCancelBookingModal}
+          onConfirm={handleCancelBooking}
+        />
+      )}
     </section>
   );
 }

@@ -62,7 +62,7 @@ describe("authMiddleware", () => {
 
   test("should return 403 when token is invalid", () => {
     jwt.verify.mockImplementation(() => {
-      throw new Error("Invalid token");
+      throw new Error("Token không hợp lệ");
     });
 
     const req = { headers: { authorization: "Bearer invalid-token" } };
@@ -73,7 +73,7 @@ describe("authMiddleware", () => {
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: false, message: "Invalid token" })
+      expect.objectContaining({ success: false, message: "Token không hợp lệ" })
     );
     expect(next).not.toHaveBeenCalled();
   });
@@ -103,7 +103,7 @@ describe("adminMiddleware", () => {
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: false, message: "Admin access required" })
+      expect.objectContaining({ success: false, message: "Chỉ admin mới có quyền truy cập" })
     );
     expect(next).not.toHaveBeenCalled();
   });
@@ -129,7 +129,7 @@ describe("staffMiddleware", () => {
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: false, message: "Staff access required" })
+      expect.objectContaining({ success: false, message: "Chỉ nhân viên mới có quyền truy cập" })
     );
     expect(next).not.toHaveBeenCalled();
   });
@@ -155,7 +155,7 @@ describe("adminOrStaffMiddleware", () => {
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: false, message: "Admin or staff access required" })
+      expect.objectContaining({ success: false, message: "Chỉ admin hoặc nhân viên mới có quyền truy cập" })
     );
     expect(next).not.toHaveBeenCalled();
   });

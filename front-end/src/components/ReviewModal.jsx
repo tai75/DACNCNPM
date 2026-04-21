@@ -8,9 +8,11 @@ function ReviewModal({ booking, service, onClose, onSuccess }) {
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [stage, setStage] = useState("rate");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (rating === 0) {
       setError("Vui lòng chọn đánh giá sao");
       return;
@@ -35,106 +37,132 @@ function ReviewModal({ booking, service, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-800">Đánh giá dịch vụ</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 px-4">
+      <div className="flex w-full max-w-[560px] flex-col overflow-hidden rounded-[18px] bg-[#111111] text-white shadow-2xl">
+        <div className="flex items-center justify-between px-5 pt-4">
           <button
+            type="button"
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition hover:bg-white/10 hover:text-white"
+            aria-label="Đóng"
           >
             <X size={24} />
           </button>
+
+          <button
+            type="submit"
+            form="review-form"
+            disabled={loading || rating === 0}
+            className="rounded-full px-2 py-2 text-sm font-semibold text-white/90 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {loading ? "Đang gửi" : "Gửi"}
+          </button>
         </div>
 
-        {/* Content */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Service Info */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Dịch vụ</p>
-            <p className="font-semibold text-gray-800">{service.name}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              Booking: #{booking.id}
-            </p>
-          </div>
-
-          {/* Rating */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Đánh giá <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-2 justify-center">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setRating(star)}
-                  onMouseEnter={() => setHoveredRating(star)}
-                  onMouseLeave={() => setHoveredRating(0)}
-                  className="focus:outline-none transition-transform hover:scale-110"
-                >
-                  <Star
-                    size={40}
-                    className={
-                      star <= (hoveredRating || rating)
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "text-gray-300"
-                    }
-                  />
-                </button>
-              ))}
+        <form id="review-form" onSubmit={handleSubmit} className="px-5 pb-6 pt-2">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#93a8b7] text-lg font-semibold text-white">
+              G
             </div>
-            {rating > 0 && (
-              <p className="text-center text-sm text-gray-600 mt-2">
-                {rating} sao
-              </p>
-            )}
+            <div className="min-w-0">
+              <p className="truncate text-[18px] font-medium text-white/95">{service?.name || "Dịch vụ"}</p>
+              <p className="text-[14px] leading-5 text-white/58">Xếp hạng dịch vụ này</p>
+            </div>
           </div>
 
-          {/* Comment */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nhận xét (không bắt buộc)
-            </label>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Chia sẻ trải nghiệm của bạn với dịch vụ này..."
-              maxLength={1000}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none resize-none"
-              rows="4"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              {comment.length}/1000 ký tự
-            </p>
+          <div className="mb-6 rounded-[22px] bg-white/0 px-1 py-2">
+            <div className="mb-5 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#93a8b7] text-lg font-semibold text-white">
+                {String(booking.id).slice(-1)}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[18px] font-medium text-white">Đăng Hữu Tài</p>
+                <p className="mt-1 text-[14px] leading-6 text-white/66">
+                  Các bài đánh giá đều công khai và có chứa thông tin về tài khoản và thiết bị của bạn.
+                  <span className="block text-white/80 underline decoration-white/45 underline-offset-4">
+                    Tìm hiểu thêm
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-4 flex items-center justify-between gap-2 sm:gap-4">
+              {[1, 2, 3, 4, 5].map((star) => {
+                const active = star <= (hoveredRating || rating);
+
+                return (
+                  <button
+                    key={star}
+                    type="button"
+                    onMouseEnter={() => setHoveredRating(star)}
+                    onMouseLeave={() => setHoveredRating(0)}
+                    onClick={() => {
+                      setRating(star);
+                      setStage("write");
+                    }}
+                    onMouseDown={() => {
+                      setRating(star);
+                      setStage("write");
+                    }}
+                    onPointerDown={() => {
+                      setRating(star);
+                      setStage("write");
+                    }}
+                    aria-label={`${star} sao`}
+                    className="flex flex-1 items-center justify-center rounded-xl py-2 outline-none transition active:scale-95"
+                  >
+                    <Star
+                      size={52}
+                      strokeWidth={1.7}
+                      className={active ? "text-[#d9d9d9]" : "text-[#a0a0a0]"}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mb-2 flex items-center justify-center gap-2 text-sm text-white/70">
+              <span>{rating > 0 ? `${rating} sao` : ""}</span>
+            </div>
           </div>
 
-          {/* Error */}
+          <button
+            type="button"
+            onClick={() => setStage("write")}
+            className="mb-4 text-[18px] font-semibold text-[#9fc3ff] transition hover:text-[#b7d1ff]"
+          >
+            Viết bài đánh giá
+          </button>
+
+          {stage === "write" && (
+            <div className="rounded-[22px] border border-white/10 bg-white/[0.04] p-4">
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Chia sẻ trải nghiệm của bạn với dịch vụ này..."
+                maxLength={500}
+                rows={5}
+                className="min-h-[160px] w-full resize-none rounded-[18px] border border-white/12 bg-transparent px-4 py-3 text-base text-white outline-none placeholder:text-white/35 focus:border-white/25"
+              />
+              <div className="mt-3 flex items-center justify-end text-xs text-white/55">
+                {comment.length}/500
+              </div>
+            </div>
+          )}
+
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="mt-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
               {error}
             </div>
           )}
 
-          {/* Buttons */}
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              disabled={loading || rating === 0}
-              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-            >
-              {loading ? "Đang gửi..." : "Gửi đánh giá"}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={loading || rating === 0}
+            className="mt-5 w-full rounded-2xl bg-white px-4 py-3 text-base font-semibold text-[#111111] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? "Đang gửi..." : "Gửi đánh giá"}
+          </button>
         </form>
       </div>
     </div>

@@ -22,27 +22,27 @@ const authMiddleware = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(403).json({ success: false, message: "Invalid token" });
+    return res.status(403).json({ success: false, message: "Token không hợp lệ" });
   }
 };
 
 const adminMiddleware = (req, res, next) => {
   if (req.user.role !== "admin") {
-    return res.status(403).json({ success: false, message: "Admin access required" });
+    return res.status(403).json({ success: false, message: "Chỉ admin mới có quyền truy cập" });
   }
   next();
 };
 
 const staffMiddleware = (req, res, next) => {
   if (req.user.role !== "staff") {
-    return res.status(403).json({ success: false, message: "Staff access required" });
+    return res.status(403).json({ success: false, message: "Chỉ nhân viên mới có quyền truy cập" });
   }
   next();
 };
 
 const adminOrStaffMiddleware = (req, res, next) => {
   if (req.user.role !== "admin" && req.user.role !== "staff") {
-    return res.status(403).json({ success: false, message: "Admin or staff access required" });
+    return res.status(403).json({ success: false, message: "Chỉ admin hoặc nhân viên mới có quyền truy cập" });
   }
   next();
 };

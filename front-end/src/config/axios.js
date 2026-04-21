@@ -31,7 +31,7 @@ api.interceptors.response.use(
     const normalizedError =
       error instanceof Error
         ? error
-        : new Error(message || error?.message || "Unknown API error");
+        : new Error(message || error?.message || "Lỗi API không xác định");
 
     if (shouldLogout) {
       localStorage.removeItem('token');

@@ -10,6 +10,12 @@ function UserInfo() {
   const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [totalBookings, setTotalBookings] = useState(0);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -67,6 +73,14 @@ function UserInfo() {
     }));
   };
 
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleSave = async () => {
     try {
       setError("");
@@ -91,6 +105,48 @@ function UserInfo() {
       setIsEditing(false);
     } catch (err) {
       setError(err.response?.data?.message || "Không thể cập nhật thông tin");
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setError("Vui lòng nhập đầy đủ thông tin đổi mật khẩu");
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 8) {
+      setError("Mật khẩu mới phải có ít nhất 8 ký tự");
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp");
+      return;
+    }
+
+    try {
+      setError("");
+      setIsChangingPassword(true);
+
+      const res = await axios.put("/users/change-password", {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+        confirmPassword: passwordForm.confirmPassword,
+      });
+
+      if (res.data?.success) {
+        setError("");
+        setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+        alert("Đổi mật khẩu thành công");
+      } else {
+        setError(res.data?.message || "Không thể đổi mật khẩu");
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Không thể đổi mật khẩu");
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -279,6 +335,60 @@ function UserInfo() {
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">Số đơn đã đặt</p>
             <p className="mt-2 text-lg font-semibold text-slate-800">{totalBookings}</p>
           </div>
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+          <div className="mb-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-emerald-700">Bảo mật</p>
+            <h2 className="mt-2 text-2xl font-bold text-slate-800">Đổi mật khẩu</h2>
+            <p className="mt-2 text-sm text-slate-500">Thay đổi mật khẩu đăng nhập của bạn tại đây.</p>
+          </div>
+
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">Mật khẩu hiện tại</label>
+              <input
+                type="password"
+                name="currentPassword"
+                value={passwordForm.currentPassword}
+                onChange={handlePasswordChange}
+                className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                placeholder="Nhập mật khẩu hiện tại"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">Mật khẩu mới</label>
+              <input
+                type="password"
+                name="newPassword"
+                value={passwordForm.newPassword}
+                onChange={handlePasswordChange}
+                className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                placeholder="Ít nhất 8 ký tự"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">Xác nhận mật khẩu mới</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={passwordForm.confirmPassword}
+                onChange={handlePasswordChange}
+                className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                placeholder="Nhập lại mật khẩu mới"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isChangingPassword}
+              className="inline-flex items-center justify-center rounded-lg bg-slate-800 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isChangingPassword ? "Đang đổi mật khẩu..." : "Đổi mật khẩu"}
+            </button>
+          </form>
         </div>
       </div>
     </div>

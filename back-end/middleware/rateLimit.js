@@ -11,7 +11,7 @@ const createRateLimiter = ({ windowMs, max, message }) => {
     if (recentHits.length >= max) {
       return res.status(429).json({
         success: false,
-        message: message || "Too many requests. Please try again later.",
+        message: message || "Bạn gửi quá nhiều yêu cầu. Vui lòng thử lại sau.",
       });
     }
 

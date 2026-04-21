@@ -24,13 +24,21 @@ function Services() {
     fetchServices();
   }, []);
 
+  // Hàm xóa dấu tiếng Việt để tìm kiếm chính xác
+  const removeVietnameseTones = (str) => {
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+  };
+
   const filteredServices = useMemo(() => {
-    const keyword = searchKeyword.trim().toLowerCase();
+    const keyword = removeVietnameseTones(searchKeyword.trim());
     if (!keyword) return services;
 
     return services.filter((service) => {
-      const name = String(service.name || "").toLowerCase();
-      const description = String(service.description || "").toLowerCase();
+      const name = removeVietnameseTones(String(service.name || ""));
+      const description = removeVietnameseTones(String(service.description || ""));
       return name.includes(keyword) || description.includes(keyword);
     });
   }, [searchKeyword, services]);

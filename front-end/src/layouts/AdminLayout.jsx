@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   ChevronRight,
   MessageSquare,
+  BadgeDollarSign,
 } from "lucide-react";
 
 function AdminLayout() {
@@ -26,6 +27,7 @@ function AdminLayout() {
     { to: "/admin/reviews", label: "Đánh giá khách hàng", icon: Star },
     { to: "/admin/contacts", label: "Quản lý liên hệ", icon: MessageSquare },
     { to: "/admin/bookings", label: "Quản lý đơn hàng", icon: ClipboardList },
+    { to: "/admin/refunds", label: "Hoàn tiền", icon: BadgeDollarSign },
     { to: "/admin/revenue", label: "Doanh thu", icon: BarChart3 },
   ];
 

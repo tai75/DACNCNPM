@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS users (
   name VARCHAR(100) NOT NULL,
   email VARCHAR(191) NOT NULL,
   phone VARCHAR(20) NOT NULL,
-  address VARCHAR(255) DEFAULT NULL,
   password VARCHAR(255) NOT NULL,
   role ENUM('user', 'staff', 'admin') NOT NULL DEFAULT 'user',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -33,8 +32,8 @@ CREATE TABLE IF NOT EXISTS services (
 
 CREATE TABLE IF NOT EXISTS bookings (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NOT NULL,
-  service_id INT UNSIGNED NOT NULL,
+  user_id INT UNSIGNED DEFAULT NULL,
+  service_id INT UNSIGNED DEFAULT NULL,
   staff_id INT UNSIGNED DEFAULT NULL,
   secondary_staff_id INT UNSIGNED DEFAULT NULL,
   booking_date DATE NOT NULL,
@@ -54,7 +53,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT fk_bookings_service FOREIGN KEY (service_id)
     REFERENCES services(id)
-    ON DELETE RESTRICT ON UPDATE CASCADE,
+    ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT fk_bookings_staff FOREIGN KEY (staff_id)
     REFERENCES users(id)
     ON DELETE SET NULL ON UPDATE CASCADE,
@@ -75,6 +74,7 @@ CREATE TABLE IF NOT EXISTS booking_items (
   service_id INT UNSIGNED NOT NULL,
   quantity INT UNSIGNED NOT NULL DEFAULT 1,
   unit_price DECIMAL(12,2) NOT NULL,
+  status ENUM('active', 'cancelled') NOT NULL DEFAULT 'active',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_booking_items_booking FOREIGN KEY (booking_id)
     REFERENCES bookings(id)
@@ -84,7 +84,8 @@ CREATE TABLE IF NOT EXISTS booking_items (
     ON DELETE RESTRICT ON UPDATE CASCADE,
   UNIQUE KEY uq_booking_service (booking_id, service_id),
   KEY idx_booking_items_booking_id (booking_id),
-  KEY idx_booking_items_service_id (service_id)
+  KEY idx_booking_items_service_id (service_id),
+  KEY idx_booking_items_status (status)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS reviews (
