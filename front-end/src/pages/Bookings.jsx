@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../config/axios";
 import CancelBookingModal from "../components/CancelBookingModal";
+import {
+  canCancelBooking,
+  getBookingPaymentStatusMeta,
+  getTimeSlotLabel,
+  normalizeBookingStatus,
+} from "../utils/booking";
 
 function Bookings() {
   const navigate = useNavigate();
@@ -35,21 +41,6 @@ function Bookings() {
     fetchBookings();
   }, []);
 
-  const normalizeText = (value) => String(value || "").trim().toLowerCase();
-
-  const normalizeBookingStatus = (status) => {
-    const normalized = normalizeText(status);
-
-    if (["da huy", "đã hủy", "huy", "cancelled", "canceled"].includes(normalized)) return "cancelled";
-    if (["da xac nhan", "đã xác nhận", "xac nhan", "confirmed"].includes(normalized)) return "confirmed";
-    if (["dang xu ly", "đang xử lý", "in_progress", "in progress"].includes(normalized)) return "in_progress";
-    if (["hoan thanh", "đã hoàn thành", "completed"].includes(normalized)) return "completed";
-    if (["da thanh toan", "đã thanh toán", "paid"].includes(normalized)) return "paid";
-    if (["da hoan tien", "đã hoàn tiền", "refunded"].includes(normalized)) return "refunded";
-
-    return normalized;
-  };
-
   const statusStyle = useMemo(
     () => ({
       completed: "bg-emerald-100 text-emerald-700",
@@ -61,38 +52,6 @@ function Bookings() {
     }),
     []
   );
-
-  const getPaymentStatusMeta = (booking) => {
-    const bookingStatus = normalizeBookingStatus(booking.status);
-    const paymentMethod = normalizeText(booking.payment_method);
-    const paymentStatus = normalizeBookingStatus(booking.payment_status);
-
-    if (bookingStatus === "cancelled" && paymentMethod === "bank" && paymentStatus === "paid") {
-      return {
-        label: "Chờ hoàn tiền",
-        className: "bg-amber-100 text-amber-700",
-      };
-    }
-
-    if (paymentStatus === "paid") {
-      return { label: "Đã thanh toán", className: "bg-emerald-100 text-emerald-700" };
-    }
-
-    if (paymentStatus === "refunded") {
-      return { label: "Đã hoàn tiền", className: "bg-rose-100 text-rose-700" };
-    }
-
-    return {
-      label: booking.payment_status_vietnamese || booking.payment_status || "Chưa cập nhật",
-      className: "bg-slate-100 text-slate-700",
-    };
-  };
-
-  const timeSlotLabel = (slot) => {
-    if (slot === "morning") return "Buổi sáng";
-    if (slot === "afternoon") return "Buổi chiều";
-    return slot || "Chưa cập nhật";
-  };
 
   const getServiceImageUrl = (image) => {
     if (!image) return "/images/sanvuon4.avif";
@@ -113,20 +72,6 @@ function Bookings() {
         service_image: booking.service_image || "",
       },
     ];
-  };
-
-  const canCancelBooking = (booking) => {
-    const normalizedStatus = normalizeBookingStatus(booking?.status);
-
-    if (normalizedStatus === "cancelled" || normalizedStatus === "completed") {
-      return false;
-    }
-
-    if (userRole === "admin" || userRole === "staff") {
-      return true;
-    }
-
-    return ["pending", "confirmed"].includes(normalizedStatus);
   };
 
   const openCancelModal = (booking) => {
@@ -225,17 +170,17 @@ function Bookings() {
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                       <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Mã #{booking.id}</p>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                            statusStyle[normalizeBookingStatus(booking.status)] || "bg-slate-100 text-slate-700"
-                          }`}
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                              statusStyle[normalizeBookingStatus(booking.status)] || "bg-slate-100 text-slate-700"
+                            }`}
                         >
                           {booking.status_vietnamese || booking.status}
                         </span>
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${getPaymentStatusMeta(booking).className}`}
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold ${getBookingPaymentStatusMeta(booking).className}`}
                         >
-                          {getPaymentStatusMeta(booking).label}
+                            {getBookingPaymentStatusMeta(booking).label}
                         </span>
                       </div>
                     </div>
