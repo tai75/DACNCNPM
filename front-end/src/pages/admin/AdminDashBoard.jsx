@@ -79,7 +79,6 @@ function AdminDashBoard() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Overview</p>
         <h1 className="text-3xl font-bold text-slate-800">Bảng điều khiển Quản trị</h1>
       </div>
 

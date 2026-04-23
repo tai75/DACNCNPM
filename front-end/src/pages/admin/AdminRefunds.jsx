@@ -162,8 +162,7 @@ function AdminRefunds() {
       <div className="card-soft overflow-hidden bg-gradient-to-r from-slate-900 via-rose-900 to-rose-700 p-6 text-white md:p-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-rose-200">Admin workspace</p>
-            <h1 className="mt-2 text-3xl font-bold md:text-4xl">Hoàn tiền booking</h1>
+            <h1 className="text-3xl font-bold md:text-4xl">Quản lý hoàn tiền</h1>
             <p className="mt-2 max-w-2xl text-sm text-rose-50/85">
               Chỉ hiển thị các đơn đã hủy và thanh toán qua ngân hàng. Hoàn tiền được xử lý ở màn riêng này.
             </p>
