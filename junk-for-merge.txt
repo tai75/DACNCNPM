@@ -1,2 +1,0 @@
-This is a temporary junk file created for the purpose of testing a merge into main.
-Remove it once you have completed the merge.
