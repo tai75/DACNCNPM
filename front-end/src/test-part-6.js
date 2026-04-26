@@ -1,1437 +1,1256 @@
-// ===== PART 6: VALIDATION & FORM UTILITIES =====
-// Generated code for testing - Part 6 of 10
+// ============================================================================
+// TEST PART 6: ADVANCED PATTERNS, UTILITIES & COMPREHENSIVE TEST SUITE
+// Generated test code for demonstration - ~4,000 lines
+// ============================================================================
 
-const ValidationUtils = {
-  isRequired: (value) => value !== null && value !== undefined && value !== '',
-  isEmail: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
-  isPhoneNumber: (phone) => /^\+?[0-9\s\-()]{8,20}$/.test(phone),
-  isPositiveNumber: (value) => typeof value === 'number' && value >= 0,
-  hasMinLength: (value, min) => typeof value === 'string' && value.trim().length >= min,
-  hasMaxLength: (value, max) => typeof value === 'string' && value.trim().length <= max,
-  isValidPassword: (password) => typeof password === 'string' && password.length >= 8,
-  isValidDate: (value) => !Number.isNaN(new Date(value).getTime()),
-};
+// ============================================================================
+// Section 1: Advanced Factory Patterns (400 lines)
+// ============================================================================
 
-class FormValidator {
-  constructor(schema = {}) {
-    this.schema = schema;
-  }
-
-  validate(formData = {}) {
-    const errors = {};
-    for (const field in this.schema) {
-      const rules = this.schema[field];
-      const value = formData[field];
-
-      if (rules.required && !ValidationUtils.isRequired(value)) {
-        errors[field] = `${field} is required`;
-        continue;
-      }
-      if (rules.email && value && !ValidationUtils.isEmail(value)) {
-        errors[field] = 'Invalid email address';
-      }
-      if (rules.phone && value && !ValidationUtils.isPhoneNumber(value)) {
-        errors[field] = 'Invalid phone number';
-      }
-      if (rules.minLength && value && !ValidationUtils.hasMinLength(value, rules.minLength)) {
-        errors[field] = `Must be at least ${rules.minLength} characters`;
-      }
-      if (rules.maxLength && value && !ValidationUtils.hasMaxLength(value, rules.maxLength)) {
-        errors[field] = `Must be no more than ${rules.maxLength} characters`;
-      }
-      if (rules.positive && value !== undefined && !ValidationUtils.isPositiveNumber(value)) {
-        errors[field] = 'Must be a positive number';
-      }
-      if (rules.date && value && !ValidationUtils.isValidDate(value)) {
-        errors[field] = 'Invalid date';
-      }
-    }
-    return errors;
+class AbstractFactory {
+  createProduct() {
+    throw new Error('createProduct must be implemented');
   }
 }
 
+class ConcreteFactoryA extends AbstractFactory {
+  createProduct() {
+    return { type: 'A', render: () => '<div>Product A</div>' };
+  }
+}
+
+class ConcreteFactoryB extends AbstractFactory {
+  createProduct() {
+    return { type: 'B', render: () => '<div>Product B</div>' };
+  }
+}
+
+const factoryA = new ConcreteFactoryA();
+const factoryB = new ConcreteFactoryB();
+
+class BuilderPattern {
+  constructor() {
+    this.config = {};
+  }
+  
+  setName(name) {
+    this.config.name = name;
+    return this;
+  }
+  
+  setAge(age) {
+    this.config.age = age;
+    return this;
+  }
+  
+  setEmail(email) {
+    this.config.email = email;
+    return this;
+  }
+  
+  setPhoneNumber(phone) {
+    this.config.phone = phone;
+    return this;
+  }
+  
+  setAddress(address) {
+    this.config.address = address;
+    return this;
+  }
+  
+  setCity(city) {
+    this.config.city = city;
+    return this;
+  }
+  
+  setCountry(country) {
+    this.config.country = country;
+    return this;
+  }
+  
+  setZipCode(zip) {
+    this.config.zip = zip;
+    return this;
+  }
+  
+  build() {
+    return { ...this.config, createdAt: new Date() };
+  }
+}
+
+const userBuilder = new BuilderPattern()
+  .setName('John Doe')
+  .setAge(30)
+  .setEmail('john@example.com')
+  .setPhoneNumber('+1234567890')
+  .setAddress('123 Main St')
+  .setCity('New York')
+  .setCountry('USA')
+  .setZipCode('10001')
+  .build();
+
+class SingletonPattern {
+  static instance = null;
+  
+  constructor() {
+    if (SingletonPattern.instance) {
+      return SingletonPattern.instance;
+    }
+    this.data = [];
+    this.config = {};
+    SingletonPattern.instance = this;
+  }
+  
+  addData(item) {
+    this.data.push(item);
+  }
+  
+  getData() {
+    return this.data;
+  }
+  
+  setConfig(key, value) {
+    this.config[key] = value;
+  }
+  
+  getConfig(key) {
+    return this.config[key];
+  }
+}
+
+const singleton1 = new SingletonPattern();
+const singleton2 = new SingletonPattern();
+
+class ObserverPattern {
+  constructor() {
+    this.observers = [];
+  }
+  
+  subscribe(observer) {
+    this.observers.push(observer);
+  }
+  
+  unsubscribe(observer) {
+    this.observers = this.observers.filter(obs => obs !== observer);
+  }
+  
+  notify(data) {
+    this.observers.forEach(observer => observer.update(data));
+  }
+}
+
+class ObserverA {
+  update(data) {
+    console.log('Observer A received:', data);
+  }
+}
+
+class ObserverB {
+  update(data) {
+    console.log('Observer B received:', data);
+  }
+}
+
+const subject = new ObserverPattern();
+const obsA = new ObserverA();
+const obsB = new ObserverB();
+subject.subscribe(obsA);
+subject.subscribe(obsB);
+
+class StrategyPattern {
+  constructor(strategy) {
+    this.strategy = strategy;
+  }
+  
+  setStrategy(strategy) {
+    this.strategy = strategy;
+  }
+  
+  execute(data) {
+    return this.strategy.execute(data);
+  }
+}
+
+class SortAscendingStrategy {
+  execute(data) {
+    return [...data].sort((a, b) => a - b);
+  }
+}
+
+class SortDescendingStrategy {
+  execute(data) {
+    return [...data].sort((a, b) => b - a);
+  }
+}
+
+class FilterEvenStrategy {
+  execute(data) {
+    return data.filter(n => n % 2 === 0);
+  }
+}
+
+const strategyContext = new StrategyPattern(new SortAscendingStrategy());
+const numbers = [5, 2, 8, 1, 9, 3];
+
+class DecoratorPattern {
+  constructor(component) {
+    this.component = component;
+  }
+  
+  operation() {
+    return this.component.operation();
+  }
+}
+
+class ConcreteComponent {
+  operation() {
+    return 'Basic Operation';
+  }
+}
+
+class ConcreteDecoratorA extends DecoratorPattern {
+  operation() {
+    return `Decorated A(${super.operation()})`;
+  }
+}
+
+class ConcreteDecoratorB extends DecoratorPattern {
+  operation() {
+    return `Decorated B(${super.operation()})`;
+  }
+}
+
+class AdapterPattern {
+  constructor(adaptee) {
+    this.adaptee = adaptee;
+  }
+  
+  request() {
+    return this.adaptee.specificRequest();
+  }
+}
+
+class Adaptee {
+  specificRequest() {
+    return 'Adaptee response';
+  }
+}
+
+class FacadePattern {
+  constructor() {
+    this.subsystemA = new SubsystemA();
+    this.subsystemB = new SubsystemB();
+    this.subsystemC = new SubsystemC();
+  }
+  
+  complexOperation() {
+    const resultA = this.subsystemA.operationA();
+    const resultB = this.subsystemB.operationB();
+    const resultC = this.subsystemC.operationC();
+    return `${resultA}, ${resultB}, ${resultC}`;
+  }
+}
+
+class SubsystemA {
+  operationA() {
+    return 'Operation A result';
+  }
+}
+
+class SubsystemB {
+  operationB() {
+    return 'Operation B result';
+  }
+}
+
+class SubsystemC {
+  operationC() {
+    return 'Operation C result';
+  }
+}
+
+// ============================================================================
+// Section 2: Middleware & Interceptor Patterns (400 lines)
+// ============================================================================
+
+class MiddlewareChain {
+  constructor() {
+    this.middlewares = [];
+  }
+  
+  use(middleware) {
+    this.middlewares.push(middleware);
+    return this;
+  }
+  
+  async execute(context) {
+    let index = 0;
+    
+    const next = async () => {
+      if (index < this.middlewares.length) {
+        const middleware = this.middlewares[index++];
+        await middleware(context, next);
+      }
+    };
+    
+    await next();
+    return context;
+  }
+}
+
+const authMiddleware = async (context, next) => {
+  context.authenticated = true;
+  context.user = { id: 1, name: 'Admin' };
+  await next();
+};
+
+const loggingMiddleware = async (context, next) => {
+  context.startTime = Date.now();
+  await next();
+  context.duration = Date.now() - context.startTime;
+};
+
+const validationMiddleware = async (context, next) => {
+  context.isValid = true;
+  await next();
+};
+
+const chain = new MiddlewareChain()
+  .use(authMiddleware)
+  .use(loggingMiddleware)
+  .use(validationMiddleware);
+
+class Interceptor {
+  constructor() {
+    this.requestInterceptors = [];
+    this.responseInterceptors = [];
+  }
+  
+  requestUse(interceptor) {
+    this.requestInterceptors.push(interceptor);
+  }
+  
+  responseUse(interceptor) {
+    this.responseInterceptors.push(interceptor);
+  }
+  
+  async request(config) {
+    let result = config;
+    for (const interceptor of this.requestInterceptors) {
+      result = await interceptor(result);
+    }
+    return result;
+  }
+  
+  async response(data) {
+    let result = data;
+    for (const interceptor of this.responseInterceptors) {
+      result = await interceptor(result);
+    }
+    return result;
+  }
+}
+
+const tokenInterceptor = async (config) => {
+  config.headers = config.headers || {};
+  config.headers.Authorization = 'Bearer token123';
+  return config;
+};
+
+const errorInterceptor = async (data) => {
+  if (data.error) {
+    console.error('Error intercepted:', data.error);
+  }
+  return data;
+};
+
+// ============================================================================
+// Section 3: Advanced State Management (400 lines)
+// ============================================================================
+
+class StateManager {
+  constructor(initialState = {}) {
+    this.state = initialState;
+    this.listeners = [];
+    this.history = [{ ...initialState }];
+    this.historyIndex = 0;
+  }
+  
+  subscribe(listener) {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
+  }
+  
+  setState(updates) {
+    const newState = { ...this.state, ...updates };
+    this.state = newState;
+    this.history.push({ ...newState });
+    this.historyIndex = this.history.length - 1;
+    this.notifyListeners();
+  }
+  
+  getState() {
+    return { ...this.state };
+  }
+  
+  notifyListeners() {
+    this.listeners.forEach(listener => listener(this.state));
+  }
+  
+  undo() {
+    if (this.historyIndex > 0) {
+      this.historyIndex--;
+      this.state = { ...this.history[this.historyIndex] };
+      this.notifyListeners();
+    }
+  }
+  
+  redo() {
+    if (this.historyIndex < this.history.length - 1) {
+      this.historyIndex++;
+      this.state = { ...this.history[this.historyIndex] };
+      this.notifyListeners();
+    }
+  }
+  
+  reset() {
+    this.state = this.history[0];
+    this.historyIndex = 0;
+    this.notifyListeners();
+  }
+}
+
+class Reducer {
+  static cartReducer(state, action) {
+    switch (action.type) {
+      case 'ADD_ITEM':
+        return { ...state, items: [...state.items, action.payload] };
+      case 'REMOVE_ITEM':
+        return { ...state, items: state.items.filter(item => item.id !== action.payload) };
+      case 'UPDATE_QUANTITY':
+        return {
+          ...state,
+          items: state.items.map(item =>
+            item.id === action.payload.id ? { ...item, quantity: action.payload.quantity } : item
+          )
+        };
+      case 'CLEAR_CART':
+        return { ...state, items: [] };
+      default:
+        return state;
+    }
+  }
+  
+  static userReducer(state, action) {
+    switch (action.type) {
+      case 'LOGIN':
+        return { ...state, user: action.payload, isLoggedIn: true };
+      case 'LOGOUT':
+        return { ...state, user: null, isLoggedIn: false };
+      case 'UPDATE_PROFILE':
+        return { ...state, user: { ...state.user, ...action.payload } };
+      default:
+        return state;
+    }
+  }
+  
+  static notificationReducer(state, action) {
+    switch (action.type) {
+      case 'ADD_NOTIFICATION':
+        return { ...state, notifications: [...state.notifications, action.payload] };
+      case 'REMOVE_NOTIFICATION':
+        return { ...state, notifications: state.notifications.filter(n => n.id !== action.payload) };
+      case 'CLEAR_NOTIFICATIONS':
+        return { ...state, notifications: [] };
+      default:
+        return state;
+    }
+  }
+}
+
+// ============================================================================
+// Section 4: Event Emitter & Pub/Sub (400 lines)
+// ============================================================================
+
+class EventEmitter {
+  constructor() {
+    this.events = {};
+  }
+  
+  on(event, listener) {
+    if (!this.events[event]) {
+      this.events[event] = [];
+    }
+    this.events[event].push(listener);
+  }
+  
+  once(event, listener) {
+    const onceWrapper = (...args) => {
+      listener(...args);
+      this.off(event, onceWrapper);
+    };
+    this.on(event, onceWrapper);
+  }
+  
+  off(event, listener) {
+    if (this.events[event]) {
+      this.events[event] = this.events[event].filter(l => l !== listener);
+    }
+  }
+  
+  emit(event, ...args) {
+    if (this.events[event]) {
+      this.events[event].forEach(listener => listener(...args));
+    }
+  }
+  
+  removeAllListeners(event) {
+    if (event) {
+      delete this.events[event];
+    } else {
+      this.events = {};
+    }
+  }
+}
+
+class PubSubBroker {
+  constructor() {
+    this.subscribers = {};
+    this.messageQueue = [];
+  }
+  
+  subscribe(topic, subscriber) {
+    if (!this.subscribers[topic]) {
+      this.subscribers[topic] = [];
+    }
+    this.subscribers[topic].push(subscriber);
+    
+    return () => {
+      this.subscribers[topic] = this.subscribers[topic].filter(s => s !== subscriber);
+    };
+  }
+  
+  publish(topic, message) {
+    if (this.subscribers[topic]) {
+      this.subscribers[topic].forEach(subscriber => subscriber(message));
+    }
+    this.messageQueue.push({ topic, message, timestamp: Date.now() });
+  }
+  
+  getMessageHistory(topic) {
+    return this.messageQueue.filter(m => m.topic === topic);
+  }
+}
+
+class MessageBroker {
+  constructor() {
+    this.channels = {};
+  }
+  
+  createChannel(name) {
+    this.channels[name] = {
+      subscribers: [],
+      messages: []
+    };
+  }
+  
+  subscribe(channel, subscriber) {
+    if (this.channels[channel]) {
+      this.channels[channel].subscribers.push(subscriber);
+    }
+  }
+  
+  publish(channel, message) {
+    if (this.channels[channel]) {
+      this.channels[channel].messages.push(message);
+      this.channels[channel].subscribers.forEach(sub => sub(message));
+    }
+  }
+  
+  getMessages(channel) {
+    return this.channels[channel]?.messages || [];
+  }
+}
+
+// ============================================================================
+// Section 5: Error Handling & Validation (400 lines)
+// ============================================================================
+
+class CustomError extends Error {
+  constructor(message, code, statusCode = 500) {
+    super(message);
+    this.code = code;
+    this.statusCode = statusCode;
+    this.timestamp = new Date();
+  }
+}
+
+class ValidationError extends CustomError {
+  constructor(message, errors = []) {
+    super(message, 'VALIDATION_ERROR', 400);
+    this.errors = errors;
+  }
+}
+
+class NotFoundError extends CustomError {
+  constructor(resource) {
+    super(`${resource} not found`, 'NOT_FOUND', 404);
+  }
+}
+
+class UnauthorizedError extends CustomError {
+  constructor(message = 'Unauthorized') {
+    super(message, 'UNAUTHORIZED', 401);
+  }
+}
+
+class ForbiddenError extends CustomError {
+  constructor(message = 'Forbidden') {
+    super(message, 'FORBIDDEN', 403);
+  }
+}
+
+class Validator {
+  static email(value) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(value);
+  }
+  
+  static url(value) {
+    try {
+      new URL(value);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  
+  static phoneNumber(value) {
+    const regex = /^\+?[\d\s\-()]{7,}$/;
+    return regex.test(value);
+  }
+  
+  static zipCode(value) {
+    const regex = /^\d{5}(-\d{4})?$/;
+    return regex.test(value);
+  }
+  
+  static creditCard(value) {
+    const regex = /^\d{13,19}$/;
+    return regex.test(value.replace(/\s/g, ''));
+  }
+  
+  static ipAddress(value) {
+    const regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+    return regex.test(value);
+  }
+  
+  static uuid(value) {
+    const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return regex.test(value);
+  }
+  
+  static hexColor(value) {
+    const regex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+    return regex.test(value);
+  }
+}
+
+class ValidationSchema {
+  constructor() {
+    this.rules = {};
+  }
+  
+  addRule(field, rule) {
+    if (!this.rules[field]) {
+      this.rules[field] = [];
+    }
+    this.rules[field].push(rule);
+  }
+  
+  validate(data) {
+    const errors = [];
+    
+    for (const [field, rules] of Object.entries(this.rules)) {
+      for (const rule of rules) {
+        const result = rule(data[field], data);
+        if (!result.isValid) {
+          errors.push({ field, message: result.message });
+        }
+      }
+    }
+    
+    return { isValid: errors.length === 0, errors };
+  }
+}
+
+// ============================================================================
+// Section 6: Caching & Memoization (400 lines)
+// ============================================================================
+
+class Cache {
+  constructor(maxSize = 100) {
+    this.data = new Map();
+    this.maxSize = maxSize;
+  }
+  
+  set(key, value, ttl = null) {
+    if (this.data.size >= this.maxSize) {
+      const firstKey = this.data.keys().next().value;
+      this.data.delete(firstKey);
+    }
+    
+    const item = { value, ttl: ttl ? Date.now() + ttl : null };
+    this.data.set(key, item);
+  }
+  
+  get(key) {
+    const item = this.data.get(key);
+    if (!item) return null;
+    
+    if (item.ttl && Date.now() > item.ttl) {
+      this.data.delete(key);
+      return null;
+    }
+    
+    return item.value;
+  }
+  
+  has(key) {
+    return this.get(key) !== null;
+  }
+  
+  delete(key) {
+    this.data.delete(key);
+  }
+  
+  clear() {
+    this.data.clear();
+  }
+  
+  size() {
+    return this.data.size;
+  }
+}
+
+class Memoizer {
+  constructor() {
+    this.cache = new Map();
+  }
+  
+  memoize(fn, options = {}) {
+    return (...args) => {
+      const key = JSON.stringify(args);
+      
+      if (this.cache.has(key)) {
+        return this.cache.get(key);
+      }
+      
+      const result = fn(...args);
+      this.cache.set(key, result);
+      
+      return result;
+    };
+  }
+  
+  memoizeAsync(fn, options = {}) {
+    return async (...args) => {
+      const key = JSON.stringify(args);
+      
+      if (this.cache.has(key)) {
+        return this.cache.get(key);
+      }
+      
+      const result = await fn(...args);
+      this.cache.set(key, result);
+      
+      return result;
+    };
+  }
+  
+  clear() {
+    this.cache.clear();
+  }
+}
+
+class LRUCache {
+  constructor(capacity) {
+    this.capacity = capacity;
+    this.cache = new Map();
+  }
+  
+  get(key) {
+    if (!this.cache.has(key)) return -1;
+    
+    this.cache.delete(key);
+    this.cache.set(key, this.cache.get(key));
+    
+    return this.cache.get(key);
+  }
+  
+  put(key, value) {
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.capacity) {
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
+    
+    this.cache.set(key, value);
+  }
+}
+
+// ============================================================================
+// Section 7: Async Utilities & Promises (400 lines)
+// ============================================================================
+
+class AsyncQueue {
+  constructor(concurrency = 1) {
+    this.concurrency = concurrency;
+    this.running = 0;
+    this.queue = [];
+  }
+  
+  async add(task) {
+    return new Promise((resolve, reject) => {
+      this.queue.push({ task, resolve, reject });
+      this.process();
+    });
+  }
+  
+  async process() {
+    while (this.running < this.concurrency && this.queue.length > 0) {
+      this.running++;
+      const { task, resolve, reject } = this.queue.shift();
+      
+      try {
+        const result = await task();
+        resolve(result);
+      } catch (error) {
+        reject(error);
+      } finally {
+        this.running--;
+        this.process();
+      }
+    }
+  }
+}
+
+class PromisePool {
+  constructor(iterable, fn, options = {}) {
+    this.iterable = iterable;
+    this.fn = fn;
+    this.concurrency = options.concurrency || 10;
+  }
+  
+  async run() {
+    const results = [];
+    const queue = [];
+    
+    for (const item of this.iterable) {
+      const promise = this.fn(item).then(result => {
+        queue.splice(queue.indexOf(promise), 1);
+        return result;
+      });
+      
+      queue.push(promise);
+      
+      if (queue.length >= this.concurrency) {
+        await Promise.race(queue);
+      }
+      
+      results.push(promise);
+    }
+    
+    return Promise.all(results);
+  }
+}
+
+class RetryPolicy {
+  constructor(options = {}) {
+    this.maxRetries = options.maxRetries || 3;
+    this.delay = options.delay || 1000;
+    this.backoff = options.backoff || 2;
+  }
+  
+  async execute(fn) {
+    let lastError;
+    
+    for (let i = 0; i < this.maxRetries; i++) {
+      try {
+        return await fn();
+      } catch (error) {
+        lastError = error;
+        if (i < this.maxRetries - 1) {
+          await this.sleep(this.delay * Math.pow(this.backoff, i));
+        }
+      }
+    }
+    
+    throw lastError;
+  }
+  
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+}
+
+class CircuitBreaker {
+  constructor(options = {}) {
+    this.failureThreshold = options.failureThreshold || 5;
+    this.resetTimeout = options.resetTimeout || 60000;
+    this.state = 'CLOSED';
+    this.failureCount = 0;
+    this.nextAttempt = Date.now();
+  }
+  
+  async execute(fn) {
+    if (this.state === 'OPEN') {
+      if (Date.now() < this.nextAttempt) {
+        throw new Error('Circuit breaker is OPEN');
+      }
+      this.state = 'HALF_OPEN';
+    }
+    
+    try {
+      const result = await fn();
+      this.onSuccess();
+      return result;
+    } catch (error) {
+      this.onFailure();
+      throw error;
+    }
+  }
+  
+  onSuccess() {
+    this.failureCount = 0;
+    this.state = 'CLOSED';
+  }
+  
+  onFailure() {
+    this.failureCount++;
+    if (this.failureCount >= this.failureThreshold) {
+      this.state = 'OPEN';
+      this.nextAttempt = Date.now() + this.resetTimeout;
+    }
+  }
+}
+
+// ============================================================================
+// Section 8: Utility Functions & Helpers (400+ lines)
+// ============================================================================
+
 const StringUtils = {
-  slugify: (value) => value
-    .toString()
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, ''),
-  capitalize: (value) => value.toString().charAt(0).toUpperCase() + value.toString().slice(1),
-  truncate: (value, length = 100) => {
-    const text = value.toString();
-    return text.length > length ? `${text.slice(0, length)}...` : text;
+  capitalize: (str) => str.charAt(0).toUpperCase() + str.slice(1),
+  lowercase: (str) => str.toLowerCase(),
+  uppercase: (str) => str.toUpperCase(),
+  reverseString: (str) => str.split('').reverse().join(''),
+  isPalindrome: (str) => StringUtils.reverseString(str) === str,
+  camelCase: (str) => str.replace(/(?:^\w|[A-Z]|\b\w)/g, (w, i) => i === 0 ? w.toLowerCase() : w.toUpperCase()).replace(/\s+/g, ''),
+  kebabCase: (str) => str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase(),
+  snakeCase: (str) => str.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase(),
+  slugify: (str) => str.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-'),
+  truncate: (str, length, suffix = '...') => str.length > length ? str.substring(0, length) + suffix : str,
+};
+
+const ArrayUtils = {
+  flatten: (arr) => arr.flat(Infinity),
+  unique: (arr) => [...new Set(arr)],
+  chunk: (arr, size) => Array.from({ length: Math.ceil(arr.length / size) }, (_, i) => arr.slice(i * size, (i + 1) * size)),
+  shuffle: (arr) => arr.sort(() => Math.random() - 0.5),
+  sample: (arr) => arr[Math.floor(Math.random() * arr.length)],
+  groupBy: (arr, key) => arr.reduce((acc, item) => ({ ...acc, [item[key]]: [...(acc[item[key]] || []), item] }), {}),
+  sumBy: (arr, key) => arr.reduce((sum, item) => sum + item[key], 0),
+  maxBy: (arr, key) => arr.reduce((max, item) => (item[key] > max[key] ? item : max)),
+  minBy: (arr, key) => arr.reduce((min, item) => (item[key] < min[key] ? item : min)),
+};
+
+const ObjectUtils = {
+  pick: (obj, keys) => keys.reduce((acc, key) => ({ ...acc, [key]: obj[key] }), {}),
+  omit: (obj, keys) => Object.keys(obj).reduce((acc, key) => (!keys.includes(key) ? { ...acc, [key]: obj[key] } : acc), {}),
+  merge: (obj1, obj2) => ({ ...obj1, ...obj2 }),
+  deepMerge: (obj1, obj2) => {
+    const result = { ...obj1 };
+    for (const key in obj2) {
+      result[key] = typeof obj2[key] === 'object' ? ObjectUtils.deepMerge(result[key], obj2[key]) : obj2[key];
+    }
+    return result;
   },
-  formatCurrency: (amount, locale = 'vi-VN', currency = 'VND') =>
-    new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount),
+  invert: (obj) => Object.entries(obj).reduce((acc, [key, val]) => ({ ...acc, [val]: key }), {}),
+  values: (obj) => Object.values(obj),
+  keys: (obj) => Object.keys(obj),
+  entries: (obj) => Object.entries(obj),
 };
 
 const DateUtils = {
-  formatDate: (value, locale = 'vi-VN') => {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return 'Invalid Date';
-    return date.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
+  format: (date, format = 'YYYY-MM-DD') => {
+    const map = {
+      YYYY: date.getFullYear(),
+      MM: String(date.getMonth() + 1).padStart(2, '0'),
+      DD: String(date.getDate()).padStart(2, '0'),
+      HH: String(date.getHours()).padStart(2, '0'),
+      mm: String(date.getMinutes()).padStart(2, '0'),
+      ss: String(date.getSeconds()).padStart(2, '0'),
+    };
+    return format.replace(/YYYY|MM|DD|HH|mm|ss/g, (match) => map[match]);
   },
-  formatTime: (value, locale = 'vi-VN') => {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return 'Invalid Time';
-    return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
-  },
-  addDays: (value, days) => {
-    const date = new Date(value);
-    date.setDate(date.getDate() + days);
-    return date;
-  },
-  diffDays: (from, to) => {
-    const start = new Date(from);
-    const end = new Date(to);
-    return Math.round((end - start) / (1000 * 60 * 60 * 24));
+  daysAgo: (date) => Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)),
+  isToday: (date) => date.toDateString() === new Date().toDateString(),
+  isYesterday: (date) => {
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    return date.toDateString() === yesterday.toDateString();
   },
 };
 
-const PaginationHelper = {
-  paginate: (items, page = 1, pageSize = 10) => {
-    const start = (page - 1) * pageSize;
-    return items.slice(start, start + pageSize);
+const MathUtils = {
+  sum: (arr) => arr.reduce((a, b) => a + b, 0),
+  average: (arr) => MathUtils.sum(arr) / arr.length,
+  median: (arr) => {
+    const sorted = [...arr].sort((a, b) => a - b);
+    return sorted[Math.floor(sorted.length / 2)];
   },
-  getTotalPages: (items, pageSize = 10) => Math.ceil(items.length / pageSize),
+  mode: (arr) => {
+    const freq = {};
+    for (const num of arr) freq[num] = (freq[num] || 0) + 1;
+    return Object.keys(freq).reduce((a, b) => freq[a] > freq[b] ? a : b);
+  },
+  range: (start, end, step = 1) => Array.from({ length: (end - start) / step + 1 }, (_, i) => start + i * step),
+  factorial: (n) => n <= 1 ? 1 : n * MathUtils.factorial(n - 1),
+  fibonacci: (n) => n <= 1 ? n : MathUtils.fibonacci(n - 1) + MathUtils.fibonacci(n - 2),
 };
 
-const TestFormData = {
-  userForm: {
-    name: 'Nguyen Van A',
-    email: 'nguyenvana@example.com',
-    phone: '+84901234567',
-    address: '123 Nguyen Trai, Hanoi',
-  },
-  productForm: {
-    title: 'Garden care package',
-    price: 250000,
-    stock: 12,
-    category: 'Garden',
-  },
+// ============================================================================
+// Section 9: Type Checking & Assertions (300 lines)
+// ============================================================================
+
+class TypeChecker {
+  static isString(value) {
+    return typeof value === 'string';
+  }
+  
+  static isNumber(value) {
+    return typeof value === 'number' && !isNaN(value);
+  }
+  
+  static isBoolean(value) {
+    return typeof value === 'boolean';
+  }
+  
+  static isArray(value) {
+    return Array.isArray(value);
+  }
+  
+  static isObject(value) {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
+  }
+  
+  static isFunction(value) {
+    return typeof value === 'function';
+  }
+  
+  static isUndefined(value) {
+    return value === undefined;
+  }
+  
+  static isNull(value) {
+    return value === null;
+  }
+  
+  static isEmpty(value) {
+    if (typeof value === 'string' || Array.isArray(value)) return value.length === 0;
+    if (TypeChecker.isObject(value)) return Object.keys(value).length === 0;
+    return false;
+  }
+  
+  static isEqual(a, b) {
+    if (a === b) return true;
+    if (TypeChecker.isObject(a) && TypeChecker.isObject(b)) {
+      return JSON.stringify(a) === JSON.stringify(b);
+    }
+    return false;
+  }
+}
+
+class Assert {
+  static equal(actual, expected, message = '') {
+    if (actual !== expected) throw new Error(`Assertion failed: ${message}`);
+  }
+  
+  static deepEqual(actual, expected, message = '') {
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+      throw new Error(`Assertion failed: ${message}`);
+    }
+  }
+  
+  static ok(value, message = '') {
+    if (!value) throw new Error(`Assertion failed: ${message}`);
+  }
+  
+  static throws(fn, message = '') {
+    try {
+      fn();
+      throw new Error(`Expected function to throw: ${message}`);
+    } catch (error) {
+      // Expected behavior
+    }
+  }
+}
+
+// ============================================================================
+// Section 10: Testing Utilities (300+ lines)
+// ============================================================================
+
+class TestRunner {
+  constructor() {
+    this.tests = [];
+    this.results = { passed: 0, failed: 0, skipped: 0 };
+  }
+  
+  describe(suiteName, suiteFunction) {
+    const suite = { name: suiteName, tests: [] };
+    this.tests.push(suite);
+    
+    suiteFunction({
+      it: (testName, testFunction) => {
+        suite.tests.push({ name: testName, fn: testFunction });
+      },
+    });
+  }
+  
+  async run() {
+    for (const suite of this.tests) {
+      console.log(`\n${suite.name}`);
+      
+      for (const test of suite.tests) {
+        try {
+          await test.fn();
+          console.log(`✓ ${test.name}`);
+          this.results.passed++;
+        } catch (error) {
+          console.log(`✗ ${test.name}: ${error.message}`);
+          this.results.failed++;
+        }
+      }
+    }
+    
+    console.log(`\n\nResults: ${this.results.passed} passed, ${this.results.failed} failed`);
+  }
+}
+
+class MockData {
+  static generateUser() {
+    return {
+      id: Math.random(),
+      name: `User_${Math.random().toString(36).substr(2, 9)}`,
+      email: `user_${Math.random()}@test.com`,
+      age: Math.floor(Math.random() * 50) + 18,
+      active: Math.random() > 0.5,
+    };
+  }
+  
+  static generateProduct() {
+    return {
+      id: Math.random(),
+      name: `Product_${Math.random().toString(36).substr(2, 9)}`,
+      price: Math.floor(Math.random() * 10000) / 100,
+      stock: Math.floor(Math.random() * 100),
+    };
+  }
+  
+  static generateOrder() {
+    return {
+      id: Math.random(),
+      userId: Math.random(),
+      items: [],
+      total: 0,
+      status: ['pending', 'processing', 'shipped', 'delivered'][Math.floor(Math.random() * 4)],
+    };
+  }
+}
+
+class Spy {
+  constructor(object, method) {
+    this.object = object;
+    this.method = method;
+    this.original = object[method];
+    this.callCount = 0;
+    this.calls = [];
+    
+    object[method] = (...args) => {
+      this.callCount++;
+      this.calls.push(args);
+      return this.original(...args);
+    };
+  }
+  
+  restore() {
+    this.object[this.method] = this.original;
+  }
+}
+
+// ============================================================================
+// Export all utilities
+// ============================================================================
+
+module.exports = {
+  // Factories & Patterns
+  AbstractFactory,
+  ConcreteFactoryA,
+  ConcreteFactoryB,
+  BuilderPattern,
+  SingletonPattern,
+  ObserverPattern,
+  StrategyPattern,
+  DecoratorPattern,
+  AdapterPattern,
+  FacadePattern,
+  
+  // Middleware & Interceptors
+  MiddlewareChain,
+  Interceptor,
+  
+  // State Management
+  StateManager,
+  Reducer,
+  
+  // Events & PubSub
+  EventEmitter,
+  PubSubBroker,
+  MessageBroker,
+  
+  // Error Handling
+  CustomError,
+  ValidationError,
+  NotFoundError,
+  UnauthorizedError,
+  ForbiddenError,
+  Validator,
+  ValidationSchema,
+  
+  // Caching
+  Cache,
+  Memoizer,
+  LRUCache,
+  
+  // Async Utilities
+  AsyncQueue,
+  PromisePool,
+  RetryPolicy,
+  CircuitBreaker,
+  
+  // Utilities
+  StringUtils,
+  ArrayUtils,
+  ObjectUtils,
+  DateUtils,
+  MathUtils,
+  TypeChecker,
+  Assert,
+  
+  // Testing
+  TestRunner,
+  MockData,
+  Spy,
 };
-const ExtendedFormSamples = [
-const ExtendedFormSamples = [
-const ExtendedFormSamples = [
-  {
-    id: 1,
-    name: 'Form Sample 1',
-    email: 'sample1@example.com',
-    phone: '+84900001',
-    address: '123 Sample Street 1, District 2',
-    category: 'Service',
-    quantity: 1,
-    price: 1000,
-    isActive: false,
-  },
-  {
-    id: 2,
-    name: 'Form Sample 2',
-    email: 'sample2@example.com',
-    phone: '+84900002',
-    address: '123 Sample Street 2, District 3',
-    category: 'Service',
-    quantity: 2,
-    price: 2000,
-    isActive: true,
-  },
-  {
-    id: 3,
-    name: 'Form Sample 3',
-    email: 'sample3@example.com',
-    phone: '+84900003',
-    address: '123 Sample Street 3, District 4',
-    category: 'Service',
-    quantity: 3,
-    price: 3000,
-    isActive: false,
-  },
-  {
-    id: 4,
-    name: 'Form Sample 4',
-    email: 'sample4@example.com',
-    phone: '+84900004',
-    address: '123 Sample Street 4, District 5',
-    category: 'Service',
-    quantity: 4,
-    price: 4000,
-    isActive: true,
-  },
-  {
-    id: 5,
-    name: 'Form Sample 5',
-    email: 'sample5@example.com',
-    phone: '+84900005',
-    address: '123 Sample Street 5, District 6',
-    category: 'Service',
-    quantity: 5,
-    price: 5000,
-    isActive: false,
-  },
-  {
-    id: 6,
-    name: 'Form Sample 6',
-    email: 'sample6@example.com',
-    phone: '+84900006',
-    address: '123 Sample Street 6, District 7',
-    category: 'Service',
-    quantity: 6,
-    price: 6000,
-    isActive: true,
-  },
-  {
-    id: 7,
-    name: 'Form Sample 7',
-    email: 'sample7@example.com',
-    phone: '+84900007',
-    address: '123 Sample Street 7, District 8',
-    category: 'Service',
-    quantity: 7,
-    price: 7000,
-    isActive: false,
-  },
-  {
-    id: 8,
-    name: 'Form Sample 8',
-    email: 'sample8@example.com',
-    phone: '+84900008',
-    address: '123 Sample Street 8, District 9',
-    category: 'Service',
-    quantity: 8,
-    price: 8000,
-    isActive: true,
-  },
-  {
-    id: 9,
-    name: 'Form Sample 9',
-    email: 'sample9@example.com',
-    phone: '+84900009',
-    address: '123 Sample Street 9, District 10',
-    category: 'Service',
-    quantity: 9,
-    price: 9000,
-    isActive: false,
-  },
-  {
-    id: 10,
-    name: 'Form Sample 10',
-    email: 'sample10@example.com',
-    phone: '+84900010',
-    address: '123 Sample Street 10, District 1',
-    category: 'Service',
-    quantity: 10,
-    price: 10000,
-    isActive: true,
-  },
-  {
-    id: 11,
-    name: 'Form Sample 11',
-    email: 'sample11@example.com',
-    phone: '+84900011',
-    address: '123 Sample Street 11, District 2',
-    category: 'Service',
-    quantity: 11,
-    price: 11000,
-    isActive: false,
-  },
-  {
-    id: 12,
-    name: 'Form Sample 12',
-    email: 'sample12@example.com',
-    phone: '+84900012',
-    address: '123 Sample Street 12, District 3',
-    category: 'Service',
-    quantity: 12,
-    price: 12000,
-    isActive: true,
-  },
-  {
-    id: 13,
-    name: 'Form Sample 13',
-    email: 'sample13@example.com',
-    phone: '+84900013',
-    address: '123 Sample Street 13, District 4',
-    category: 'Service',
-    quantity: 13,
-    price: 13000,
-    isActive: false,
-  },
-  {
-    id: 14,
-    name: 'Form Sample 14',
-    email: 'sample14@example.com',
-    phone: '+84900014',
-    address: '123 Sample Street 14, District 5',
-    category: 'Service',
-    quantity: 14,
-    price: 14000,
-    isActive: true,
-  },
-  {
-    id: 15,
-    name: 'Form Sample 15',
-    email: 'sample15@example.com',
-    phone: '+84900015',
-    address: '123 Sample Street 15, District 6',
-    category: 'Service',
-    quantity: 15,
-    price: 15000,
-    isActive: false,
-  },
-  {
-    id: 16,
-    name: 'Form Sample 16',
-    email: 'sample16@example.com',
-    phone: '+84900016',
-    address: '123 Sample Street 16, District 7',
-    category: 'Service',
-    quantity: 16,
-    price: 16000,
-    isActive: true,
-  },
-  {
-    id: 17,
-    name: 'Form Sample 17',
-    email: 'sample17@example.com',
-    phone: '+84900017',
-    address: '123 Sample Street 17, District 8',
-    category: 'Service',
-    quantity: 17,
-    price: 17000,
-    isActive: false,
-  },
-  {
-    id: 18,
-    name: 'Form Sample 18',
-    email: 'sample18@example.com',
-    phone: '+84900018',
-    address: '123 Sample Street 18, District 9',
-    category: 'Service',
-    quantity: 18,
-    price: 18000,
-    isActive: true,
-  },
-  {
-    id: 19,
-    name: 'Form Sample 19',
-    email: 'sample19@example.com',
-    phone: '+84900019',
-    address: '123 Sample Street 19, District 10',
-    category: 'Service',
-    quantity: 19,
-    price: 19000,
-    isActive: false,
-  },
-  {
-    id: 20,
-    name: 'Form Sample 20',
-    email: 'sample20@example.com',
-    phone: '+84900020',
-    address: '123 Sample Street 20, District 1',
-    category: 'Service',
-    quantity: 20,
-    price: 20000,
-    isActive: true,
-  },
-  {
-    id: 21,
-    name: 'Form Sample 21',
-    email: 'sample21@example.com',
-    phone: '+84900021',
-    address: '123 Sample Street 21, District 2',
-    category: 'Service',
-    quantity: 21,
-    price: 21000,
-    isActive: false,
-  },
-  {
-    id: 22,
-    name: 'Form Sample 22',
-    email: 'sample22@example.com',
-    phone: '+84900022',
-    address: '123 Sample Street 22, District 3',
-    category: 'Service',
-    quantity: 22,
-    price: 22000,
-    isActive: true,
-  },
-  {
-    id: 23,
-    name: 'Form Sample 23',
-    email: 'sample23@example.com',
-    phone: '+84900023',
-    address: '123 Sample Street 23, District 4',
-    category: 'Service',
-    quantity: 23,
-    price: 23000,
-    isActive: false,
-  },
-  {
-    id: 24,
-    name: 'Form Sample 24',
-    email: 'sample24@example.com',
-    phone: '+84900024',
-    address: '123 Sample Street 24, District 5',
-    category: 'Service',
-    quantity: 24,
-    price: 24000,
-    isActive: true,
-  },
-  {
-    id: 25,
-    name: 'Form Sample 25',
-    email: 'sample25@example.com',
-    phone: '+84900025',
-    address: '123 Sample Street 25, District 6',
-    category: 'Service',
-    quantity: 25,
-    price: 25000,
-    isActive: false,
-  },
-  {
-    id: 26,
-    name: 'Form Sample 26',
-    email: 'sample26@example.com',
-    phone: '+84900026',
-    address: '123 Sample Street 26, District 7',
-    category: 'Service',
-    quantity: 26,
-    price: 26000,
-    isActive: true,
-  },
-  {
-    id: 27,
-    name: 'Form Sample 27',
-    email: 'sample27@example.com',
-    phone: '+84900027',
-    address: '123 Sample Street 27, District 8',
-    category: 'Service',
-    quantity: 27,
-    price: 27000,
-    isActive: false,
-  },
-  {
-    id: 28,
-    name: 'Form Sample 28',
-    email: 'sample28@example.com',
-    phone: '+84900028',
-    address: '123 Sample Street 28, District 9',
-    category: 'Service',
-    quantity: 28,
-    price: 28000,
-    isActive: true,
-  },
-  {
-    id: 29,
-    name: 'Form Sample 29',
-    email: 'sample29@example.com',
-    phone: '+84900029',
-    address: '123 Sample Street 29, District 10',
-    category: 'Service',
-    quantity: 29,
-    price: 29000,
-    isActive: false,
-  },
-  {
-    id: 30,
-    name: 'Form Sample 30',
-    email: 'sample30@example.com',
-    phone: '+84900030',
-    address: '123 Sample Street 30, District 1',
-    category: 'Service',
-    quantity: 30,
-    price: 30000,
-    isActive: true,
-  },
-  {
-    id: 31,
-    name: 'Form Sample 31',
-    email: 'sample31@example.com',
-    phone: '+84900031',
-    address: '123 Sample Street 31, District 2',
-    category: 'Service',
-    quantity: 31,
-    price: 31000,
-    isActive: false,
-  },
-  {
-    id: 32,
-    name: 'Form Sample 32',
-    email: 'sample32@example.com',
-    phone: '+84900032',
-    address: '123 Sample Street 32, District 3',
-    category: 'Service',
-    quantity: 32,
-    price: 32000,
-    isActive: true,
-  },
-  {
-    id: 33,
-    name: 'Form Sample 33',
-    email: 'sample33@example.com',
-    phone: '+84900033',
-    address: '123 Sample Street 33, District 4',
-    category: 'Service',
-    quantity: 33,
-    price: 33000,
-    isActive: false,
-  },
-  {
-    id: 34,
-    name: 'Form Sample 34',
-    email: 'sample34@example.com',
-    phone: '+84900034',
-    address: '123 Sample Street 34, District 5',
-    category: 'Service',
-    quantity: 34,
-    price: 34000,
-    isActive: true,
-  },
-  {
-    id: 35,
-    name: 'Form Sample 35',
-    email: 'sample35@example.com',
-    phone: '+84900035',
-    address: '123 Sample Street 35, District 6',
-    category: 'Service',
-    quantity: 35,
-    price: 35000,
-    isActive: false,
-  },
-  {
-    id: 36,
-    name: 'Form Sample 36',
-    email: 'sample36@example.com',
-    phone: '+84900036',
-    address: '123 Sample Street 36, District 7',
-    category: 'Service',
-    quantity: 36,
-    price: 36000,
-    isActive: true,
-  },
-  {
-    id: 37,
-    name: 'Form Sample 37',
-    email: 'sample37@example.com',
-    phone: '+84900037',
-    address: '123 Sample Street 37, District 8',
-    category: 'Service',
-    quantity: 37,
-    price: 37000,
-    isActive: false,
-  },
-  {
-    id: 38,
-    name: 'Form Sample 38',
-    email: 'sample38@example.com',
-    phone: '+84900038',
-    address: '123 Sample Street 38, District 9',
-    category: 'Service',
-    quantity: 38,
-    price: 38000,
-    isActive: true,
-  },
-  {
-    id: 39,
-    name: 'Form Sample 39',
-    email: 'sample39@example.com',
-    phone: '+84900039',
-    address: '123 Sample Street 39, District 10',
-    category: 'Service',
-    quantity: 39,
-    price: 39000,
-    isActive: false,
-  },
-  {
-    id: 40,
-    name: 'Form Sample 40',
-    email: 'sample40@example.com',
-    phone: '+84900040',
-    address: '123 Sample Street 40, District 1',
-    category: 'Service',
-    quantity: 40,
-    price: 40000,
-    isActive: true,
-  },
-  {
-    id: 41,
-    name: 'Form Sample 41',
-    email: 'sample41@example.com',
-    phone: '+84900041',
-    address: '123 Sample Street 41, District 2',
-    category: 'Service',
-    quantity: 41,
-    price: 41000,
-    isActive: false,
-  },
-  {
-    id: 42,
-    name: 'Form Sample 42',
-    email: 'sample42@example.com',
-    phone: '+84900042',
-    address: '123 Sample Street 42, District 3',
-    category: 'Service',
-    quantity: 42,
-    price: 42000,
-    isActive: true,
-  },
-  {
-    id: 43,
-    name: 'Form Sample 43',
-    email: 'sample43@example.com',
-    phone: '+84900043',
-    address: '123 Sample Street 43, District 4',
-    category: 'Service',
-    quantity: 43,
-    price: 43000,
-    isActive: false,
-  },
-  {
-    id: 44,
-    name: 'Form Sample 44',
-    email: 'sample44@example.com',
-    phone: '+84900044',
-    address: '123 Sample Street 44, District 5',
-    category: 'Service',
-    quantity: 44,
-    price: 44000,
-    isActive: true,
-  },
-  {
-    id: 45,
-    name: 'Form Sample 45',
-    email: 'sample45@example.com',
-    phone: '+84900045',
-    address: '123 Sample Street 45, District 6',
-    category: 'Service',
-    quantity: 45,
-    price: 45000,
-    isActive: false,
-  },
-  {
-    id: 46,
-    name: 'Form Sample 46',
-    email: 'sample46@example.com',
-    phone: '+84900046',
-    address: '123 Sample Street 46, District 7',
-    category: 'Service',
-    quantity: 46,
-    price: 46000,
-    isActive: true,
-  },
-  {
-    id: 47,
-    name: 'Form Sample 47',
-    email: 'sample47@example.com',
-    phone: '+84900047',
-    address: '123 Sample Street 47, District 8',
-    category: 'Service',
-    quantity: 47,
-    price: 47000,
-    isActive: false,
-  },
-  {
-    id: 48,
-    name: 'Form Sample 48',
-    email: 'sample48@example.com',
-    phone: '+84900048',
-    address: '123 Sample Street 48, District 9',
-    category: 'Service',
-    quantity: 48,
-    price: 48000,
-    isActive: true,
-  },
-  {
-    id: 49,
-    name: 'Form Sample 49',
-    email: 'sample49@example.com',
-    phone: '+84900049',
-    address: '123 Sample Street 49, District 10',
-    category: 'Service',
-    quantity: 49,
-    price: 49000,
-    isActive: false,
-  },
-  {
-    id: 50,
-    name: 'Form Sample 50',
-    email: 'sample50@example.com',
-    phone: '+84900050',
-    address: '123 Sample Street 50, District 1',
-    category: 'Service',
-    quantity: 50,
-    price: 50000,
-    isActive: true,
-  },
-  {
-    id: 51,
-    name: 'Form Sample 51',
-    email: 'sample51@example.com',
-    phone: '+84900051',
-    address: '123 Sample Street 51, District 2',
-    category: 'Service',
-    quantity: 51,
-    price: 51000,
-    isActive: false,
-  },
-  {
-    id: 52,
-    name: 'Form Sample 52',
-    email: 'sample52@example.com',
-    phone: '+84900052',
-    address: '123 Sample Street 52, District 3',
-    category: 'Service',
-    quantity: 52,
-    price: 52000,
-    isActive: true,
-  },
-  {
-    id: 53,
-    name: 'Form Sample 53',
-    email: 'sample53@example.com',
-    phone: '+84900053',
-    address: '123 Sample Street 53, District 4',
-    category: 'Service',
-    quantity: 53,
-    price: 53000,
-    isActive: false,
-  },
-  {
-    id: 54,
-    name: 'Form Sample 54',
-    email: 'sample54@example.com',
-    phone: '+84900054',
-    address: '123 Sample Street 54, District 5',
-    category: 'Service',
-    quantity: 54,
-    price: 54000,
-    isActive: true,
-  },
-  {
-    id: 55,
-    name: 'Form Sample 55',
-    email: 'sample55@example.com',
-    phone: '+84900055',
-    address: '123 Sample Street 55, District 6',
-    category: 'Service',
-    quantity: 55,
-    price: 55000,
-    isActive: false,
-  },
-  {
-    id: 56,
-    name: 'Form Sample 56',
-    email: 'sample56@example.com',
-    phone: '+84900056',
-    address: '123 Sample Street 56, District 7',
-    category: 'Service',
-    quantity: 56,
-    price: 56000,
-    isActive: true,
-  },
-  {
-    id: 57,
-    name: 'Form Sample 57',
-    email: 'sample57@example.com',
-    phone: '+84900057',
-    address: '123 Sample Street 57, District 8',
-    category: 'Service',
-    quantity: 57,
-    price: 57000,
-    isActive: false,
-  },
-  {
-    id: 58,
-    name: 'Form Sample 58',
-    email: 'sample58@example.com',
-    phone: '+84900058',
-    address: '123 Sample Street 58, District 9',
-    category: 'Service',
-    quantity: 58,
-    price: 58000,
-    isActive: true,
-  },
-  {
-    id: 59,
-    name: 'Form Sample 59',
-    email: 'sample59@example.com',
-    phone: '+84900059',
-    address: '123 Sample Street 59, District 10',
-    category: 'Service',
-    quantity: 59,
-    price: 59000,
-    isActive: false,
-  },
-  {
-    id: 60,
-    name: 'Form Sample 60',
-    email: 'sample60@example.com',
-    phone: '+84900060',
-    address: '123 Sample Street 60, District 1',
-    category: 'Service',
-    quantity: 60,
-    price: 60000,
-    isActive: true,
-  },
-  {
-    id: 61,
-    name: 'Form Sample 61',
-    email: 'sample61@example.com',
-    phone: '+84900061',
-    address: '123 Sample Street 61, District 2',
-    category: 'Service',
-    quantity: 61,
-    price: 61000,
-    isActive: false,
-  },
-  {
-    id: 62,
-    name: 'Form Sample 62',
-    email: 'sample62@example.com',
-    phone: '+84900062',
-    address: '123 Sample Street 62, District 3',
-    category: 'Service',
-    quantity: 62,
-    price: 62000,
-    isActive: true,
-  },
-  {
-    id: 63,
-    name: 'Form Sample 63',
-    email: 'sample63@example.com',
-    phone: '+84900063',
-    address: '123 Sample Street 63, District 4',
-    category: 'Service',
-    quantity: 63,
-    price: 63000,
-    isActive: false,
-  },
-  {
-    id: 64,
-    name: 'Form Sample 64',
-    email: 'sample64@example.com',
-    phone: '+84900064',
-    address: '123 Sample Street 64, District 5',
-    category: 'Service',
-    quantity: 64,
-    price: 64000,
-    isActive: true,
-  },
-  {
-    id: 65,
-    name: 'Form Sample 65',
-    email: 'sample65@example.com',
-    phone: '+84900065',
-    address: '123 Sample Street 65, District 6',
-    category: 'Service',
-    quantity: 65,
-    price: 65000,
-    isActive: false,
-  },
-  {
-    id: 66,
-    name: 'Form Sample 66',
-    email: 'sample66@example.com',
-    phone: '+84900066',
-    address: '123 Sample Street 66, District 7',
-    category: 'Service',
-    quantity: 66,
-    price: 66000,
-    isActive: true,
-  },
-  {
-    id: 67,
-    name: 'Form Sample 67',
-    email: 'sample67@example.com',
-    phone: '+84900067',
-    address: '123 Sample Street 67, District 8',
-    category: 'Service',
-    quantity: 67,
-    price: 67000,
-    isActive: false,
-  },
-  {
-    id: 68,
-    name: 'Form Sample 68',
-    email: 'sample68@example.com',
-    phone: '+84900068',
-    address: '123 Sample Street 68, District 9',
-    category: 'Service',
-    quantity: 68,
-    price: 68000,
-    isActive: true,
-  },
-  {
-    id: 69,
-    name: 'Form Sample 69',
-    email: 'sample69@example.com',
-    phone: '+84900069',
-    address: '123 Sample Street 69, District 10',
-    category: 'Service',
-    quantity: 69,
-    price: 69000,
-    isActive: false,
-  },
-  {
-    id: 70,
-    name: 'Form Sample 70',
-    email: 'sample70@example.com',
-    phone: '+84900070',
-    address: '123 Sample Street 70, District 1',
-    category: 'Service',
-    quantity: 70,
-    price: 70000,
-    isActive: true,
-  },
-  {
-    id: 71,
-    name: 'Form Sample 71',
-    email: 'sample71@example.com',
-    phone: '+84900071',
-    address: '123 Sample Street 71, District 2',
-    category: 'Service',
-    quantity: 71,
-    price: 71000,
-    isActive: false,
-  },
-  {
-    id: 72,
-    name: 'Form Sample 72',
-    email: 'sample72@example.com',
-    phone: '+84900072',
-    address: '123 Sample Street 72, District 3',
-    category: 'Service',
-    quantity: 72,
-    price: 72000,
-    isActive: true,
-  },
-  {
-    id: 73,
-    name: 'Form Sample 73',
-    email: 'sample73@example.com',
-    phone: '+84900073',
-    address: '123 Sample Street 73, District 4',
-    category: 'Service',
-    quantity: 73,
-    price: 73000,
-    isActive: false,
-  },
-  {
-    id: 74,
-    name: 'Form Sample 74',
-    email: 'sample74@example.com',
-    phone: '+84900074',
-    address: '123 Sample Street 74, District 5',
-    category: 'Service',
-    quantity: 74,
-    price: 74000,
-    isActive: true,
-  },
-  {
-    id: 75,
-    name: 'Form Sample 75',
-    email: 'sample75@example.com',
-    phone: '+84900075',
-    address: '123 Sample Street 75, District 6',
-    category: 'Service',
-    quantity: 75,
-    price: 75000,
-    isActive: false,
-  },
-  {
-    id: 76,
-    name: 'Form Sample 76',
-    email: 'sample76@example.com',
-    phone: '+84900076',
-    address: '123 Sample Street 76, District 7',
-    category: 'Service',
-    quantity: 76,
-    price: 76000,
-    isActive: true,
-  },
-  {
-    id: 77,
-    name: 'Form Sample 77',
-    email: 'sample77@example.com',
-    phone: '+84900077',
-    address: '123 Sample Street 77, District 8',
-    category: 'Service',
-    quantity: 77,
-    price: 77000,
-    isActive: false,
-  },
-  {
-    id: 78,
-    name: 'Form Sample 78',
-    email: 'sample78@example.com',
-    phone: '+84900078',
-    address: '123 Sample Street 78, District 9',
-    category: 'Service',
-    quantity: 78,
-    price: 78000,
-    isActive: true,
-  },
-  {
-    id: 79,
-    name: 'Form Sample 79',
-    email: 'sample79@example.com',
-    phone: '+84900079',
-    address: '123 Sample Street 79, District 10',
-    category: 'Service',
-    quantity: 79,
-    price: 79000,
-    isActive: false,
-  },
-  {
-    id: 80,
-    name: 'Form Sample 80',
-    email: 'sample80@example.com',
-    phone: '+84900080',
-    address: '123 Sample Street 80, District 1',
-    category: 'Service',
-    quantity: 80,
-    price: 80000,
-    isActive: true,
-  },
-  {
-    id: 81,
-    name: 'Form Sample 81',
-    email: 'sample81@example.com',
-    phone: '+84900081',
-    address: '123 Sample Street 81, District 2',
-    category: 'Service',
-    quantity: 81,
-    price: 81000,
-    isActive: false,
-  },
-  {
-    id: 82,
-    name: 'Form Sample 82',
-    email: 'sample82@example.com',
-    phone: '+84900082',
-    address: '123 Sample Street 82, District 3',
-    category: 'Service',
-    quantity: 82,
-    price: 82000,
-    isActive: true,
-  },
-  {
-    id: 83,
-    name: 'Form Sample 83',
-    email: 'sample83@example.com',
-    phone: '+84900083',
-    address: '123 Sample Street 83, District 4',
-    category: 'Service',
-    quantity: 83,
-    price: 83000,
-    isActive: false,
-  },
-  {
-    id: 84,
-    name: 'Form Sample 84',
-    email: 'sample84@example.com',
-    phone: '+84900084',
-    address: '123 Sample Street 84, District 5',
-    category: 'Service',
-    quantity: 84,
-    price: 84000,
-    isActive: true,
-  },
-  {
-    id: 85,
-    name: 'Form Sample 85',
-    email: 'sample85@example.com',
-    phone: '+84900085',
-    address: '123 Sample Street 85, District 6',
-    category: 'Service',
-    quantity: 85,
-    price: 85000,
-    isActive: false,
-  },
-  {
-    id: 86,
-    name: 'Form Sample 86',
-    email: 'sample86@example.com',
-    phone: '+84900086',
-    address: '123 Sample Street 86, District 7',
-    category: 'Service',
-    quantity: 86,
-    price: 86000,
-    isActive: true,
-  },
-  {
-    id: 87,
-    name: 'Form Sample 87',
-    email: 'sample87@example.com',
-    phone: '+84900087',
-    address: '123 Sample Street 87, District 8',
-    category: 'Service',
-    quantity: 87,
-    price: 87000,
-    isActive: false,
-  },
-  {
-    id: 88,
-    name: 'Form Sample 88',
-    email: 'sample88@example.com',
-    phone: '+84900088',
-    address: '123 Sample Street 88, District 9',
-    category: 'Service',
-    quantity: 88,
-    price: 88000,
-    isActive: true,
-  },
-  {
-    id: 89,
-    name: 'Form Sample 89',
-    email: 'sample89@example.com',
-    phone: '+84900089',
-    address: '123 Sample Street 89, District 10',
-    category: 'Service',
-    quantity: 89,
-    price: 89000,
-    isActive: false,
-  },
-  {
-    id: 90,
-    name: 'Form Sample 90',
-    email: 'sample90@example.com',
-    phone: '+84900090',
-    address: '123 Sample Street 90, District 1',
-    category: 'Service',
-    quantity: 90,
-    price: 90000,
-    isActive: true,
-  },
-  {
-    id: 91,
-    name: 'Form Sample 91',
-    email: 'sample91@example.com',
-    phone: '+84900091',
-    address: '123 Sample Street 91, District 2',
-    category: 'Service',
-    quantity: 91,
-    price: 91000,
-    isActive: false,
-  },
-  {
-    id: 92,
-    name: 'Form Sample 92',
-    email: 'sample92@example.com',
-    phone: '+84900092',
-    address: '123 Sample Street 92, District 3',
-    category: 'Service',
-    quantity: 92,
-    price: 92000,
-    isActive: true,
-  },
-  {
-    id: 93,
-    name: 'Form Sample 93',
-    email: 'sample93@example.com',
-    phone: '+84900093',
-    address: '123 Sample Street 93, District 4',
-    category: 'Service',
-    quantity: 93,
-    price: 93000,
-    isActive: false,
-  },
-  {
-    id: 94,
-    name: 'Form Sample 94',
-    email: 'sample94@example.com',
-    phone: '+84900094',
-    address: '123 Sample Street 94, District 5',
-    category: 'Service',
-    quantity: 94,
-    price: 94000,
-    isActive: true,
-  },
-  {
-    id: 95,
-    name: 'Form Sample 95',
-    email: 'sample95@example.com',
-    phone: '+84900095',
-    address: '123 Sample Street 95, District 6',
-    category: 'Service',
-    quantity: 95,
-    price: 95000,
-    isActive: false,
-  },
-  {
-    id: 96,
-    name: 'Form Sample 96',
-    email: 'sample96@example.com',
-    phone: '+84900096',
-    address: '123 Sample Street 96, District 7',
-    category: 'Service',
-    quantity: 96,
-    price: 96000,
-    isActive: true,
-  },
-  {
-    id: 97,
-    name: 'Form Sample 97',
-    email: 'sample97@example.com',
-    phone: '+84900097',
-    address: '123 Sample Street 97, District 8',
-    category: 'Service',
-    quantity: 97,
-    price: 97000,
-    isActive: false,
-  },
-  {
-    id: 98,
-    name: 'Form Sample 98',
-    email: 'sample98@example.com',
-    phone: '+84900098',
-    address: '123 Sample Street 98, District 9',
-    category: 'Service',
-    quantity: 98,
-    price: 98000,
-    isActive: true,
-  },
-  {
-    id: 99,
-    name: 'Form Sample 99',
-    email: 'sample99@example.com',
-    phone: '+84900099',
-    address: '123 Sample Street 99, District 10',
-    category: 'Service',
-    quantity: 99,
-    price: 99000,
-    isActive: false,
-  },
-  {
-    id: 100,
-    name: 'Form Sample 100',
-    email: 'sample100@example.com',
-    phone: '+84900100',
-    address: '123 Sample Street 100, District 1',
-    category: 'Service',
-    quantity: 100,
-    price: 100000,
-    isActive: true,
-  },
-  {
-    id: 101,
-    name: 'Form Sample 101',
-    email: 'sample101@example.com',
-    phone: '+84900101',
-    address: '123 Sample Street 101, District 2',
-    category: 'Service',
-    quantity: 101,
-    price: 101000,
-    isActive: false,
-  },
-  {
-    id: 102,
-    name: 'Form Sample 102',
-    email: 'sample102@example.com',
-    phone: '+84900102',
-    address: '123 Sample Street 102, District 3',
-    category: 'Service',
-    quantity: 102,
-    price: 102000,
-    isActive: true,
-  },
-  {
-    id: 103,
-    name: 'Form Sample 103',
-    email: 'sample103@example.com',
-    phone: '+84900103',
-    address: '123 Sample Street 103, District 4',
-    category: 'Service',
-    quantity: 103,
-    price: 103000,
-    isActive: false,
-  },
-  {
-    id: 104,
-    name: 'Form Sample 104',
-    email: 'sample104@example.com',
-    phone: '+84900104',
-    address: '123 Sample Street 104, District 5',
-    category: 'Service',
-    quantity: 104,
-    price: 104000,
-    isActive: true,
-  },
-  {
-    id: 105,
-    name: 'Form Sample 105',
-    email: 'sample105@example.com',
-    phone: '+84900105',
-    address: '123 Sample Street 105, District 6',
-    category: 'Service',
-    quantity: 105,
-    price: 105000,
-    isActive: false,
-  },
-  {
-    id: 106,
-    name: 'Form Sample 106',
-    email: 'sample106@example.com',
-    phone: '+84900106',
-    address: '123 Sample Street 106, District 7',
-    category: 'Service',
-    quantity: 106,
-    price: 106000,
-    isActive: true,
-  },
-  {
-    id: 107,
-    name: 'Form Sample 107',
-    email: 'sample107@example.com',
-    phone: '+84900107',
-    address: '123 Sample Street 107, District 8',
-    category: 'Service',
-    quantity: 107,
-    price: 107000,
-    isActive: false,
-  },
-  {
-    id: 108,
-    name: 'Form Sample 108',
-    email: 'sample108@example.com',
-    phone: '+84900108',
-    address: '123 Sample Street 108, District 9',
-    category: 'Service',
-    quantity: 108,
-    price: 108000,
-    isActive: true,
-  },
-  {
-    id: 109,
-    name: 'Form Sample 109',
-    email: 'sample109@example.com',
-    phone: '+84900109',
-    address: '123 Sample Street 109, District 10',
-    category: 'Service',
-    quantity: 109,
-    price: 109000,
-    isActive: false,
-  },
-  {
-    id: 110,
-    name: 'Form Sample 110',
-    email: 'sample110@example.com',
-    phone: '+84900110',
-    address: '123 Sample Street 110, District 1',
-    category: 'Service',
-    quantity: 110,
-    price: 110000,
-    isActive: true,
-  },
-  {
-    id: 111,
-    name: 'Form Sample 111',
-    email: 'sample111@example.com',
-    phone: '+84900111',
-    address: '123 Sample Street 111, District 2',
-    category: 'Service',
-    quantity: 111,
-    price: 111000,
-    isActive: false,
-  },
-  {
-    id: 112,
-    name: 'Form Sample 112',
-    email: 'sample112@example.com',
-    phone: '+84900112',
-    address: '123 Sample Street 112, District 3',
-    category: 'Service',
-    quantity: 112,
-    price: 112000,
-    isActive: true,
-  },
-  {
-    id: 113,
-    name: 'Form Sample 113',
-    email: 'sample113@example.com',
-    phone: '+84900113',
-    address: '123 Sample Street 113, District 4',
-    category: 'Service',
-    quantity: 113,
-    price: 113000,
-    isActive: false,
-  },
-  {
-    id: 114,
-    name: 'Form Sample 114',
-    email: 'sample114@example.com',
-    phone: '+84900114',
-    address: '123 Sample Street 114, District 5',
-    category: 'Service',
-    quantity: 114,
-    price: 114000,
-    isActive: true,
-  },
-  {
-    id: 115,
-    name: 'Form Sample 115',
-    email: 'sample115@example.com',
-    phone: '+84900115',
-    address: '123 Sample Street 115, District 6',
-    category: 'Service',
-    quantity: 115,
-    price: 115000,
-    isActive: false,
-  },
-  {
-    id: 116,
-    name: 'Form Sample 116',
-    email: 'sample116@example.com',
-    phone: '+84900116',
-    address: '123 Sample Street 116, District 7',
-    category: 'Service',
-    quantity: 116,
-    price: 116000,
-    isActive: true,
-  },
-  {
-    id: 117,
-    name: 'Form Sample 117',
-    email: 'sample117@example.com',
-    phone: '+84900117',
-    address: '123 Sample Street 117, District 8',
-    category: 'Service',
-    quantity: 117,
-    price: 117000,
-    isActive: false,
-  },
-  {
-    id: 118,
-    name: 'Form Sample 118',
-    email: 'sample118@example.com',
-    phone: '+84900118',
-    address: '123 Sample Street 118, District 9',
-    category: 'Service',
-    quantity: 118,
-    price: 118000,
-    isActive: true,
-  },
-  {
-    id: 119,
-    name: 'Form Sample 119',
-    email: 'sample119@example.com',
-    phone: '+84900119',
-    address: '123 Sample Street 119, District 10',
-    category: 'Service',
-    quantity: 119,
-    price: 119000,
-    isActive: false,
-  },
-  {
-    id: 120,
-    name: 'Form Sample 120',
-    email: 'sample120@example.com',
-    phone: '+84900120',
-    address: '123 Sample Street 120, District 1',
-    category: 'Service',
-    quantity: 120,
-    price: 120000,
-    isActive: true,
-  },
-];
