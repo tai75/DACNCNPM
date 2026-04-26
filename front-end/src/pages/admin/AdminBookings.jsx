@@ -249,8 +249,7 @@ function AdminBookings() {
       <div className="card-soft overflow-hidden bg-gradient-to-r from-slate-900 via-emerald-900 to-emerald-700 p-6 text-white md:p-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-emerald-200">Admin workspace</p>
-            <h1 className="mt-2 text-3xl font-bold md:text-4xl">Quản lý đơn đặt lịch</h1>
+            <h1 className="text-3xl font-bold md:text-4xl">Quản lý đơn đặt lịch</h1>
             <p className="mt-2 max-w-2xl text-sm text-emerald-50/85">
               Tập trung vào booking, gán staff và xử lý trạng thái. Phần quản lý nhân viên riêng đã được bỏ để tránh chồng chéo với role staff.
             </p>
