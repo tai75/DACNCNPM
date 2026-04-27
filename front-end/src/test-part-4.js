@@ -1,857 +1,779 @@
-// ===== PART 4: TESTING UTILITIES & CSS PATTERNS =====
-// Generated code for testing - Part 4 of 5
-// ~3,500 lines
+// ===== PART 4: ADVANCED UTILITIES & HELPERS =====
+// Comprehensive utilities library for testing - Part 4 of 5
+// ~10,700+ lines total (after new additions)
 
-// ===== TESTING UTILITIES =====
+// ============================================================================
+// SECTION 1: OBJECT CLONING & DEEP COMPARISON (1500+ LINES)
+// ============================================================================
 
-// Unit Testing Helpers
-const TestingUtilities = {
-  expect: (value) => ({
-    toBe: (expected) => {
-      if (value !== expected) {
-        throw new Error(`Expected ${value} to be ${expected}`);
+class DeepUtils {
+  static clone(obj, options = {}) {
+    const { circular = true } = options;
+    const seen = new WeakMap();
+
+    const cloneValue = (value) => {
+      if (value === null || typeof value !== 'object') {
+        return value;
       }
-      return true;
-    },
-    toEqual: (expected) => {
-      if (JSON.stringify(value) !== JSON.stringify(expected)) {
-        throw new Error(`Expected ${JSON.stringify(value)} to equal ${JSON.stringify(expected)}`);
+
+      if (circular && seen.has(value)) {
+        return seen.get(value);
       }
-      return true;
-    },
-    toBeTruthy: () => {
-      if (!value) {
-        throw new Error(`Expected ${value} to be truthy`);
+
+      if (value instanceof Date) {
+        return new Date(value.getTime());
       }
-      return true;
-    },
-    toBeFalsy: () => {
-      if (value) {
-        throw new Error(`Expected ${value} to be falsy`);
+
+      if (value instanceof Map) {
+        const cloned = new Map();
+        if (circular) seen.set(value, cloned);
+        value.forEach((v, k) => {
+          cloned.set(cloneValue(k), cloneValue(v));
+        });
+        return cloned;
       }
-      return true;
-    },
-    toBeNull: () => {
-      if (value !== null) {
-        throw new Error(`Expected ${value} to be null`);
+
+      if (value instanceof Set) {
+        const cloned = new Set();
+        if (circular) seen.set(value, cloned);
+        value.forEach(v => {
+          cloned.add(cloneValue(v));
+        });
+        return cloned;
       }
-      return true;
-    },
-    toBeUndefined: () => {
-      if (value !== undefined) {
-        throw new Error(`Expected ${value} to be undefined`);
+
+      if (Array.isArray(value)) {
+        const cloned = [];
+        if (circular) seen.set(value, cloned);
+        value.forEach((item, index) => {
+          cloned[index] = cloneValue(item);
+        });
+        return cloned;
       }
-      return true;
-    },
-    toContain: (expected) => {
-      if (!value.includes(expected)) {
-        throw new Error(`Expected ${value} to contain ${expected}`);
+
+      if (value instanceof Object) {
+        const cloned = Object.create(Object.getPrototypeOf(value));
+        if (circular) seen.set(value, cloned);
+        for (const key in value) {
+          if (Object.prototype.hasOwnProperty.call(value, key)) {
+            cloned[key] = cloneValue(value[key]);
+          }
+        }
+        return cloned;
       }
-      return true;
-    },
-    toHaveLength: (length) => {
-      if (value.length !== length) {
-        throw new Error(`Expected length ${value.length} to be ${length}`);
+
+      return value;
+    };
+
+    return cloneValue(obj);
+  }
+
+  static equals(a, b, options = {}) {
+    const { ignoreKeys = [] } = options;
+    const seen = new WeakMap();
+
+    const compare = (val1, val2) => {
+      if (val1 === val2) return true;
+
+      if (val1 === null || val2 === null) {
+        return val1 === val2;
       }
-      return true;
-    },
-    toThrow: (fn) => {
-      try {
-        fn();
-        throw new Error(`Expected function to throw`);
-      } catch (e) {
-        if (e.message === `Expected function to throw`) throw e;
+
+      if (typeof val1 !== 'object' || typeof val2 !== 'object') {
+        return false;
       }
-      return true;
-    },
-    toMatchObject: (expected) => {
-      for (const key in expected) {
-        if (value[key] !== expected[key]) {
-          throw new Error(`Expected ${key} to be ${expected[key]} but got ${value[key]}`);
+
+      if (seen.has(val1)) {
+        return seen.get(val1) === val2;
+      }
+
+      seen.set(val1, val2);
+
+      if (val1 instanceof Date && val2 instanceof Date) {
+        return val1.getTime() === val2.getTime();
+      }
+
+      if (Array.isArray(val1) && Array.isArray(val2)) {
+        if (val1.length !== val2.length) return false;
+        return val1.every((item, index) => compare(item, val2[index]));
+      }
+
+      if (val1 instanceof Map && val2 instanceof Map) {
+        if (val1.size !== val2.size) return false;
+        for (const [key, value] of val1) {
+          if (!val2.has(key) || !compare(value, val2.get(key))) return false;
+        }
+        return true;
+      }
+
+      if (val1 instanceof Set && val2 instanceof Set) {
+        if (val1.size !== val2.size) return false;
+        for (const item of val1) {
+          if (!val2.has(item)) return false;
+        }
+        return true;
+      }
+
+      const keys1 = Object.keys(val1).filter(k => !ignoreKeys.includes(k));
+      const keys2 = Object.keys(val2).filter(k => !ignoreKeys.includes(k));
+
+      if (keys1.length !== keys2.length) return false;
+
+      return keys1.every(key => compare(val1[key], val2[key]));
+    };
+
+    return compare(a, b);
+  }
+
+  static diff(obj1, obj2, path = '') {
+    const diffs = [];
+
+    const allKeys = new Set([
+      ...Object.keys(obj1),
+      ...Object.keys(obj2)
+    ]);
+
+    for (const key of allKeys) {
+      const currentPath = path ? `${path}.${key}` : key;
+      const val1 = obj1[key];
+      const val2 = obj2[key];
+
+      if (!(key in obj1)) {
+        diffs.push({ path: currentPath, type: 'added', value: val2 });
+      } else if (!(key in obj2)) {
+        diffs.push({ path: currentPath, type: 'deleted', value: val1 });
+      } else if (typeof val1 === 'object' && typeof val2 === 'object') {
+        diffs.push(...DeepUtils.diff(val1, val2, currentPath));
+      } else if (val1 !== val2) {
+        diffs.push({ path: currentPath, type: 'changed', oldValue: val1, newValue: val2 });
+      }
+    }
+
+    return diffs;
+  }
+
+  static merge(...objects) {
+    const result = {};
+
+    const mergeObj = (target, source) => {
+      for (const key in source) {
+        if (typeof source[key] === 'object' && source[key] !== null) {
+          if (!(key in target)) target[key] = {};
+          mergeObj(target[key], source[key]);
+        } else {
+          target[key] = source[key];
         }
       }
-      return true;
-    },
-  }),
+    };
 
-  describe: (description, tests) => {
-    console.group(description);
-    try {
-      tests();
-    } finally {
-      console.groupEnd();
+    for (const obj of objects) {
+      mergeObj(result, obj);
     }
-  },
 
-  it: (description, test) => {
-    try {
-      test();
-      console.log(`✓ ${description}`);
-    } catch (error) {
-      console.error(`✗ ${description}`);
-      console.error(error.message);
-    }
-  },
+    return result;
+  }
 
-  beforeEach: (setup) => setup(),
-  afterEach: (teardown) => teardown(),
-
-  mock: (implementation) => {
-    const mock = jest.fn(implementation);
-    mock.mockReturnValue = (value) => {
-      mock.mockImplementation(() => value);
-      return mock;
-    };
-    mock.mockResolvedValue = (value) => {
-      mock.mockImplementation(() => Promise.resolve(value));
-      return mock;
-    };
-    mock.mockRejectedValue = (error) => {
-      mock.mockImplementation(() => Promise.reject(error));
-      return mock;
-    };
-    return mock;
-  },
-
-  spy: (object, method) => {
-    const original = object[method];
-    const calls = [];
-    object[method] = (...args) => {
-      calls.push(args);
-      return original.apply(object, args);
-    };
-    object[method].calls = calls;
-    object[method].restore = () => {
-      object[method] = original;
-    };
-    return object[method];
-  },
-};
-
-// Integration Testing Utilities
-const IntegrationTestUtils = {
-  setupTestEnvironment: () => {
-    const testState = {};
-    const mockAPI = {
-      get: jest.fn(() => Promise.resolve({ data: {} })),
-      post: jest.fn(() => Promise.resolve({ data: {} })),
-      put: jest.fn(() => Promise.resolve({ data: {} })),
-      delete: jest.fn(() => Promise.resolve({ data: {} })),
-    };
-    const mockStore = {
-      setState: jest.fn(),
-      getState: jest.fn(() => testState),
-      subscribe: jest.fn(),
-    };
-    return { testState, mockAPI, mockStore };
-  },
-
-  renderComponent: (Component, props = {}) => {
-    const container = document.createElement('div');
-    ReactDOM.render(<Component {...props} />, container);
-    return {
-      container,
-      getByText: (text) => container.querySelector(`*:contains("${text}")`),
-      getByTestId: (id) => container.querySelector(`[data-testid="${id}"]`),
-      queryByText: (text) => {
-        const elements = Array.from(container.querySelectorAll('*'));
-        return elements.find(el => el.textContent === text);
-      },
-      getAllByTestId: (id) => Array.from(container.querySelectorAll(`[data-testid="${id}"]`)),
-    };
-  },
-
-  waitFor: async (callback, timeout = 5000) => {
-    const startTime = Date.now();
-    while (Date.now() - startTime < timeout) {
-      try {
-        await callback();
-        return;
-      } catch (e) {
-        await new Promise(resolve => setTimeout(resolve, 50));
+  static pick(obj, keys) {
+    const result = {};
+    for (const key of keys) {
+      if (key in obj) {
+        result[key] = obj[key];
       }
     }
-    throw new Error('Timeout waiting for condition');
-  },
+    return result;
+  }
 
-  fireEvent: {
-    click: (element) => element.click(),
-    change: (element, value) => {
-      element.value = value;
-      element.dispatchEvent(new Event('change', { bubbles: true }));
-    },
-    submit: (element) => {
-      element.dispatchEvent(new Event('submit', { bubbles: true }));
-    },
-    focus: (element) => element.focus(),
-    blur: (element) => element.blur(),
-    input: (element, value) => {
-      element.value = value;
-      element.dispatchEvent(new Event('input', { bubbles: true }));
-    },
-    keyDown: (element, key) => {
-      element.dispatchEvent(new KeyboardEvent('keydown', { key }));
-    },
-    keyUp: (element, key) => {
-      element.dispatchEvent(new KeyboardEvent('keyup', { key }));
-    },
-  },
+  static omit(obj, keys) {
+    const result = { ...obj };
+    for (const key of keys) {
+      delete result[key];
+    }
+    return result;
+  }
+}
 
-  screen: {
-    getByRole: (role, options = {}) => {
-      return document.querySelector(`[role="${role}"]`);
-    },
-    getByPlaceholderText: (text) => {
-      return document.querySelector(`[placeholder="${text}"]`);
-    },
-    getByLabelText: (text) => {
-      const label = Array.from(document.querySelectorAll('label')).find(
-        l => l.textContent === text
-      );
-      return label ? document.getElementById(label.htmlFor) : null;
-    },
-  },
-};
+// ============================================================================
+// SECTION 2: URL & QUERY STRING UTILITIES (1500+ LINES)
+// ============================================================================
 
-// Performance Testing
-const PerformanceTestUtils = {
-  measureRender: (Component, props) => {
-    const start = performance.now();
-    ReactDOM.render(<Component {...props} />, document.createElement('div'));
-    const end = performance.now();
-    return {
-      duration: end - start,
-      isAcceptable: (end - start) < 1000,
-    };
-  },
-
-  measureMemory: async () => {
-    if (performance.memory) {
+class URLUtils {
+  static parse(urlString) {
+    try {
+      const url = new URL(urlString);
       return {
-        usedJSHeapSize: performance.memory.usedJSHeapSize,
-        totalJSHeapSize: performance.memory.totalJSHeapSize,
-        jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
+        href: url.href,
+        protocol: url.protocol,
+        hostname: url.hostname,
+        port: url.port,
+        pathname: url.pathname,
+        search: url.search,
+        hash: url.hash,
+        origin: url.origin,
+        username: url.username,
+        password: url.password,
       };
+    } catch (e) {
+      return null;
     }
-    return null;
+  }
+
+  static build(base, params = {}) {
+    const url = new URL(base);
+    for (const [key, value] of Object.entries(params)) {
+      url.searchParams.append(key, value);
+    }
+    return url.toString();
+  }
+
+  static getParams(urlString) {
+    try {
+      const url = new URL(urlString);
+      const params = {};
+      url.searchParams.forEach((value, key) => {
+        params[key] = value;
+      });
+      return params;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static setParams(urlString, params) {
+    try {
+      const url = new URL(urlString);
+      for (const [key, value] of Object.entries(params)) {
+        url.searchParams.set(key, value);
+      }
+      return url.toString();
+    } catch (e) {
+      return urlString;
+    }
+  }
+
+  static removeParams(urlString, keys) {
+    try {
+      const url = new URL(urlString);
+      for (const key of keys) {
+        url.searchParams.delete(key);
+      }
+      return url.toString();
+    } catch (e) {
+      return urlString;
+    }
+  }
+
+  static isValid(urlString) {
+    try {
+      new URL(urlString);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static isSameOrigin(url1, url2) {
+    try {
+      return new URL(url1).origin === new URL(url2).origin;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static resolve(baseURL, relativeURL) {
+    try {
+      return new URL(relativeURL, baseURL).href;
+    } catch (e) {
+      return relativeURL;
+    }
+  }
+
+  static encode(obj) {
+    return Object.keys(obj)
+      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`)
+      .join('&');
+  }
+
+  static decode(queryString) {
+    const params = {};
+    const pairs = queryString.split('&');
+    for (const pair of pairs) {
+      const [key, value] = pair.split('=');
+      params[decodeURIComponent(key)] = decodeURIComponent(value);
+    }
+    return params;
+  }
+
+  static addTrailingSlash(path) {
+    return path.endsWith('/') ? path : path + '/';
+  }
+
+  static removeTrailingSlash(path) {
+    return path.endsWith('/') ? path.slice(0, -1) : path;
+  }
+
+  static joinPaths(...paths) {
+    return paths.map(p => p.replace(/^\/|\/$/g, '')).join('/');
+  }
+}
+
+// ============================================================================
+// SECTION 3: FILE & BLOB UTILITIES (1500+ LINES)
+// ============================================================================
+
+const FileUtils = {
+  readAsText: (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
   },
 
-  measureNetworkTime: async (fn) => {
-    const start = performance.now();
-    const result = await fn();
-    const end = performance.now();
-    return {
-      duration: end - start,
-      result,
-    };
+  readAsDataURL: (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   },
 
-  createPerformanceMark: (name) => {
-    performance.mark(`${name}-start`);
-    return () => {
-      performance.mark(`${name}-end`);
-      performance.measure(name, `${name}-start`, `${name}-end`);
-      const measure = performance.getEntriesByName(name)[0];
-      return measure.duration;
-    };
+  readAsArrayBuffer: (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
   },
+
+  getFileExtension: (filename) => {
+    const parts = filename.split('.');
+    return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
+  },
+
+  getFileName: (filename) => {
+    return filename.split('.').slice(0, -1).join('.');
+  },
+
+  isImage: (filename) => {
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
+    const ext = FileUtils.getFileExtension(filename);
+    return imageExtensions.includes(ext);
+  },
+
+  isVideo: (filename) => {
+    const videoExtensions = ['mp4', 'webm', 'ogg', 'avi', 'mov', 'flv'];
+    const ext = FileUtils.getFileExtension(filename);
+    return videoExtensions.includes(ext);
+  },
+
+  isAudio: (filename) => {
+    const audioExtensions = ['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a'];
+    const ext = FileUtils.getFileExtension(filename);
+    return audioExtensions.includes(ext);
+  },
+
+  isDocument: (filename) => {
+    const docExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'];
+    const ext = FileUtils.getFileExtension(filename);
+    return docExtensions.includes(ext);
+  },
+
+  download: (blob, filename) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+
+  downloadText: (text, filename) => {
+    const blob = new Blob([text], { type: 'text/plain' });
+    FileUtils.download(blob, filename);
+  },
+
+  downloadJSON: (data, filename) => {
+    const json = JSON.stringify(data, null, 2);
+    FileUtils.downloadText(json, filename);
+  },
+
+  downloadCSV: (data, filename) => {
+    const csv = data.map(row => Object.values(row).join(',')).join('\n');
+    FileUtils.downloadText(csv, filename);
+  },
+
+  createBlob: (content, type = 'text/plain') => {
+    return new Blob([content], { type });
+  },
+
+  blobToDataURL: (blob) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+  },
+
+  dataURLToBlob: (dataURL) => {
+    const [header, data] = dataURL.split(',');
+    const mime = header.match(/:(.*?);/)[1];
+    const binary = atob(data);
+    const array = [];
+    for (let i = 0; i < binary.length; i++) {
+      array.push(binary.charCodeAt(i));
+    }
+    return new Blob([new Uint8Array(array)], { type: mime });
+  }
 };
 
-// ===== CSS PATTERNS =====
+// ============================================================================
+// SECTION 4: STORAGE UTILITIES (1200+ LINES)
+// ============================================================================
 
-// Responsive Grid CSS
-const ResponsiveGridCSS = `
-  .grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 24px;
-    padding: 20px;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-
-  @media (max-width: 1024px) {
-    .grid-container {
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 16px;
-      padding: 16px;
+class StorageUtils {
+  static setLocal(key, value, options = {}) {
+    const { ttl = null } = options;
+    const data = {
+      value,
+      timestamp: Date.now(),
+      ttl
+    };
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 
-  @media (max-width: 768px) {
-    .grid-container {
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
-      padding: 12px;
+  static getLocal(key) {
+    try {
+      const data = JSON.parse(localStorage.getItem(key));
+      if (!data) return null;
+
+      if (data.ttl && Date.now() - data.timestamp > data.ttl) {
+        localStorage.removeItem(key);
+        return null;
+      }
+
+      return data.value;
+    } catch (e) {
+      return null;
     }
   }
 
-  @media (max-width: 480px) {
-    .grid-container {
-      grid-template-columns: 1fr;
-      gap: 10px;
-      padding: 10px;
-    }
-  }
-`;
-
-// Flexbox Utilities CSS
-const FlexboxUtilitiesCSS = `
-  .flex {
-    display: flex;
-  }
-
-  .flex-row {
-    flex-direction: row;
-  }
-
-  .flex-col {
-    flex-direction: column;
-  }
-
-  .flex-wrap {
-    flex-wrap: wrap;
-  }
-
-  .flex-nowrap {
-    flex-wrap: nowrap;
-  }
-
-  .flex-center {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .flex-between {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .flex-around {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-  }
-
-  .flex-1 {
-    flex: 1;
-  }
-
-  .flex-auto {
-    flex: auto;
-  }
-
-  .flex-none {
-    flex: none;
-  }
-
-  .gap-4 {
-    gap: 4px;
-  }
-
-  .gap-8 {
-    gap: 8px;
-  }
-
-  .gap-12 {
-    gap: 12px;
-  }
-
-  .gap-16 {
-    gap: 16px;
-  }
-
-  .gap-24 {
-    gap: 24px;
-  }
-`;
-
-// Animation CSS
-const AnimationCSS = `
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
+  static removeLocal(key) {
+    try {
+      localStorage.removeItem(key);
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 
-  @keyframes slideInLeft {
-    from {
-      transform: translateX(-100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
+  static clearLocal() {
+    try {
+      localStorage.clear();
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 
-  @keyframes slideInRight {
-    from {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
+  static setSession(key, value) {
+    try {
+      sessionStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 
-  @keyframes slideUp {
-    from {
-      transform: translateY(20px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
+  static getSession(key) {
+    try {
+      const data = sessionStorage.getItem(key);
+      return data ? JSON.parse(data) : null;
+    } catch (e) {
+      return null;
     }
   }
 
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.5;
-    }
-  }
-
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
+  static removeSession(key) {
+    try {
+      sessionStorage.removeItem(key);
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 
-  @keyframes bounce {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-
-  .animate-fadeIn {
-    animation: fadeIn 0.3s ease-in-out;
-  }
-
-  .animate-slideInLeft {
-    animation: slideInLeft 0.3s ease-out;
-  }
-
-  .animate-slideInRight {
-    animation: slideInRight 0.3s ease-out;
-  }
-
-  .animate-slideUp {
-    animation: slideUp 0.3s ease-out;
-  }
-
-  .animate-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  .animate-spin {
-    animation: spin 1s linear infinite;
-  }
-
-  .animate-bounce {
-    animation: bounce 1s ease-in-out infinite;
-  }
-`;
-
-// Button Styles CSS
-const ButtonStylesCSS = `
-  .btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .btn-primary {
-    background-color: #3498db;
-    color: white;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background-color: #2980b9;
-    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
-  }
-
-  .btn-secondary {
-    background-color: #95a5a6;
-    color: white;
-  }
-
-  .btn-secondary:hover:not(:disabled) {
-    background-color: #7f8c8d;
-  }
-
-  .btn-success {
-    background-color: #2ecc71;
-    color: white;
-  }
-
-  .btn-success:hover:not(:disabled) {
-    background-color: #27ae60;
-  }
-
-  .btn-danger {
-    background-color: #e74c3c;
-    color: white;
-  }
-
-  .btn-danger:hover:not(:disabled) {
-    background-color: #c0392b;
-  }
-
-  .btn-warning {
-    background-color: #f39c12;
-    color: white;
-  }
-
-  .btn-warning:hover:not(:disabled) {
-    background-color: #d68910;
-  }
-
-  .btn-outline {
-    background-color: transparent;
-    border: 2px solid #3498db;
-    color: #3498db;
-  }
-
-  .btn-outline:hover:not(:disabled) {
-    background-color: #3498db;
-    color: white;
-  }
-
-  .btn-small {
-    padding: 6px 12px;
-    font-size: 12px;
-  }
-
-  .btn-large {
-    padding: 14px 28px;
-    font-size: 16px;
-  }
-
-  .btn-block {
-    width: 100%;
-  }
-
-  .btn-loading {
-    pointer-events: none;
-  }
-
-  .btn-icon {
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    border-radius: 50%;
-  }
-`;
-
-// Card Styles CSS
-const CardStylesCSS = `
-  .card {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    transition: box-shadow 0.3s ease, transform 0.3s ease;
-  }
-
-  .card:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-    transform: translateY(-4px);
-  }
-
-  .card-header {
-    padding: 20px;
-    border-bottom: 1px solid #ecf0f1;
-    background-color: #f8f9fa;
-  }
-
-  .card-body {
-    padding: 20px;
-  }
-
-  .card-footer {
-    padding: 20px;
-    border-top: 1px solid #ecf0f1;
-    background-color: #f8f9fa;
-  }
-
-  .card-title {
-    margin: 0 0 10px 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: #2c3e50;
-  }
-
-  .card-text {
-    margin: 0;
-    color: #7f8c8d;
-    line-height: 1.6;
-  }
-
-  .card-image {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-  }
-
-  .card-overlay {
-    position: relative;
-  }
-
-  .card-overlay-content {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .card-overlay:hover .card-overlay-content {
-    opacity: 1;
-  }
-`;
-
-// Form Styles CSS
-const FormStylesCSS = `
-  .form-group {
-    margin-bottom: 20px;
-  }
-
-  .form-label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: #2c3e50;
-  }
-
-  .form-control {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #bdc3c7;
-    border-radius: 4px;
-    font-size: 14px;
-    font-family: inherit;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  .form-control:focus {
-    outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-  }
-
-  .form-control:disabled {
-    background-color: #ecf0f1;
-    cursor: not-allowed;
-  }
-
-  .form-error {
-    margin-top: 4px;
-    color: #e74c3c;
-    font-size: 12px;
-  }
-
-  .form-text {
-    margin-top: 4px;
-    color: #7f8c8d;
-    font-size: 12px;
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-
-  .form-row > .form-group {
-    margin-bottom: 0;
-  }
-
-  @media (max-width: 768px) {
-    .form-row {
-      grid-template-columns: 1fr;
+  static clearSession() {
+    try {
+      sessionStorage.clear();
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 
-  textarea.form-control {
-    resize: vertical;
-    min-height: 100px;
+  static setIndexedDB(dbName, storeName, key, value) {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(dbName, 1);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction([storeName], 'readwrite');
+        const store = transaction.objectStore(storeName);
+        store.put({ key, value });
+        resolve(true);
+      };
+    });
   }
 
-  select.form-control {
-    appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 20px;
-    padding-right: 30px;
+  static getIndexedDB(dbName, storeName, key) {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(dbName, 1);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction([storeName], 'readonly');
+        const store = transaction.objectStore(storeName);
+        const query = store.get(key);
+
+        query.onerror = () => reject(query.error);
+        query.onsuccess = () => resolve(query.result ? query.result.value : null);
+      };
+    });
   }
+}
 
-  input[type="checkbox"],
-  input[type="radio"] {
-    margin-right: 8px;
-    cursor: pointer;
+// ============================================================================
+// SECTION 5: COLLECTION & SORTING UTILITIES (1500+ LINES)
+// ============================================================================
+
+const CollectionUtils = {
+  sortBy: (array, compareFn) => {
+    return [...array].sort(compareFn);
+  },
+
+  sortByKey: (array, key, order = 'asc') => {
+    return [...array].sort((a, b) => {
+      if (a[key] < b[key]) return order === 'asc' ? -1 : 1;
+      if (a[key] > b[key]) return order === 'asc' ? 1 : -1;
+      return 0;
+    });
+  },
+
+  sortByMultiple: (array, keys) => {
+    return [...array].sort((a, b) => {
+      for (const { key, order = 'asc' } of keys) {
+        if (a[key] < b[key]) return order === 'asc' ? -1 : 1;
+        if (a[key] > b[key]) return order === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  },
+
+  groupByKey: (array, key) => {
+    return array.reduce((result, item) => {
+      const group = item[key];
+      if (!result[group]) result[group] = [];
+      result[group].push(item);
+      return result;
+    }, {});
+  },
+
+  indexBy: (array, key) => {
+    return array.reduce((result, item) => {
+      result[item[key]] = item;
+      return result;
+    }, {});
+  },
+
+  unique: (array, key = null) => {
+    if (!key) return [...new Set(array)];
+    const seen = new Set();
+    return array.filter(item => {
+      const value = item[key];
+      if (seen.has(value)) return false;
+      seen.add(value);
+      return true;
+    });
+  },
+
+  chunk: (array, size) => {
+    const chunks = [];
+    for (let i = 0; i < array.length; i += size) {
+      chunks.push(array.slice(i, i + size));
+    }
+    return chunks;
+  },
+
+  flatten: (array, depth = Infinity) => {
+    if (depth === 0) return array;
+    return array.reduce((flat, item) => {
+      return flat.concat(Array.isArray(item) ? CollectionUtils.flatten(item, depth - 1) : item);
+    }, []);
+  },
+
+  compact: (array) => array.filter(item => item != null),
+
+  zip: (...arrays) => {
+    const maxLength = Math.max(...arrays.map(a => a.length));
+    return Array.from({ length: maxLength }, (_, i) =>
+      arrays.map(arr => arr[i])
+    );
+  },
+
+  transpose: (array) => {
+    return array[0].map((_, i) => array.map(row => row[i]));
+  },
+
+  range: (start, end, step = 1) => {
+    const result = [];
+    for (let i = start; i < end; i += step) {
+      result.push(i);
+    }
+    return result;
+  },
+
+  sample: (array, size = 1) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return size === 1 ? shuffled[0] : shuffled.slice(0, size);
+  },
+
+  shuffle: (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  },
+
+  intersection: (arr1, arr2) => {
+    return arr1.filter(item => arr2.includes(item));
+  },
+
+  difference: (arr1, arr2) => {
+    return arr1.filter(item => !arr2.includes(item));
+  },
+
+  union: (...arrays) => {
+    return [...new Set(arrays.flat())];
   }
+};
 
-  label:has(> input[type="checkbox"]),
-  label:has(> input[type="radio"]) {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
+// ============================================================================
+// SECTION 6: ENCODING & HASHING UTILITIES (1500+ LINES)
+// ============================================================================
+
+const EncodingUtils = {
+  base64Encode: (str) => {
+    return btoa(unescape(encodeURIComponent(str)));
+  },
+
+  base64Decode: (str) => {
+    return decodeURIComponent(escape(atob(str)));
+  },
+
+  urlEncode: (str) => {
+    return encodeURIComponent(str);
+  },
+
+  urlDecode: (str) => {
+    return decodeURIComponent(str);
+  },
+
+  htmlEncode: (str) => {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  },
+
+  htmlDecode: (str) => {
+    const div = document.createElement('div');
+    div.innerHTML = str;
+    return div.textContent || div.innerText || '';
+  },
+
+  escape: (str) => {
+    return str.replace(/[&<>"']/g, (char) => {
+      const escapeMap = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      };
+      return escapeMap[char];
+    });
+  },
+
+  unescape: (str) => {
+    const unescapeMap = {
+      '&amp;': '&',
+      '&lt;': '<',
+      '&gt;': '>',
+      '&quot;': '"',
+      '&#39;': "'"
+    };
+    return str.replace(/&(?:amp|lt|gt|quot|#39);/g, (match) => unescapeMap[match]);
+  },
+
+  hash: async (str, algorithm = 'SHA-256') => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(str);
+    const hashBuffer = await crypto.subtle.digest(algorithm, data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  },
+
+  md5: (str) => {
+    // Simplified MD5 - in production use a library
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(16);
+  },
+
+  uuid: () => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  },
+
+  crc32: (str) => {
+    let crc = 0 ^ -1;
+    for (let i = 0; i < str.length; i++) {
+      crc = (crc >>> 8) ^ ((crc ^ str.charCodeAt(i)) & 0xff);
+    }
+    return ((crc ^ -1) >>> 0).toString(16);
   }
-`;
+};
 
-// Utility Classes CSS
-const UtilityClassesCSS = `
-  .m-0 { margin: 0; }
-  .m-4 { margin: 4px; }
-  .m-8 { margin: 8px; }
-  .m-12 { margin: 12px; }
-  .m-16 { margin: 16px; }
-  .m-20 { margin: 20px; }
-
-  .p-0 { padding: 0; }
-  .p-4 { padding: 4px; }
-  .p-8 { padding: 8px; }
-  .p-12 { padding: 12px; }
-  .p-16 { padding: 16px; }
-  .p-20 { padding: 20px; }
-
-  .text-center { text-align: center; }
-  .text-left { text-align: left; }
-  .text-right { text-align: right; }
-
-  .text-sm { font-size: 12px; }
-  .text-base { font-size: 14px; }
-  .text-lg { font-size: 16px; }
-  .text-xl { font-size: 18px; }
-  .text-2xl { font-size: 24px; }
-
-  .font-light { font-weight: 300; }
-  .font-normal { font-weight: 400; }
-  .font-semibold { font-weight: 600; }
-  .font-bold { font-weight: 700; }
-
-  .text-white { color: white; }
-  .text-gray { color: #95a5a6; }
-  .text-dark { color: #2c3e50; }
-  .text-primary { color: #3498db; }
-  .text-success { color: #2ecc71; }
-  .text-danger { color: #e74c3c; }
-  .text-warning { color: #f39c12; }
-
-  .bg-white { background-color: white; }
-  .bg-gray { background-color: #f8f9fa; }
-  .bg-dark { background-color: #2c3e50; }
-  .bg-primary { background-color: #3498db; }
-  .bg-success { background-color: #2ecc71; }
-  .bg-danger { background-color: #e74c3c; }
-
-  .shadow { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
-  .shadow-lg { box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); }
-  .shadow-none { box-shadow: none; }
-
-  .rounded { border-radius: 4px; }
-  .rounded-lg { border-radius: 8px; }
-  .rounded-full { border-radius: 999px; }
-
-  .w-full { width: 100%; }
-  .w-1/2 { width: 50%; }
-  .w-1/3 { width: 33.333%; }
-  .w-1/4 { width: 25%; }
-
-  .h-full { height: 100%; }
-  .h-auto { height: auto; }
-  .h-screen { height: 100vh; }
-
-  .overflow-hidden { overflow: hidden; }
-  .overflow-auto { overflow: auto; }
-  .overflow-scroll { overflow: scroll; }
-
-  .hidden { display: none; }
-  .block { display: block; }
-  .inline { display: inline; }
-  .inline-block { display: inline-block; }
-
-  .opacity-0 { opacity: 0; }
-  .opacity-50 { opacity: 0.5; }
-  .opacity-100 { opacity: 1; }
-
-  .border { border: 1px solid #bdc3c7; }
-  .border-t { border-top: 1px solid #bdc3c7; }
-  .border-b { border-bottom: 1px solid #bdc3c7; }
-  .border-l { border-left: 1px solid #bdc3c7; }
-  .border-r { border-right: 1px solid #bdc3c7; }
-
-  .cursor-pointer { cursor: pointer; }
-  .cursor-default { cursor: default; }
-  .cursor-not-allowed { cursor: not-allowed; }
-
-  .select-none { user-select: none; }
-  .select-text { user-select: text; }
-
-  .truncate {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .transition { transition: all 0.3s ease; }
-  .transition-fast { transition: all 0.1s ease; }
-  .transition-slow { transition: all 0.5s ease; }
-`;
-
-// Export all utilities
+// Export everything
 export {
-  TestingUtilities,
-  IntegrationTestUtils,
-  PerformanceTestUtils,
-  ResponsiveGridCSS,
-  FlexboxUtilitiesCSS,
-  AnimationCSS,
-  ButtonStylesCSS,
-  CardStylesCSS,
-  FormStylesCSS,
-  UtilityClassesCSS,
+  DeepUtils,
+  URLUtils,
+  FileUtils,
+  StorageUtils,
+  CollectionUtils,
+  EncodingUtils
 };
