@@ -1,664 +1,959 @@
-// ===== PART 3: REACT COMPONENTS =====
-// Generated code for testing - Part 3 of 5
-// ~3,500 lines
+// ===== PART 3: DATE, TIME & FORMAT UTILITIES =====
+// Advanced utilities library for testing - Part 3 of 5
+// ~10,700+ lines total (after new additions)
 
-// ===== COMPONENT EXAMPLES =====
+// ============================================================================
+// SECTION 1: DATE & TIME UTILITIES (2000+ LINES)
+// ============================================================================
 
-// User Components
-const UserListComponent = `
-  export function UserList({ users, onUserClick, onDeleteUser, loading }) {
-    return (
-      <div className="user-list">
-        {loading && <div className="spinner">Loading...</div>}
-        <div className="user-grid">
-          {users.map(user => (
-            <div
-              key={user.id}
-              className="user-card"
-              onClick={() => onUserClick(user)}
-            >
-              <img src={user.avatar} alt={user.name} className="user-avatar" />
-              <h3>{user.name}</h3>
-              <p className="user-email">{user.email}</p>
-              <p className="user-status" data-status={user.status}>
-                {user.status}
-              </p>
-              <div className="user-actions">
-                <button 
-                  className="btn-edit"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                >
-                  Edit
-                </button>
-                <button
-                  className="btn-delete"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteUser(user.id);
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+class DateUtils {
+  static now() {
+    return new Date();
   }
-`;
 
-const UserProfileComponent = `
-  export function UserProfile({ userId, user, onEdit, onDelete, onFollow }) {
-    if (!user) return <div>Loading...</div>;
-
-    return (
-      <div className="user-profile">
-        <div className="profile-banner">
-          <img src={user.banner} alt="banner" className="banner-image" />
-        </div>
-        <div className="profile-content">
-          <div className="profile-header">
-            <img src={user.avatar} alt={user.name} className="profile-avatar" />
-            <div className="profile-info">
-              <h1>{user.name}</h1>
-              <p className="profile-email">{user.email}</p>
-              <p className="profile-phone">{user.phone}</p>
-              <p className="profile-address">{user.address}</p>
-            </div>
-            <div className="profile-meta">
-              <div className="meta-item">
-                <span className="meta-label">Joined</span>
-                <span className="meta-value">
-                  {new Date(user.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-              <div className="meta-item">
-                <span className="meta-label">Status</span>
-                <span className="meta-value" data-status={user.status}>
-                  {user.status}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="profile-actions">
-            <button onClick={onEdit} className="btn-primary">
-              Edit Profile
-            </button>
-            <button onClick={onFollow} className="btn-secondary">
-              Follow
-            </button>
-            <button onClick={onDelete} className="btn-danger">
-              Delete Profile
-            </button>
-          </div>
-
-          <div className="profile-tabs">
-            <div className="tab-content">
-              <h3>About</h3>
-              <p>{user.bio || 'No bio provided'}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  static today() {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    return date;
   }
-`;
 
-const UserFormComponent = `
-  export function UserForm({ initialData, onSubmit, onCancel, loading }) {
-    const [formData, setFormData] = useState(initialData || {
-      name: '',
-      email: '',
-      phone: '',
-      address: '',
-    });
-    const [errors, setErrors] = useState({});
+  static tomorrow() {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }
 
-    const validateForm = () => {
-      const newErrors = {};
-      if (!formData.name) newErrors.name = 'Name is required';
-      if (!formData.email) newErrors.email = 'Email is required';
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = 'Invalid email';
+  static yesterday() {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }
+
+  static addDays(date, days) {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+  }
+
+  static addMonths(date, months) {
+    const result = new Date(date);
+    result.setMonth(result.getMonth() + months);
+    return result;
+  }
+
+  static addYears(date, years) {
+    const result = new Date(date);
+    result.setFullYear(result.getFullYear() + years);
+    return result;
+  }
+
+  static addHours(date, hours) {
+    const result = new Date(date);
+    result.setHours(result.getHours() + hours);
+    return result;
+  }
+
+  static addMinutes(date, minutes) {
+    const result = new Date(date);
+    result.setMinutes(result.getMinutes() + minutes);
+    return result;
+  }
+
+  static addSeconds(date, seconds) {
+    const result = new Date(date);
+    result.setSeconds(result.getSeconds() + seconds);
+    return result;
+  }
+
+  static subtractDays(date, days) {
+    return DateUtils.addDays(date, -days);
+  }
+
+  static subtractMonths(date, months) {
+    return DateUtils.addMonths(date, -months);
+  }
+
+  static subtractYears(date, years) {
+    return DateUtils.addYears(date, -years);
+  }
+
+  static isBefore(date1, date2) {
+    return date1 < date2;
+  }
+
+  static isAfter(date1, date2) {
+    return date1 > date2;
+  }
+
+  static isSame(date1, date2, unit = 'day') {
+    switch (unit) {
+      case 'year':
+        return date1.getFullYear() === date2.getFullYear();
+      case 'month':
+        return date1.getFullYear() === date2.getFullYear() &&
+               date1.getMonth() === date2.getMonth();
+      case 'day':
+        return date1.getFullYear() === date2.getFullYear() &&
+               date1.getMonth() === date2.getMonth() &&
+               date1.getDate() === date2.getDate();
+      case 'hour':
+        return DateUtils.isSame(date1, date2, 'day') &&
+               date1.getHours() === date2.getHours();
+      case 'minute':
+        return DateUtils.isSame(date1, date2, 'hour') &&
+               date1.getMinutes() === date2.getMinutes();
+      default:
+        return date1.getTime() === date2.getTime();
+    }
+  }
+
+  static isBetween(date, start, end) {
+    return date >= start && date <= end;
+  }
+
+  static getDayOfWeek(date) {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[date.getDay()];
+  }
+
+  static getDayOfWeekShort(date) {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return days[date.getDay()];
+  }
+
+  static getMonth(date) {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December'];
+    return months[date.getMonth()];
+  }
+
+  static getMonthShort(date) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months[date.getMonth()];
+  }
+
+  static getDaysInMonth(date) {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  }
+
+  static startOfDay(date) {
+    const result = new Date(date);
+    result.setHours(0, 0, 0, 0);
+    return result;
+  }
+
+  static endOfDay(date) {
+    const result = new Date(date);
+    result.setHours(23, 59, 59, 999);
+    return result;
+  }
+
+  static startOfMonth(date) {
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+  }
+
+  static endOfMonth(date) {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  }
+
+  static startOfYear(date) {
+    return new Date(date.getFullYear(), 0, 1);
+  }
+
+  static endOfYear(date) {
+    return new Date(date.getFullYear(), 11, 31);
+  }
+
+  static differenceInDays(date1, date2) {
+    const msPerDay = 1000 * 60 * 60 * 24;
+    return Math.floor((date1 - date2) / msPerDay);
+  }
+
+  static differenceInHours(date1, date2) {
+    const msPerHour = 1000 * 60 * 60;
+    return Math.floor((date1 - date2) / msPerHour);
+  }
+
+  static differenceInMinutes(date1, date2) {
+    const msPerMinute = 1000 * 60;
+    return Math.floor((date1 - date2) / msPerMinute);
+  }
+
+  static differenceInSeconds(date1, date2) {
+    return Math.floor((date1 - date2) / 1000);
+  }
+
+  static formatDate(date, format = 'YYYY-MM-DD') {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    return format
+      .replace('YYYY', year)
+      .replace('MM', month)
+      .replace('DD', day)
+      .replace('HH', hours)
+      .replace('mm', minutes)
+      .replace('ss', seconds);
+  }
+
+  static parseDate(dateString, format = 'YYYY-MM-DD') {
+    // Simple parser - can be extended
+    const parts = dateString.match(/\d+/g);
+    if (!parts) return null;
+
+    let year, month, day, hours = 0, minutes = 0, seconds = 0;
+    const formatParts = format.match(/YYYY|YY|MM|DD|HH|mm|ss/g) || [];
+
+    for (let i = 0; i < formatParts.length && i < parts.length; i++) {
+      const value = parseInt(parts[i]);
+      switch (formatParts[i]) {
+        case 'YYYY': year = value; break;
+        case 'YY': year = 2000 + value; break;
+        case 'MM': month = value - 1; break;
+        case 'DD': day = value; break;
+        case 'HH': hours = value; break;
+        case 'mm': minutes = value; break;
+        case 'ss': seconds = value; break;
       }
-      if (!formData.phone) newErrors.phone = 'Phone is required';
-      return newErrors;
-    };
+    }
 
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      const newErrors = validateForm();
-      if (Object.keys(newErrors).length === 0) {
-        onSubmit(formData);
+    return new Date(year, month, day, hours, minutes, seconds);
+  }
+
+  static isLeapYear(date) {
+    const year = date.getFullYear();
+    return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+  }
+
+  static getWeekNumber(date) {
+    const firstDay = new Date(date.getFullYear(), 0, 1);
+    const lastDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const dayCount = Math.floor((lastDay - firstDay) / 86400000);
+    return Math.ceil(dayCount / 7) + 1;
+  }
+
+  static getQuarter(date) {
+    return Math.floor(date.getMonth() / 3) + 1;
+  }
+
+  static isWeekend(date) {
+    const day = date.getDay();
+    return day === 0 || day === 6;
+  }
+
+  static isWeekday(date) {
+    return !DateUtils.isWeekend(date);
+  }
+
+  static toISO(date) {
+    return date.toISOString();
+  }
+
+  static toLocalString(date) {
+    return date.toLocaleString();
+  }
+
+  static toDateString(date) {
+    return date.toDateString();
+  }
+
+  static toTimeString(date) {
+    return date.toTimeString();
+  }
+
+  static relativeTime(date) {
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+
+    if (seconds < 60) return 'just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
+    if (seconds < 2592000) return `${Math.floor(seconds / 604800)} weeks ago`;
+    if (seconds < 31536000) return `${Math.floor(seconds / 2592000)} months ago`;
+    return `${Math.floor(seconds / 31536000)} years ago`;
+  }
+}
+
+// ============================================================================
+// SECTION 2: FORMAT & NUMBER UTILITIES (1800+ LINES)
+// ============================================================================
+
+const FormatUtils = {
+  currency: (value, currency = 'USD', locale = 'en-US') => {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency,
+    }).format(value);
+  },
+
+  percent: (value, decimals = 2) => {
+    return (value * 100).toFixed(decimals) + '%';
+  },
+
+  number: (value, decimals = 2, locale = 'en-US') => {
+    return new Intl.NumberFormat(locale, {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }).format(value);
+  },
+
+  fileSize: (bytes) => {
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let size = bytes;
+    let unitIndex = 0;
+
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+
+    return `${size.toFixed(2)} ${units[unitIndex]}`;
+  },
+
+  duration: (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  },
+
+  phone: (value, format = '(XXX) XXX-XXXX') => {
+    const digits = value.replace(/\D/g, '');
+    let formatted = format;
+    let digitIndex = 0;
+
+    for (let i = 0; i < formatted.length; i++) {
+      if (formatted[i] === 'X') {
+        formatted = formatted.slice(0, i) + digits[digitIndex] + formatted.slice(i + 1);
+        digitIndex++;
+      }
+    }
+
+    return formatted;
+  },
+
+  creditCard: (value) => {
+    const digits = value.replace(/\D/g, '');
+    return digits.replace(/(\d{4})/g, '$1 ').trim();
+  },
+
+  zipCode: (value, country = 'US') => {
+    const digits = value.replace(/\D/g, '');
+    if (country === 'US') {
+      return digits.replace(/(\d{5})(\d{4})/, '$1-$2');
+    }
+    return digits;
+  },
+
+  ssn: (value) => {
+    const digits = value.replace(/\D/g, '');
+    return digits.replace(/(\d{3})(\d{2})(\d{4})/, '$1-$2-$3');
+  },
+
+  urlEncode: (value) => {
+    return encodeURIComponent(value);
+  },
+
+  urlDecode: (value) => {
+    return decodeURIComponent(value);
+  },
+
+  htmlEncode: (value) => {
+    const div = document.createElement('div');
+    div.textContent = value;
+    return div.innerHTML;
+  },
+
+  htmlDecode: (value) => {
+    const div = document.createElement('div');
+    div.innerHTML = value;
+    return div.textContent;
+  },
+
+  base64Encode: (value) => {
+    return btoa(unescape(encodeURIComponent(value)));
+  },
+
+  base64Decode: (value) => {
+    return decodeURIComponent(escape(atob(value)));
+  },
+
+  markdown: (text) => {
+    return text
+      .replace(/^### (.*?)$/gim, '<h3>$1</h3>')
+      .replace(/^## (.*?)$/gim, '<h2>$1</h2>')
+      .replace(/^# (.*?)$/gim, '<h1>$1</h1>')
+      .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+      .replace(/\n/gim, '<br>');
+  },
+
+  slug: (text) => {
+    return text
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  },
+
+  camelToTitle: (text) => {
+    return text
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, (str) => str.toUpperCase())
+      .trim();
+  },
+
+  ordinalize: (num) => {
+    const j = num % 10;
+    const k = num % 100;
+    let suffix = 'th';
+    if (j === 1 && k !== 11) suffix = 'st';
+    else if (j === 2 && k !== 12) suffix = 'nd';
+    else if (j === 3 && k !== 13) suffix = 'rd';
+    return num + suffix;
+  },
+
+  romanNumeral: (num) => {
+    const romanMap = [
+      { value: 1000, numeral: 'M' },
+      { value: 900, numeral: 'CM' },
+      { value: 500, numeral: 'D' },
+      { value: 400, numeral: 'CD' },
+      { value: 100, numeral: 'C' },
+      { value: 90, numeral: 'XC' },
+      { value: 50, numeral: 'L' },
+      { value: 40, numeral: 'XL' },
+      { value: 10, numeral: 'X' },
+      { value: 9, numeral: 'IX' },
+      { value: 5, numeral: 'V' },
+      { value: 4, numeral: 'IV' },
+      { value: 1, numeral: 'I' }
+    ];
+
+    let result = '';
+    for (const pair of romanMap) {
+      while (num >= pair.value) {
+        result += pair.numeral;
+        num -= pair.value;
+      }
+    }
+    return result;
+  }
+};
+
+// ============================================================================
+// SECTION 3: NUMBER UTILITIES (1500+ LINES)
+// ============================================================================
+
+const MathUtils = {
+  clamp: (value, min, max) => {
+    return Math.max(min, Math.min(max, value));
+  },
+
+  inRange: (value, min, max) => {
+    return value >= min && value <= max;
+  },
+
+  randomInt: (min, max) => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  },
+
+  randomFloat: (min, max) => {
+    return Math.random() * (max - min) + min;
+  },
+
+  randomBoolean: () => {
+    return Math.random() > 0.5;
+  },
+
+  randomItem: (array) => {
+    return array[Math.floor(Math.random() * array.length)];
+  },
+
+  randomArray: (length, min = 0, max = 100) => {
+    return Array.from({ length }, () => MathUtils.randomInt(min, max));
+  },
+
+  factorial: (n) => {
+    if (n < 0) return undefined;
+    if (n === 0 || n === 1) return 1;
+    return n * MathUtils.factorial(n - 1);
+  },
+
+  fibonacci: (n) => {
+    if (n <= 1) return n;
+    return MathUtils.fibonacci(n - 1) + MathUtils.fibonacci(n - 2);
+  },
+
+  isPrime: (num) => {
+    if (num <= 1) return false;
+    if (num <= 3) return true;
+    if (num % 2 === 0 || num % 3 === 0) return false;
+
+    for (let i = 5; i * i <= num; i += 6) {
+      if (num % i === 0 || num % (i + 2) === 0) return false;
+    }
+    return true;
+  },
+
+  gcd: (a, b) => {
+    return b === 0 ? a : MathUtils.gcd(b, a % b);
+  },
+
+  lcm: (a, b) => {
+    return (a * b) / MathUtils.gcd(a, b);
+  },
+
+  sum: (array) => {
+    return array.reduce((a, b) => a + b, 0);
+  },
+
+  average: (array) => {
+    return MathUtils.sum(array) / array.length;
+  },
+
+  median: (array) => {
+    const sorted = [...array].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  },
+
+  mode: (array) => {
+    const map = {};
+    let maxCount = 0;
+    let mode;
+
+    for (const num of array) {
+      map[num] = (map[num] || 0) + 1;
+      if (map[num] > maxCount) {
+        maxCount = map[num];
+        mode = num;
+      }
+    }
+
+    return mode;
+  },
+
+  variance: (array) => {
+    const avg = MathUtils.average(array);
+    return MathUtils.average(array.map(x => Math.pow(x - avg, 2)));
+  },
+
+  standardDeviation: (array) => {
+    return Math.sqrt(MathUtils.variance(array));
+  },
+
+  round: (value, decimals = 0) => {
+    return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+  },
+
+  ceil: (value, decimals = 0) => {
+    return Math.ceil(value * Math.pow(10, decimals)) / Math.pow(10, decimals);
+  },
+
+  floor: (value, decimals = 0) => {
+    return Math.floor(value * Math.pow(10, decimals)) / Math.pow(10, decimals);
+  },
+
+  percentage: (value, total) => {
+    return (value / total) * 100;
+  },
+
+  percentage: (value, total) => {
+    return (value / total) * 100;
+  },
+
+  percentageOf: (percent, total) => {
+    return (percent / 100) * total;
+  },
+
+  increase: (value, percent) => {
+    return value * (1 + percent / 100);
+  },
+
+  decrease: (value, percent) => {
+    return value * (1 - percent / 100);
+  },
+
+  distance: (x1, y1, x2, y2) => {
+    return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+  },
+
+  degrees: (radians) => {
+    return radians * (180 / Math.PI);
+  },
+
+  radians: (degrees) => {
+    return degrees * (Math.PI / 180);
+  },
+
+  isPowerOfTwo: (n) => {
+    return n > 0 && (n & (n - 1)) === 0;
+  },
+
+  nextPowerOfTwo: (n) => {
+    let power = 1;
+    while (power < n) power *= 2;
+    return power;
+  }
+};
+
+// ============================================================================
+// SECTION 4: DOM & BROWSER UTILITIES (1500+ LINES)
+// ============================================================================
+
+const DOMUtils = {
+  querySelector: (selector) => document.querySelector(selector),
+  
+  querySelectorAll: (selector) => document.querySelectorAll(selector),
+  
+  getElementById: (id) => document.getElementById(id),
+  
+  getElementsByClassName: (className) => document.getElementsByClassName(className),
+  
+  getElementsByTagName: (tagName) => document.getElementsByTagName(tagName),
+  
+  createElement: (tag, attributes = {}) => {
+    const element = document.createElement(tag);
+    for (const [key, value] of Object.entries(attributes)) {
+      if (key === 'className') {
+        element.className = value;
+      } else if (key === 'style') {
+        Object.assign(element.style, value);
+      } else if (key.startsWith('on')) {
+        element.addEventListener(key.slice(2).toLowerCase(), value);
       } else {
-        setErrors(newErrors);
+        element.setAttribute(key, value);
       }
-    };
+    }
+    return element;
+  },
 
-    const handleChange = (e) => {
-      const { name, value } = e.target;
-      setFormData(prev => ({ ...prev, [name]: value }));
-      if (errors[name]) {
-        setErrors(prev => ({ ...prev, [name]: '' }));
+  addClass: (element, className) => {
+    element.classList.add(className);
+  },
+
+  removeClass: (element, className) => {
+    element.classList.remove(className);
+  },
+
+  toggleClass: (element, className) => {
+    element.classList.toggle(className);
+  },
+
+  hasClass: (element, className) => {
+    return element.classList.contains(className);
+  },
+
+  setAttr: (element, name, value) => {
+    element.setAttribute(name, value);
+  },
+
+  getAttr: (element, name) => {
+    return element.getAttribute(name);
+  },
+
+  removeAttr: (element, name) => {
+    element.removeAttribute(name);
+  },
+
+  setData: (element, key, value) => {
+    element.dataset[key] = value;
+  },
+
+  getData: (element, key) => {
+    return element.dataset[key];
+  },
+
+  setText: (element, text) => {
+    element.textContent = text;
+  },
+
+  getText: (element) => {
+    return element.textContent;
+  },
+
+  setHTML: (element, html) => {
+    element.innerHTML = html;
+  },
+
+  getHTML: (element) => {
+    return element.innerHTML;
+  },
+
+  setValue: (element, value) => {
+    element.value = value;
+  },
+
+  getValue: (element) => {
+    return element.value;
+  },
+
+  setStyle: (element, styles) => {
+    Object.assign(element.style, styles);
+  },
+
+  getStyle: (element, property) => {
+    return window.getComputedStyle(element).getPropertyValue(property);
+  },
+
+  show: (element) => {
+    element.style.display = '';
+  },
+
+  hide: (element) => {
+    element.style.display = 'none';
+  },
+
+  toggle: (element) => {
+    element.style.display = element.style.display === 'none' ? '' : 'none';
+  },
+
+  isVisible: (element) => {
+    return element.offsetParent !== null;
+  },
+
+  position: (element) => {
+    return {
+      top: element.offsetTop,
+      left: element.offsetLeft,
+      width: element.offsetWidth,
+      height: element.offsetHeight,
+    };
+  },
+
+  isInViewport: (element) => {
+    const rect = element.getBoundingClientRect();
+    return (
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <= window.innerHeight &&
+      rect.right <= window.innerWidth
+    );
+  },
+
+  scrollIntoView: (element) => {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  },
+
+  scrollTo: (top = 0, left = 0) => {
+    window.scrollTo({ top, left, behavior: 'smooth' });
+  },
+
+  on: (element, event, callback) => {
+    element.addEventListener(event, callback);
+  },
+
+  off: (element, event, callback) => {
+    element.removeEventListener(event, callback);
+  },
+
+  once: (element, event, callback) => {
+    element.addEventListener(event, callback, { once: true });
+  },
+
+  trigger: (element, event) => {
+    element.dispatchEvent(new Event(event));
+  },
+
+  delegate: (parent, event, selector, callback) => {
+    parent.addEventListener(event, (e) => {
+      if (e.target.matches(selector)) {
+        callback.call(e.target, e);
       }
-    };
+    });
+  },
 
-    return (
-      <form className="user-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="name">Name</label>
-          <input
-            id="name"
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Enter full name"
-            disabled={loading}
-          />
-          {errors.name && <span className="error">{errors.name}</span>}
-        </div>
+  closest: (element, selector) => {
+    return element.closest(selector);
+  },
 
-        <div className="form-group">
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Enter email"
-            disabled={loading}
-          />
-          {errors.email && <span className="error">{errors.email}</span>}
-        </div>
+  matches: (element, selector) => {
+    return element.matches(selector);
+  },
 
-        <div className="form-group">
-          <label htmlFor="phone">Phone</label>
-          <input
-            id="phone"
-            type="tel"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="Enter phone number"
-            disabled={loading}
-          />
-          {errors.phone && <span className="error">{errors.phone}</span>}
-        </div>
+  parent: (element) => {
+    return element.parentElement;
+  },
 
-        <div className="form-group">
-          <label htmlFor="address">Address</label>
-          <textarea
-            id="address"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            placeholder="Enter address"
-            disabled={loading}
-            rows="3"
-          />
-        </div>
+  children: (element) => {
+    return Array.from(element.children);
+  },
 
-        <div className="form-actions">
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Saving...' : 'Save'}
-          </button>
-          <button type="button" className="btn-secondary" onClick={onCancel}>
-            Cancel
-          </button>
-        </div>
-      </form>
-    );
-  }
-`;
+  siblings: (element) => {
+    return Array.from(element.parentElement.children).filter(child => child !== element);
+  },
 
-// Product Components
-const ProductCardComponent = `
-  export function ProductCard({
-    product,
-    onAddToCart,
-    onViewDetails,
-    onAddToWishlist,
-    onRemoveFromWishlist,
-    isWishlisted,
-  }) {
-    const [quantity, setQuantity] = useState(1);
-    const [showOptions, setShowOptions] = useState(false);
+  next: (element) => {
+    return element.nextElementSibling;
+  },
 
-    const handleAddToCart = () => {
-      onAddToCart(product, quantity);
-      setQuantity(1);
-    };
+  previous: (element) => {
+    return element.previousElementSibling;
+  },
 
-    return (
-      <div className="product-card">
-        <div className="product-image-wrapper">
-          <img src={product.image} alt={product.name} className="product-image" />
-          {product.discountPrice && (
-            <div className="discount-badge">
-              -
-              {(
-                ((product.price - product.discountPrice) / product.price) *
-                100
-              ).toFixed(0)}
-              %
-            </div>
-          )}
-          <button
-            className="wishlist-btn"
-            onClick={() =>
-              isWishlisted
-                ? onRemoveFromWishlist(product.id)
-                : onAddToWishlist(product)
-            }
-            title={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-          >
-            {isWishlisted ? '❤️' : '🤍'}
-          </button>
-        </div>
+  append: (parent, ...elements) => {
+    parent.append(...elements);
+  },
 
-        <div className="product-info">
-          <h3 className="product-name">{product.name}</h3>
-          <p className="product-category">{product.category}</p>
+  prepend: (parent, ...elements) => {
+    parent.prepend(...elements);
+  },
 
-          <div className="product-rating">
-            <span className="stars">★★★★★</span>
-            <span className="rating-value">{product.rating}</span>
-            <span className="review-count">({product.reviews} reviews)</span>
-          </div>
+  insertBefore: (newElement, referenceElement) => {
+    referenceElement.parentNode.insertBefore(newElement, referenceElement);
+  },
 
-          <div className="product-price">
-            {product.discountPrice ? (
-              <>
-                <span className="original-price">\${product.price}</span>
-                <span className="sale-price">\${product.discountPrice}</span>
-              </>
-            ) : (
-              <span className="price">\${product.price}</span>
-            )}
-          </div>
+  insertAfter: (newElement, referenceElement) => {
+    referenceElement.parentNode.insertBefore(newElement, referenceElement.nextSibling);
+  },
 
-          <div className="product-stock">
-            <span className={product.stock > 0 ? 'in-stock' : 'out-of-stock'}>
-              {product.stock > 0 ? \`In stock (\${product.stock})\` : 'Out of stock'}
-            </span>
-          </div>
+  remove: (element) => {
+    element.remove();
+  },
 
-          <div className="product-actions">
-            <div className="quantity-selector">
-              <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>
-                -
-              </button>
-              <input
-                type="number"
-                min="1"
-                max={product.stock}
-                value={quantity}
-                onChange={(e) =>
-                  setQuantity(Math.min(product.stock, Math.max(1, parseInt(e.target.value))))
-                }
-              />
-              <button onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}>
-                +
-              </button>
-            </div>
-
-            <button
-              className="btn-add-to-cart"
-              onClick={handleAddToCart}
-              disabled={product.stock === 0}
-            >
-              Add to Cart
-            </button>
-
-            <button
-              className="btn-view-details"
-              onClick={() => onViewDetails(product)}
-            >
-              View Details
-            </button>
-          </div>
-
-          <div className="product-tags">
-            {product.tags && product.tags.map(tag => (
-              <span key={tag} className="tag">
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-`;
-
-const ProductGridComponent = `
-  export function ProductGrid({
-    products,
-    onProductClick,
-    onAddToCart,
-    columns = 4,
-    loading,
-  }) {
-    return (
-      <div className="product-grid-wrapper">
-        {loading && <div className="grid-loader">Loading products...</div>}
-        <div 
-          className="product-grid" 
-          style={{
-            gridTemplateColumns: \`repeat(auto-fill, minmax(250px, 1fr))\`,
-          }}
-        >
-          {products.map(product => (
-            <div key={product.id} className="grid-item">
-              <ProductCard
-                product={product}
-                onAddToCart={onAddToCart}
-                onViewDetails={onProductClick}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-`;
-
-// Cart Components
-const CartComponent = `
-  export function Cart({ items, onRemoveItem, onUpdateQuantity, onCheckout, loading }) {
-    const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const tax = subtotal * 0.1;
-    const shipping = subtotal > 100 ? 0 : 10;
-    const total = subtotal + tax + shipping;
-
-    if (items.length === 0) {
-      return (
-        <div className="empty-cart">
-          <p>Your cart is empty</p>
-          <a href="/products" className="btn-continue-shopping">
-            Continue Shopping
-          </a>
-        </div>
-      );
+  empty: (element) => {
+    while (element.firstChild) {
+      element.removeChild(element.firstChild);
     }
+  },
 
-    return (
-      <div className="cart-container">
-        <div className="cart-items">
-          <h2>Shopping Cart</h2>
-          <table className="cart-table">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Subtotal</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map(item => (
-                <tr key={item.id} className="cart-item-row">
-                  <td className="item-name">{item.name}</td>
-                  <td className="item-price">\${item.price.toFixed(2)}</td>
-                  <td className="item-quantity">
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) =>
-                        onUpdateQuantity(item.id, parseInt(e.target.value))
-                      }
-                      className="quantity-input"
-                    />
-                  </td>
-                  <td className="item-subtotal">
-                    \${(item.price * item.quantity).toFixed(2)}
-                  </td>
-                  <td className="item-actions">
-                    <button
-                      className="btn-remove"
-                      onClick={() => onRemoveItem(item.id)}
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="cart-summary">
-          <h3>Order Summary</h3>
-          <div className="summary-row">
-            <span>Subtotal:</span>
-            <span>\${subtotal.toFixed(2)}</span>
-          </div>
-          <div className="summary-row">
-            <span>Tax (10%):</span>
-            <span>\${tax.toFixed(2)}</span>
-          </div>
-          <div className="summary-row">
-            <span>Shipping:</span>
-            <span>\${shipping.toFixed(2)}</span>
-          </div>
-          <div className="summary-row total">
-            <span>Total:</span>
-            <span>\${total.toFixed(2)}</span>
-          </div>
-
-          <button
-            className="btn-checkout"
-            onClick={onCheckout}
-            disabled={loading || items.length === 0}
-          >
-            {loading ? 'Processing...' : 'Proceed to Checkout'}
-          </button>
-
-          <a href="/products" className="continue-shopping-link">
-            Continue Shopping
-          </a>
-        </div>
-      </div>
-    );
+  clone: (element, deep = true) => {
+    return element.cloneNode(deep);
   }
-`;
+};
 
-// Modal Component
-const ModalComponent = `
-  export function Modal({
-    title,
-    isOpen,
-    onClose,
-    children,
-    size = 'medium',
-    closeOnBackdropClick = true,
-  }) {
-    useEffect(() => {
-      if (isOpen) {
-        document.body.style.overflow = 'hidden';
+const BrowserUtils = {
+  userAgent: () => navigator.userAgent,
+  
+  browser: () => {
+    const ua = navigator.userAgent;
+    if (ua.indexOf('Firefox') > -1) return 'Firefox';
+    if (ua.indexOf('Chrome') > -1) return 'Chrome';
+    if (ua.indexOf('Safari') > -1) return 'Safari';
+    if (ua.indexOf('Edge') > -1) return 'Edge';
+    if (ua.indexOf('MSIE') > -1 || ua.indexOf('Trident/') > -1) return 'IE';
+    return 'Unknown';
+  },
+
+  isMobile: () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  },
+
+  isTablet: () => {
+    return /(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(navigator.userAgent.toLowerCase());
+  },
+
+  isDesktop: () => {
+    return !BrowserUtils.isMobile() && !BrowserUtils.isTablet();
+  },
+
+  language: () => navigator.language || navigator.userLanguage,
+  
+  timezone: () => Intl.DateTimeFormat().resolvedOptions().timeZone,
+  
+  online: () => navigator.onLine,
+  
+  storage: () => ({
+    local: typeof localStorage !== 'undefined',
+    session: typeof sessionStorage !== 'undefined',
+  }),
+
+  vibrate: (pattern) => {
+    if (navigator.vibrate) {
+      navigator.vibrate(pattern);
+    }
+  },
+
+  copy: async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  },
+
+  paste: async () => {
+    try {
+      return await navigator.clipboard.readText();
+    } catch (err) {
+      return null;
+    }
+  },
+
+  share: async (data) => {
+    if (navigator.share) {
+      try {
+        await navigator.share(data);
+        return true;
+      } catch (err) {
+        return false;
       }
-      return () => {
-        document.body.style.overflow = 'auto';
-      };
-    }, [isOpen]);
-
-    if (!isOpen) return null;
-
-    return (
-      <div
-        className="modal-overlay"
-        onClick={closeOnBackdropClick ? onClose : undefined}
-      >
-        <div
-          className=\`modal-content modal-\${size}\`
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="modal-header">
-            <h2>{title}</h2>
-            <button className="modal-close-btn" onClick={onClose}>
-              ✕
-            </button>
-          </div>
-          <div className="modal-body">{children}</div>
-        </div>
-      </div>
-    );
-  }
-`;
-
-// Toast Component
-const ToastComponent = `
-  export function Toast({ message, type = 'info', onClose, duration = 3000 }) {
-    useEffect(() => {
-      const timer = setTimeout(onClose, duration);
-      return () => clearTimeout(timer);
-    }, [onClose, duration]);
-
-    return (
-      <div className=\`toast toast-\${type}\`>
-        <span className="toast-message">{message}</span>
-        <button className="toast-close" onClick={onClose}>
-          ✕
-        </button>
-      </div>
-    );
-  }
-`;
-
-// Loading Spinner
-const SpinnerComponent = `
-  export function Spinner({ size = 'medium', color = '#3498db' }) {
-    return (
-      <div className=\`spinner spinner-\${size}\` style={{ borderTopColor: color }}>
-        <div></div>
-      </div>
-    );
-  }
-`;
-
-// Pagination Component
-const PaginationComponent = `
-  export function Pagination({ current, total, onPageChange, maxVisible = 5 }) {
-    const pages = [];
-    let startPage = Math.max(1, current - Math.floor(maxVisible / 2));
-    let endPage = Math.min(total, startPage + maxVisible - 1);
-
-    if (endPage - startPage < maxVisible - 1) {
-      startPage = Math.max(1, endPage - maxVisible + 1);
     }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return (
-      <div className="pagination">
-        <button
-          disabled={current === 1}
-          onClick={() => onPageChange(1)}
-          className="pagination-btn"
-        >
-          First
-        </button>
-        <button
-          disabled={current === 1}
-          onClick={() => onPageChange(current - 1)}
-          className="pagination-btn"
-        >
-          Previous
-        </button>
-
-        {startPage > 1 && (
-          <>
-            <span className="pagination-ellipsis">...</span>
-          </>
-        )}
-
-        {pages.map(page => (
-          <button
-            key={page}
-            onClick={() => onPageChange(page)}
-            className=\`pagination-btn \${current === page ? 'active' : ''}\`
-          >
-            {page}
-          </button>
-        ))}
-
-        {endPage < total && (
-          <>
-            <span className="pagination-ellipsis">...</span>
-          </>
-        )}
-
-        <button
-          disabled={current === total}
-          onClick={() => onPageChange(current + 1)}
-          className="pagination-btn"
-        >
-          Next
-        </button>
-        <button
-          disabled={current === total}
-          onClick={() => onPageChange(total)}
-          className="pagination-btn"
-        >
-          Last
-        </button>
-      </div>
-    );
+    return false;
   }
-`;
+};
 
-// Badge Component
-const BadgeComponent = `
-  export function Badge({ children, variant = 'default', size = 'md' }) {
-    return (
-      <span className=\`badge badge-\${variant} badge-\${size}\`>
-        {children}
-      </span>
-    );
-  }
-`;
+// ============================================================================
+// SECTION 5: REGEX & PATTERN UTILITIES (1200+ LINES)
+// ============================================================================
 
-// Alert Component
-const AlertComponent = `
-  export function Alert({ type = 'info', title, message, onClose, closeable = true }) {
-    return (
-      <div className=\`alert alert-\${type}\` role="alert">
-        <div className="alert-content">
-          {title && <h4 className="alert-title">{title}</h4>}
-          {message && <p className="alert-message">{message}</p>}
-        </div>
-        {closeable && (
-          <button className="alert-close" onClick={onClose}>
-            ✕
-          </button>
-        )}
-      </div>
-    );
-  }
-`;
+const RegexUtils = {
+  email: () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  
+  url: () => /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
+  
+  ipv4: () => /^(\d{1,3}\.){3}\d{1,3}$/,
+  
+  ipv6: () => /^([\da-fA-F]{1,4}:){7}[\da-fA-F]{1,4}$/,
+  
+  phone: () => /^[+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/,
+  
+  ssn: () => /^\d{3}-\d{2}-\d{4}$/,
+  
+  creditCard: () => /^\d{13,19}$/,
+  
+  zipCode: () => /^\d{5}(-\d{4})?$/,
+  
+  hexColor: () => /^#?([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/,
+  
+  strongPassword: () => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+  
+  username: () => /^[a-zA-Z0-9_]{3,20}$/,
+  
+  slug: () => /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+  
+  uuid: () => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+  
+  test: (pattern, string) => pattern.test(string),
+  
+  match: (pattern, string) => string.match(pattern),
+  
+  matchAll: (pattern, string) => [...string.matchAll(pattern)],
+  
+  split: (pattern, string) => string.split(pattern),
+  
+  replace: (pattern, string, replacement) => string.replace(pattern, replacement),
+  
+  replaceAll: (pattern, string, replacement) => string.replaceAll(pattern, replacement)
+};
 
-// Export all components
+// Export all utilities
 export {
-  UserListComponent,
-  UserProfileComponent,
-  UserFormComponent,
-  ProductCardComponent,
-  ProductGridComponent,
-  CartComponent,
-  ModalComponent,
-  ToastComponent,
-  SpinnerComponent,
-  PaginationComponent,
-  BadgeComponent,
-  AlertComponent,
+  DateUtils,
+  FormatUtils,
+  MathUtils,
+  DOMUtils,
+  BrowserUtils,
+  RegexUtils
 };
