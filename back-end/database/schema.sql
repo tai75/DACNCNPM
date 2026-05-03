@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   time_slot ENUM('morning', 'afternoon') NOT NULL,
   address VARCHAR(500) NOT NULL,
   note TEXT,
-  status ENUM('pending', 'confirmed', 'in_progress', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
+  status ENUM('pending', 'confirmed', 'in_progress', 'not_completed', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
   completion_note TEXT,
   before_image VARCHAR(255) DEFAULT NULL,
   after_image VARCHAR(255) DEFAULT NULL,

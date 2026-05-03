@@ -53,6 +53,7 @@ function BookingDetail() {
       confirmed: "bg-sky-100 text-sky-700",
       pending: "bg-amber-100 text-amber-700",
       in_progress: "bg-indigo-100 text-indigo-700",
+      not_completed: "bg-rose-100 text-rose-700",
       cancelled: "bg-rose-100 text-rose-700",
       active: "bg-emerald-100 text-emerald-700",
     }),
@@ -73,6 +74,8 @@ function BookingDetail() {
     return "Bạn có chắc muốn hủy dịch vụ này không?";
   };
 
+  const resolveCancelItemKey = (item) => String(item?.cancel_key ?? item?.id ?? item?.service_id ?? "").trim();
+
   const openCancelModal = (item) => {
     setItemToCancel(item);
   };
@@ -81,18 +84,27 @@ function BookingDetail() {
     setItemToCancel(null);
   };
 
-  const handleCancelItem = async (itemId) => {
+  const handleCancelItem = async (itemKey) => {
+    const normalizedItemKey = String(itemKey ?? "").trim();
+
+    if (!normalizedItemKey) {
+      alert("Không thể hủy dịch vụ này vì thiếu mã dịch vụ hợp lệ.");
+      return;
+    }
+
     try {
-      setCancelingItemId(itemId);
-      const res = await api.delete(`/bookings/${id}/items/${itemId}`);
+      setCancelingItemId(normalizedItemKey);
+      const res = await api.delete(`/bookings/${id}/items/${normalizedItemKey}`);
       if (res.data?.success) {
         setBooking((currentBooking) => {
           if (!currentBooking) return currentBooking;
 
+          const updatedKey = Number(normalizedItemKey);
+
           return {
             ...currentBooking,
             service_items: (currentBooking.service_items || []).map((item) =>
-              item.id === itemId
+              Number(item.id || item.service_id) === updatedKey
                 ? {
                     ...item,
                     status: "cancelled",
@@ -175,6 +187,7 @@ function BookingDetail() {
   const cancelledItems =
     booking.service_items?.filter((item) => normalizeItemStatus(item) === "cancelled") || [];
   const totalPrice = booking.total_price || 0;
+  const itemCancelKey = resolveCancelItemKey(itemToCancel);
 
   return (
     <section className="w-full py-8 md:py-10">
@@ -419,9 +432,9 @@ function BookingDetail() {
           paymentLabel={booking.payment_method_vietnamese}
           paymentMethod={booking.payment_method}
           paymentStatus={booking.payment_status}
-          loading={cancelingItemId === itemToCancel.id}
+          loading={cancelingItemId === itemCancelKey}
           onClose={closeCancelModal}
-          onConfirm={() => handleCancelItem(itemToCancel.id)}
+          onConfirm={() => handleCancelItem(itemCancelKey)}
         />
       )}
 

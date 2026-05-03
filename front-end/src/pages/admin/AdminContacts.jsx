@@ -83,31 +83,31 @@ function AdminContacts() {
 
   return (
     <div className="space-y-6">
-      <div className="card-soft overflow-hidden bg-gradient-to-r from-slate-900 via-cyan-900 to-emerald-700 p-6 text-white md:p-8">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold md:text-4xl">Quản lý liên hệ khách hàng</h1>
-            <p className="mt-2 max-w-2xl text-sm text-emerald-50/85">
+            <h1 className="text-2xl font-bold text-slate-800">Quản lý liên hệ khách hàng</h1>
+            <p className="mt-2 max-w-2xl text-sm text-slate-500">
               Theo dõi yêu cầu từ trang Liên hệ, cập nhật trạng thái xử lý và phản hồi khách hàng kịp thời.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-center text-sm md:grid-cols-4">
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-              <div className="text-2xl font-bold">{summary.total}</div>
-              <div className="text-white/75">Tổng liên hệ</div>
+            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{summary.total}</div>
+              <div className="text-slate-500">Tổng liên hệ</div>
             </div>
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-              <div className="text-2xl font-bold">{summary.new}</div>
-              <div className="text-white/75">Mới</div>
+            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{summary.new}</div>
+              <div className="text-slate-500">Mới</div>
             </div>
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-              <div className="text-2xl font-bold">{summary.in_progress}</div>
-              <div className="text-white/75">Đang xử lý</div>
+            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{summary.in_progress}</div>
+              <div className="text-slate-500">Đang xử lý</div>
             </div>
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-              <div className="text-2xl font-bold">{summary.resolved}</div>
-              <div className="text-white/75">Đã xử lý</div>
+            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{summary.resolved}</div>
+              <div className="text-slate-500">Đã xử lý</div>
             </div>
           </div>
         </div>

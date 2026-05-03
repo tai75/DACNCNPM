@@ -240,37 +240,38 @@ function AdminBookings() {
     { value: "pending", label: "Chờ xác nhận" },
     { value: "confirmed", label: "Đã xác nhận" },
     { value: "in_progress", label: "Đang thực hiện" },
+    { value: "not_completed", label: "Chưa hoàn thành" },
     { value: "completed", label: "Hoàn thành" },
     { value: "cancelled", label: "Đã hủy" },
   ];
 
   return (
     <div className="space-y-6 reveal-up">
-      <div className="card-soft overflow-hidden bg-gradient-to-r from-slate-900 via-emerald-900 to-emerald-700 p-6 text-white md:p-8">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold md:text-4xl">Quản lý đơn đặt lịch</h1>
-            <p className="mt-2 max-w-2xl text-sm text-emerald-50/85">
-              Tập trung vào booking, gán staff và xử lý trạng thái. Phần quản lý nhân viên riêng đã được bỏ để tránh chồng chéo với role staff.
+            <h1 className="text-2xl font-bold text-slate-800">Quản lý đơn đặt lịch</h1>
+            <p className="mt-2 max-w-2xl text-sm text-slate-500">
+              Tập trung vào booking, gán staff và xử lý trạng thái.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-center text-sm md:grid-cols-4">
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-              <div className="text-2xl font-bold">{summary.total}</div>
-              <div className="text-white/75">Tổng booking</div>
+            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{summary.total}</div>
+              <div className="text-slate-500">Tổng booking</div>
             </div>
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-              <div className="text-2xl font-bold">{summary.pending}</div>
-              <div className="text-white/75">Chờ xác nhận</div>
+            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{summary.pending}</div>
+              <div className="text-slate-500">Chờ xác nhận</div>
             </div>
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-              <div className="text-2xl font-bold">{summary.in_progress}</div>
-              <div className="text-white/75">Đang thực hiện</div>
+            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{summary.in_progress}</div>
+              <div className="text-slate-500">Đang thực hiện</div>
             </div>
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-              <div className="text-2xl font-bold">{summary.completed}</div>
-              <div className="text-white/75">Hoàn thành</div>
+            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{summary.completed}</div>
+              <div className="text-slate-500">Hoàn thành</div>
             </div>
           </div>
         </div>
@@ -408,6 +409,7 @@ function AdminBookings() {
                     <option value="pending">Chờ xác nhận</option>
                     <option value="confirmed">Đã xác nhận</option>
                     <option value="in_progress">Đang thực hiện</option>
+                    <option value="not_completed">Chưa hoàn thành</option>
                     <option value="completed">Hoàn thành</option>
                     <option value="cancelled">Đã hủy</option>
                   </select>

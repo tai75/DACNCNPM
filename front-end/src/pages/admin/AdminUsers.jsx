@@ -92,35 +92,58 @@ function AdminUsers() {
     return "rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700";
   };
 
+  const totalAdmins = users.filter(u => u.role === 'admin').length;
+  const totalStaff = users.filter(u => u.role === 'staff').length;
+  const totalRegularUsers = users.filter(u => u.role === 'user').length;
+
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold text-slate-800">Quản lý người dùng</h2>
-          <p className="text-sm text-slate-500">Tìm kiếm, chỉnh role và quản trị tài khoản hệ thống.</p>
+      <div className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold text-slate-800">Quản lý người dùng</h2>
+            <p className="text-sm text-slate-500">Tìm kiếm, chỉnh role và quản trị tài khoản hệ thống.</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 text-center text-sm md:grid-cols-4">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{users.length}</div>
+              <div className="text-slate-500">Tổng người dùng</div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{totalAdmins}</div>
+              <div className="text-slate-500">Admin</div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{totalStaff}</div>
+              <div className="text-slate-500">Staff</div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{totalRegularUsers}</div>
+              <div className="text-slate-500">Người dùng</div>
+            </div>
+          </div>
         </div>
 
-          <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
-            <div className="relative w-full md:w-80">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Tìm theo tên hoặc email..."
-                className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-[#059669] focus:ring-2 focus:ring-emerald-100"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={fetchUsers}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Làm mới
-            </button>
+        <div className="mt-4 flex w-full flex-col gap-3 md:flex-row md:items-center">
+          <div className="relative w-full md:w-80">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Tìm theo tên hoặc email..."
+              className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-[#059669] focus:ring-2 focus:ring-emerald-100"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
+          <button
+            type="button"
+            onClick={fetchUsers}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Làm mới
+          </button>
         </div>
       </div>
 

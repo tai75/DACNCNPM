@@ -29,6 +29,7 @@ import AdminRevenue from "./pages/admin/AdminRevenue";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminStaff from "./pages/admin/AdminStaff";
 import AdminContacts from "./pages/admin/AdminContacts";
+import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminRoute from "./routes/Adminroute";
 import StaffLayout from "./layouts/StaffLayout";
 import StaffRoute from "./routes/StaffRoute";
@@ -119,6 +120,7 @@ function App() {
         {/* ================= ADMIN ================= */}
         <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
           <Route path="dashboard" element={<AdminDashBoard />} />
+          <Route path="notifications" element={<AdminNotifications />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="staff" element={<AdminStaff />} />
           <Route path="services" element={<AdminServices />} />

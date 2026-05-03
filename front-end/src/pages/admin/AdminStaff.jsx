@@ -94,6 +94,7 @@ function AdminStaff() {
   const bookingStatusMeta = (status) => {
     if (status === "completed") return { label: "Hoàn thành", cls: "bg-green-100 text-green-700" };
     if (status === "cancelled") return { label: "Đã hủy", cls: "bg-red-100 text-red-700" };
+    if (status === "not_completed") return { label: "Chưa hoàn thành", cls: "bg-rose-100 text-rose-700" };
     if (status === "in_progress") return { label: "Đang thực hiện", cls: "bg-amber-100 text-amber-700" };
     if (status === "confirmed") return { label: "Đã xác nhận", cls: "bg-blue-100 text-blue-700" };
     return { label: "Chờ xác nhận", cls: "bg-slate-100 text-slate-700" };
@@ -121,11 +122,33 @@ function AdminStaff() {
     }
   };
 
+  const totalBusy = staffList.filter(s => s.status === 'busy').length;
+  const totalAvailable = staffList.filter(s => s.status === 'available').length;
+
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-white p-5 shadow-sm">
-        <h1 className="text-2xl font-semibold text-slate-800">Quản lý nhân viên</h1>
-        <p className="mt-1 text-sm text-slate-500">Theo dõi chuyên môn và trạng thái làm việc của đội ngũ nhân viên.</p>
+      <div className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-800">Quản lý nhân viên</h1>
+            <p className="mt-1 text-sm text-slate-500">Theo dõi chuyên môn và trạng thái làm việc của đội ngũ nhân viên.</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 text-center text-sm md:grid-cols-3">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{staffList.length}</div>
+              <div className="text-slate-500">Tổng nhân viên</div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{totalAvailable}</div>
+              <div className="text-slate-500">Đang rảnh</div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{totalBusy}</div>
+              <div className="text-slate-500">Đã có lịch</div>
+            </div>
+          </div>
+        </div>
 
         <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
           <input

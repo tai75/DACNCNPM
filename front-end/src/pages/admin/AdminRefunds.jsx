@@ -159,23 +159,23 @@ function AdminRefunds() {
 
   return (
     <div className="space-y-6 reveal-up">
-      <div className="card-soft overflow-hidden bg-gradient-to-r from-slate-900 via-rose-900 to-rose-700 p-6 text-white md:p-8">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold md:text-4xl">Quản lý hoàn tiền</h1>
-            <p className="mt-2 max-w-2xl text-sm text-rose-50/85">
+            <h1 className="text-2xl font-bold text-slate-800">Quản lý hoàn tiền</h1>
+            <p className="mt-2 max-w-2xl text-sm text-slate-500">
               Chỉ hiển thị các đơn đã hủy và thanh toán qua ngân hàng. Hoàn tiền được xử lý ở màn riêng này.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-center text-sm">
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-              <div className="text-2xl font-bold">{summary.pending}</div>
-              <div className="text-white/75">Chờ hoàn tiền</div>
+            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{summary.pending}</div>
+              <div className="text-slate-500">Chờ hoàn tiền</div>
             </div>
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-              <div className="text-2xl font-bold">{summary.refunded}</div>
-              <div className="text-white/75">Đã hoàn tiền</div>
+            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{summary.refunded}</div>
+              <div className="text-slate-500">Đã hoàn tiền</div>
             </div>
           </div>
         </div>

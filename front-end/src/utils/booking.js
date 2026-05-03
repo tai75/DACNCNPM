@@ -4,6 +4,7 @@ const STATUS_ALIASES = {
   cancelled: ["da huy", "đã hủy", "huy", "cancelled", "canceled"],
   confirmed: ["da xac nhan", "đã xác nhận", "xac nhan", "confirmed"],
   in_progress: ["dang xu ly", "đang xử lý", "in_progress", "in progress"],
+  not_completed: ["chua hoan thanh", "chưa hoàn thành", "not_completed", "not completed"],
   completed: ["hoan thanh", "đã hoàn thành", "completed"],
   paid: ["da thanh toan", "đã thanh toán", "paid"],
   refunded: ["da hoan tien", "đã hoàn tiền", "refunded"],
@@ -68,7 +69,10 @@ export const canCancelBooking = (booking, userRole = "user") => {
 };
 
 export const canCancelBookingItem = (booking, item) =>
-  Boolean(booking) && ["pending", "confirmed"].includes(normalizeBookingStatus(booking?.status)) && normalizeItemStatus(item) === "active";
+  Boolean(booking) &&
+  Boolean(item?.cancel_key || item?.id || item?.service_id) &&
+  ["pending", "confirmed"].includes(normalizeBookingStatus(booking?.status)) &&
+  normalizeItemStatus(item) === "active";
 
 export const getTimeSlotLabel = (slot) => {
   if (slot === "morning") return "Buổi sáng";

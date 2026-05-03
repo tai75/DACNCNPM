@@ -12,7 +12,7 @@ function StaffBookings() {
       accumulator[booking.status] = (accumulator[booking.status] || 0) + 1;
       return accumulator;
     },
-    { total: 0, confirmed: 0, in_progress: 0, completed: 0 }
+    { total: 0, confirmed: 0, in_progress: 0, not_completed: 0, completed: 0 }
   );
 
   const statusMeta = {
@@ -25,6 +25,11 @@ function StaffBookings() {
       label: "Đang thực hiện",
       chip: "bg-amber-100 text-amber-700",
       option: "text-amber-700",
+    },
+    not_completed: {
+      label: "Chưa hoàn thành",
+      chip: "bg-rose-100 text-rose-700",
+      option: "text-rose-700",
     },
     completed: {
       label: "Hoàn thành",
@@ -113,28 +118,32 @@ function StaffBookings() {
 
   return (
     <div className="reveal-up space-y-6">
-      <div className="card-soft overflow-hidden border-0 bg-gradient-to-r from-slate-900 via-emerald-900 to-emerald-700 p-6 text-white shadow-xl md:p-8">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-emerald-200">Staff workspace</p>
-            <h1 className="mt-2 text-3xl font-bold md:text-4xl">Lịch đặt được giao</h1>
-            <p className="mt-2 max-w-2xl text-sm text-emerald-50/85">
-              Chỉ hiển thị booking do admin phân công cho bạn. Mục tiêu là xử lý nhanh, rõ trạng thái và không bị rối.
+            <p className="text-xs uppercase tracking-[0.18em] text-emerald-600">Staff workspace</p>
+            <h1 className="mt-2 text-3xl font-bold text-slate-800 md:text-4xl">Lịch đặt được giao</h1>
+            <p className="mt-2 max-w-2xl text-sm text-slate-500">
+              Chỉ hiển thị booking do admin phân công cho bạn. Nếu dịch vụ chưa hoàn thành, hãy đánh dấu rồi chờ admin đổi lịch trước khi xử lý tiếp.
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 text-center text-sm">
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-              <div className="text-2xl font-bold">{summary.total}</div>
-              <div className="text-white/75">Tổng việc</div>
+          <div className="grid grid-cols-2 gap-3 text-center text-sm md:grid-cols-4">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{summary.total}</div>
+              <div className="text-slate-500">Tổng việc</div>
             </div>
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-              <div className="text-2xl font-bold">{summary.in_progress}</div>
-              <div className="text-white/75">Đang làm</div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{summary.in_progress}</div>
+              <div className="text-slate-500">Đang làm</div>
             </div>
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-              <div className="text-2xl font-bold">{summary.completed}</div>
-              <div className="text-white/75">Hoàn thành</div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{summary.not_completed}</div>
+              <div className="text-slate-500">Chưa hoàn thành</div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="text-2xl font-bold text-slate-800">{summary.completed}</div>
+              <div className="text-slate-500">Hoàn thành</div>
             </div>
           </div>
         </div>
@@ -200,7 +209,7 @@ function StaffBookings() {
                     </td>
                     <td className="px-4 py-4">
                       <span className={`badge-status ${currentMeta.chip}`}>{currentMeta.label}</span>
-                      <div className="mt-2 text-xs text-slate-400">Chỉ có 3 bước: xác nhận, thực hiện, hoàn thành</div>
+                      <div className="mt-2 text-xs text-slate-400">Nếu chưa hoàn thành, chờ admin đổi lịch rồi mới xử lý tiếp</div>
                     </td>
                     <td className="px-4 py-4 text-sm">
                       <div className="mb-2 flex flex-wrap gap-2">
@@ -223,7 +232,9 @@ function StaffBookings() {
                         </button>
                       ) : (
                         <div className="text-xs text-slate-400">
-                          {b.payment_method === "bank"
+                          {b.status === "not_completed"
+                            ? "Đang chờ admin đổi lịch để xử lý tiếp"
+                            : b.payment_method === "bank"
                             ? "Booking chuyển khoản: không cần staff cập nhật"
                             : b.status !== "completed"
                             ? "Chỉ cập nhật sau khi hoàn thành"
@@ -239,6 +250,7 @@ function StaffBookings() {
                       >
                         <option value="confirmed">Đã xác nhận</option>
                         <option value="in_progress">Đang thực hiện</option>
+                        <option value="not_completed">Chưa hoàn thành</option>
                         <option value="completed">Hoàn thành</option>
                       </select>
                     </td>

@@ -13,6 +13,7 @@ import {
   ChevronRight,
   MessageSquare,
   BadgeDollarSign,
+  Bell,
 } from "lucide-react";
 
 function AdminLayout() {
@@ -21,6 +22,7 @@ function AdminLayout() {
 
   const menuItems = [
     { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/admin/notifications", label: "Thông báo", icon: Bell },
     { to: "/admin/users", label: "Quản lý người dùng", icon: Users },
     { to: "/admin/staff", label: "Quản lý nhân viên", icon: Users },
     { to: "/admin/services", label: "Quản lý dịch vụ", icon: Sprout },

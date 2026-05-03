@@ -135,15 +135,33 @@ function AdminServices() {
 
   return (
     <div className="space-y-5 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-800">Quản lý dịch vụ</h1>
-        <button
-          onClick={openCreateModal}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#059669] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
-        >
-          <Plus className="h-4 w-4" />
-          Thêm dịch vụ
-        </button>
+      <div className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-800">Quản lý dịch vụ</h1>
+            <p className="mt-1 text-sm text-slate-500">Quản lý danh mục dịch vụ cho khách hàng đặt lịch.</p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-slate-800">{services.length}</div>
+              <div className="text-sm text-slate-500">Tổng dịch vụ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-800">Danh sách dịch vụ</h2>
+          <button
+            onClick={openCreateModal}
+            className="inline-flex items-center gap-2 rounded-xl bg-[#059669] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+          >
+            <Plus className="h-4 w-4" />
+            Thêm dịch vụ
+          </button>
+        </div>
       </div>
 
       {services.length === 0 ? (

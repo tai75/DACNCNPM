@@ -314,3 +314,49 @@ exports.getStaffSchedule = async (req, res) => {
     res.status(500).json({ success: false, message: "Lỗi tải lịch làm việc" });
   }
 };
+
+exports.getNotifications = async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ success: false, message: "Chỉ admin mới có thể xem thông báo" });
+  }
+
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+    const offset = Math.max(0, (parseInt(req.query.page) || 1) - 1) * limit;
+
+    const [notifications, countResult] = await Promise.all([
+      query(
+        `
+          SELECT
+            n.id,
+            n.user_id,
+            n.booking_id,
+            n.message,
+            n.type,
+            n.is_read,
+            n.created_at,
+            u.name AS user_name,
+            b.service_name
+          FROM notifications n
+          LEFT JOIN users u ON u.id = n.user_id
+          LEFT JOIN bookings b ON b.id = n.booking_id
+          ORDER BY n.created_at DESC
+          LIMIT ? OFFSET ?
+        `,
+        [limit, offset]
+      ),
+      query("SELECT COUNT(*) as total FROM notifications")
+    ]);
+
+    res.json({
+      success: true,
+      data: notifications,
+      total: countResult[0].total,
+      page: parseInt(req.query.page) || 1,
+      limit,
+    });
+  } catch (err) {
+    console.error("Get notifications error:", err);
+    res.status(500).json({ success: false, message: "Lỗi tải thông báo" });
+  }
+};

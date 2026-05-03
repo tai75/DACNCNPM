@@ -8,12 +8,22 @@ function Services() {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [loading, setLoading] = useState(true);
   const imageBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const serviceList = Array.isArray(services) ? services : [];
 
   useEffect(() => {
     const fetchServices = async () => {
       try {
         const response = await api.get("/services");
-        setServices(response.data);
+        const payload = response.data;
+        const nextServices = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.value)
+            ? payload.value
+            : Array.isArray(payload?.data)
+              ? payload.data
+              : [];
+
+        setServices(nextServices);
       } catch (error) {
         console.error("Error fetching services:", error);
       } finally {
@@ -24,24 +34,27 @@ function Services() {
     fetchServices();
   }, []);
 
-  // Hàm xóa dấu tiếng Việt để tìm kiếm chính xác
-  const removeVietnameseTones = (str) => {
-    return str
+  const normalizeText = (value) => {
+    return String(value ?? "")
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase();
+      .toLowerCase()
+      .trim();
   };
 
   const filteredServices = useMemo(() => {
-    const keyword = removeVietnameseTones(searchKeyword.trim());
-    if (!keyword) return services;
+    const keyword = normalizeText(searchKeyword);
+    if (!keyword) return serviceList;
 
-    return services.filter((service) => {
-      const name = removeVietnameseTones(String(service.name || ""));
-      const description = removeVietnameseTones(String(service.description || ""));
-      return name.includes(keyword) || description.includes(keyword);
+    return serviceList.filter((service) => {
+      const name = normalizeText(service.name);
+      const description = normalizeText(service.description);
+
+      return [name, description].some((field) => {
+        return field.includes(keyword) || field.split(/\s+/).some((word) => word.startsWith(keyword));
+      });
     });
-  }, [searchKeyword, services]);
+  }, [searchKeyword, serviceList]);
 
   if (loading) {
     return (
@@ -84,7 +97,7 @@ function Services() {
             )}
           </div>
           <p className="mt-2 text-xs text-slate-500">
-            {filteredServices.length} / {services.length} dịch vụ phù hợp
+            {filteredServices.length} / {serviceList.length} dịch vụ phù hợp
           </p>
         </div>
       </div>
@@ -123,7 +136,7 @@ function Services() {
           </article>
         ))}
 
-        {services.length === 0 && (
+        {serviceList.length === 0 && (
           <div className="card-soft sm:col-span-2 lg:col-span-3">
             <div className="flex flex-col items-center justify-center gap-4 px-6 py-12 text-center">
               <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
@@ -144,7 +157,7 @@ function Services() {
           </div>
         )}
 
-        {services.length > 0 && filteredServices.length === 0 && (
+        {serviceList.length > 0 && filteredServices.length === 0 && (
           <div className="card-soft sm:col-span-2 lg:col-span-3 p-8 text-center">
             <h2 className="text-xl font-semibold text-slate-800">Không tìm thấy dịch vụ phù hợp</h2>
             <p className="mt-2 text-sm text-slate-500">
