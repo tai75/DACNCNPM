@@ -130,7 +130,7 @@ function AdminReviews() {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6">
         <h1 className="text-2xl font-semibold text-slate-800">Quản lý đánh giá khách hàng</h1>
         <p className="mt-1 text-sm text-slate-500">Theo dõi, ẩn/hiện hoặc xóa các đánh giá không phù hợp.</p>
 

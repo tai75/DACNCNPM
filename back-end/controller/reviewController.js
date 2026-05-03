@@ -51,14 +51,6 @@ exports.create = async (req, res) => {
       }
     }
 
-    const existingReview = booking_id
-      ? await query("SELECT id FROM reviews WHERE user_id = ? AND booking_id = ?", [user_id, booking_id])
-      : await query("SELECT id FROM reviews WHERE user_id = ? AND service_id = ? AND booking_id IS NULL", [user_id, service_id]);
-
-    if (existingReview.length > 0) {
-      return res.status(400).json({ message: booking_id ? "Bạn đã đánh giá booking này rồi" : "Bạn đã đánh giá dịch vụ này rồi" });
-    }
-
     // Insert review
     const insertSql = `
       INSERT INTO reviews (user_id, service_id, booking_id, rating, comment, is_visible)

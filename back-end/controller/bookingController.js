@@ -1,10 +1,25 @@
 const db = require("../config/db");
 const Joi = require("joi");
 
+const bookingDateSchema = Joi.string()
+  .pattern(/^\d{4}-\d{2}-\d{2}$/)
+  .required()
+  .custom((value, helpers) => {
+    const selectedDate = new Date(`${value}T00:00:00`);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (Number.isNaN(selectedDate.getTime()) || selectedDate < today) {
+      return helpers.error("date.min");
+    }
+
+    return value;
+  }, "booking date validation");
+
 const bookingSchema = Joi.object({
   service_id: Joi.number().integer().positive(),
   service_ids: Joi.array().items(Joi.number().integer().positive()).min(1).max(20).unique(),
-  booking_date: Joi.date().greater("now").required(),
+  booking_date: bookingDateSchema,
   time_slot: Joi.string().valid("morning", "afternoon").required(),
   address: Joi.string().min(10).max(500).required(),
   note: Joi.string().allow("", null).max(1000),
@@ -13,7 +28,7 @@ const bookingSchema = Joi.object({
 
 const statusSchema = Joi.object({
   status: Joi.string()
-    .valid("pending", "confirmed", "in_progress", "completed", "cancelled")
+    .valid("pending", "confirmed", "in_progress", "not_completed", "completed", "cancelled")
     .required(),
 });
 
@@ -50,6 +65,7 @@ const statusTranslations = {
   pending: "Cho xac nhan",
   confirmed: "Da xac nhan",
   in_progress: "Dang thuc hien",
+  not_completed: "Chua hoan thanh",
   completed: "Hoan thanh",
   cancelled: "Da huy",
 };
@@ -67,8 +83,9 @@ const paymentStatusTranslations = {
 
 const allowedTransitionsByStaff = {
   pending: [],
-  confirmed: ["in_progress"],
-  in_progress: ["completed"],
+  confirmed: ["in_progress", "not_completed"],
+  in_progress: ["completed", "not_completed"],
+  not_completed: ["confirmed", "in_progress", "completed", "not_completed"],
   completed: [],
   cancelled: [],
 };
@@ -78,7 +95,7 @@ const autoRescheduleOverdueBookings = (callback) => {
     UPDATE bookings
     SET booking_date = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
     WHERE booking_date < CURDATE()
-      AND status IN ('pending', 'confirmed', 'in_progress')
+      AND status IN ('pending', 'confirmed', 'in_progress', 'not_completed')
   `;
 
   db.query(sql, (err, result) => {
@@ -114,7 +131,7 @@ const checkStaffAvailability = (staffId, bookingDate, timeSlot, excludeBookingId
     WHERE bsa.staff_id = ?
       AND DATE(b.booking_date) = DATE(?)
       AND b.time_slot = ?
-      AND b.status IN ('confirmed', 'in_progress', 'completed')
+      AND b.status IN ('confirmed', 'in_progress', 'not_completed', 'completed')
   `;
   
   const params = [staffId, bookingDate, timeSlot];
@@ -506,7 +523,7 @@ exports.createBooking = (req, res) => {
         WHERE user_id = ?
           AND DATE(booking_date) = DATE(?)
           AND time_slot = ?
-          AND status IN ('pending', 'confirmed', 'in_progress')
+          AND status IN ('pending', 'confirmed', 'in_progress', 'not_completed')
         LIMIT 1
       `;
 
@@ -1208,7 +1225,7 @@ exports.updateBookingSchedule = (req, res) => {
       WHERE user_id = ?
         AND DATE(booking_date) = DATE(?)
         AND time_slot = ?
-        AND status IN ('pending', 'confirmed', 'in_progress')
+        AND status IN ('pending', 'confirmed', 'in_progress', 'not_completed')
         AND id <> ?
       LIMIT 1
     `;
@@ -1229,7 +1246,8 @@ exports.updateBookingSchedule = (req, res) => {
       const updateSql = `
         UPDATE bookings
         SET booking_date = ?,
-            time_slot = ?
+            time_slot = ?,
+            status = 'confirmed'
         WHERE id = ?
       `;
 
@@ -1243,7 +1261,7 @@ exports.updateBookingSchedule = (req, res) => {
           return res.status(404).json({ success: false, message: "Booking khong ton tai" });
         }
 
-        createNotification(booking.user_id, `Booking #${id} da duoc doi lich hen`, id);
+        createNotification(booking.user_id, `Booking #${id} da duoc doi lich hen va quay ve trang thai da xac nhan`, id);
 
         return res.json({ success: true, message: "Doi lich booking thanh cong" });
       });
@@ -1423,6 +1441,7 @@ exports.getBookingDetail = (req, res) => {
           service_items: serviceItems.map(item => ({
             id: item.id,
             service_id: item.service_id,
+            cancel_key: item.id || item.service_id,
             service_name: item.service_name,
             service_image: item.service_image,
             quantity: Number(item.quantity || 1),
@@ -1452,21 +1471,19 @@ exports.getBookingDetail = (req, res) => {
 };
 
 exports.cancelBookingItem = (req, res) => {
-  const bookingIdValidation = bookingIdSchema.validate(req.params);
-  if (bookingIdValidation.error) {
+  const rawBookingId = String(req.params.id ?? "").trim();
+  const rawItemId = String(req.params.itemId ?? "").trim();
+
+  const bookingId = Number.parseInt(rawBookingId, 10);
+  const itemId = Number.parseInt(rawItemId, 10);
+
+  if (!Number.isInteger(bookingId) || bookingId <= 0) {
     return res.status(400).json({ success: false, message: "ID booking khong hop le" });
   }
 
-  const itemIdSchema = Joi.object({
-    itemId: Joi.number().integer().positive().required(),
-  });
-
-  const itemIdValidation = itemIdSchema.validate(req.params);
-  if (itemIdValidation.error) {
+  if (!Number.isInteger(itemId) || itemId <= 0) {
     return res.status(400).json({ success: false, message: "ID dich vu khong hop le" });
   }
-
-  const { id: bookingId, itemId } = { ...bookingIdValidation.value, ...itemIdValidation.value };
 
   // Check booking ownership
   db.query("SELECT user_id, status FROM bookings WHERE id = ?", [bookingId], (bookingErr, bookingRows) => {
@@ -1491,100 +1508,133 @@ exports.cancelBookingItem = (req, res) => {
       return res.status(400).json({ success: false, message: "Chi duoc huy dich vu trong booking dang pending hoac confirmed" });
     }
 
+    const findBookingItemSql = `
+      SELECT id, status
+      FROM booking_items
+      WHERE booking_id = ? AND id = ?
+      LIMIT 1
+    `;
+
+    const findLegacyItemSql = `
+      SELECT id, status
+      FROM booking_items
+      WHERE booking_id = ? AND service_id = ?
+      ORDER BY id ASC
+      LIMIT 1
+    `;
+
     // Check booking item exists and belongs to this booking
-    db.query("SELECT id, status FROM booking_items WHERE id = ? AND booking_id = ?", [itemId, bookingId], (itemErr, itemRows) => {
+    db.query(findBookingItemSql, [bookingId, itemId], (itemErr, itemRows) => {
       if (itemErr) {
         console.error("Check booking item error:", itemErr);
         return res.status(500).json({ success: false, message: "Loi server" });
       }
 
       if (itemRows.length === 0) {
-        return res.status(404).json({ success: false, message: "Dich vu trong booking khong ton tai" });
-      }
-
-      const bookingItem = itemRows[0];
-
-      if (bookingItem.status === "cancelled") {
-        return res.status(400).json({ success: false, message: "Dich vu nay da bi huy roi" });
-      }
-
-      // Cancel the item
-      db.beginTransaction((txErr) => {
-        if (txErr) {
-          console.error("Begin transaction cancel item error:", txErr);
-          return res.status(500).json({ success: false, message: "Loi server" });
-        }
-
-        const cancelSql = "UPDATE booking_items SET status = 'cancelled' WHERE id = ?";
-        db.query(cancelSql, [itemId], (cancelErr) => {
-          if (cancelErr) {
-            return db.rollback(() => {
-              console.error("Cancel booking item error:", cancelErr);
-              return res.status(500).json({ success: false, message: "Loi server" });
-            });
+        db.query(findLegacyItemSql, [bookingId, itemId], (legacyErr, legacyRows) => {
+          if (legacyErr) {
+            console.error("Check legacy booking item error:", legacyErr);
+            return res.status(500).json({ success: false, message: "Loi server" });
           }
 
-          // Check if all items in the booking are cancelled
-          const checkAllCancelledSql = `
-            SELECT COUNT(*) as active_count
-            FROM booking_items
-            WHERE booking_id = ? AND status = 'active'
-          `;
+          if (legacyRows.length === 0) {
+            return res.status(404).json({ success: false, message: "Dich vu trong booking khong ton tai" });
+          }
 
-          db.query(checkAllCancelledSql, [bookingId], (checkErr, checkRows) => {
-            if (checkErr) {
+          if (legacyRows.length > 1) {
+            return res.status(400).json({ success: false, message: "Co nhieu dich vu trung service_id, khong the huy an toan" });
+          }
+
+          handleCancelBookingItem(bookingId, legacyRows[0].id, legacyRows[0].status, booking, res);
+        });
+        return;
+      }
+
+      handleCancelBookingItem(bookingId, itemRows[0].id, itemRows[0].status, booking, res);
+    });
+  });
+};
+
+function handleCancelBookingItem(bookingId, bookingItemId, bookingItemStatus, booking, res) {
+  if (bookingItemStatus === "cancelled") {
+    return res.status(400).json({ success: false, message: "Dich vu nay da bi huy roi" });
+  }
+
+  // Cancel the item
+  db.beginTransaction((txErr) => {
+    if (txErr) {
+      console.error("Begin transaction cancel item error:", txErr);
+      return res.status(500).json({ success: false, message: "Loi server" });
+    }
+
+    const cancelSql = "UPDATE booking_items SET status = 'cancelled' WHERE id = ?";
+    db.query(cancelSql, [bookingItemId], (cancelErr) => {
+      if (cancelErr) {
+        return db.rollback(() => {
+          console.error("Cancel booking item error:", cancelErr);
+          return res.status(500).json({ success: false, message: "Loi server" });
+        });
+      }
+
+      // Check if all items in the booking are cancelled
+      const checkAllCancelledSql = `
+        SELECT COUNT(*) as active_count
+        FROM booking_items
+        WHERE booking_id = ? AND status = 'active'
+      `;
+
+      db.query(checkAllCancelledSql, [bookingId], (checkErr, checkRows) => {
+        if (checkErr) {
+          return db.rollback(() => {
+            console.error("Check all items cancelled error:", checkErr);
+            return res.status(500).json({ success: false, message: "Loi server" });
+          });
+        }
+
+        const activeCount = checkRows[0].active_count;
+
+        // If all items are cancelled, mark booking as cancelled
+        if (activeCount === 0) {
+          const cancelBookingSql = "UPDATE bookings SET status = 'cancelled' WHERE id = ?";
+          db.query(cancelBookingSql, [bookingId], (cancelBookingErr) => {
+            if (cancelBookingErr) {
               return db.rollback(() => {
-                console.error("Check all items cancelled error:", checkErr);
+                console.error("Cancel booking error:", cancelBookingErr);
                 return res.status(500).json({ success: false, message: "Loi server" });
               });
             }
 
-            const activeCount = checkRows[0].active_count;
-
-            // If all items are cancelled, mark booking as cancelled
-            if (activeCount === 0) {
-              const cancelBookingSql = "UPDATE bookings SET status = 'cancelled' WHERE id = ?";
-              db.query(cancelBookingSql, [bookingId], (cancelBookingErr) => {
-                if (cancelBookingErr) {
-                  return db.rollback(() => {
-                    console.error("Cancel booking error:", cancelBookingErr);
-                    return res.status(500).json({ success: false, message: "Loi server" });
-                  });
-                }
-
-                return db.commit((commitErr) => {
-                  if (commitErr) {
-                    return db.rollback(() => {
-                      console.error("Commit cancel item error:", commitErr);
-                      return res.status(500).json({ success: false, message: "Loi server" });
-                    });
-                  }
-
-                  createNotification(booking.user_id, `Huy tat ca dich vu trong booking #${bookingId}. Booking nay da bi huy.`, bookingId);
-
-                  return res.json({ success: true, message: "Huy dich vu thanh cong. Vi tat ca dich vu da bi huy, booking nay cung da bi huy." });
+            return db.commit((commitErr) => {
+              if (commitErr) {
+                return db.rollback(() => {
+                  console.error("Commit cancel item error:", commitErr);
+                  return res.status(500).json({ success: false, message: "Loi server" });
                 });
-              });
-            } else {
-              return db.commit((commitErr) => {
-                if (commitErr) {
-                  return db.rollback(() => {
-                    console.error("Commit cancel item error:", commitErr);
-                    return res.status(500).json({ success: false, message: "Loi server" });
-                  });
-                }
+              }
 
-                createNotification(booking.user_id, `Dich vu trong booking #${bookingId} da bi huy.`, bookingId);
+              createNotification(booking.user_id, `Huy tat ca dich vu trong booking #${bookingId}. Booking nay da bi huy.`, bookingId);
 
-                return res.json({ success: true, message: "Huy dich vu thanh cong" });
+              return res.json({ success: true, message: "Huy dich vu thanh cong. Vi tat ca dich vu da bi huy, booking nay cung da bi huy." });
+            });
+          });
+        } else {
+          return db.commit((commitErr) => {
+            if (commitErr) {
+              return db.rollback(() => {
+                console.error("Commit cancel item error:", commitErr);
+                return res.status(500).json({ success: false, message: "Loi server" });
               });
             }
+
+            createNotification(booking.user_id, `Dich vu trong booking #${bookingId} da bi huy.`, bookingId);
+
+            return res.json({ success: true, message: "Huy dich vu thanh cong" });
           });
-        });
+        }
       });
     });
   });
-};
+}
 exports.checkStaffAvailabilityEndpoint = (req, res) => {
   if (req.user.role !== "admin") {
     return res.status(403).json({ success: false, message: "Chi admin moi co the kiem tra khả nang của nhan vien" });

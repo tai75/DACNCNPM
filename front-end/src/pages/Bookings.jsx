@@ -47,6 +47,7 @@ function Bookings() {
       confirmed: "bg-sky-100 text-sky-700",
       pending: "bg-amber-100 text-amber-700",
       in_progress: "bg-indigo-100 text-indigo-700",
+      not_completed: "bg-rose-100 text-rose-700",
       cancelled: "bg-rose-100 text-rose-700",
       paid: "bg-emerald-100 text-emerald-700",
     }),
@@ -209,7 +210,7 @@ function Bookings() {
                         <b>Ngày:</b> {new Date(booking.booking_date).toLocaleDateString("vi-VN")}
                       </p>
                       <p>
-                        <b>Khung giờ:</b> {timeSlotLabel(booking.time_slot)}
+                        <b>Khung giờ:</b> {getTimeSlotLabel(booking.time_slot)}
                       </p>
                       <p className="md:col-span-2 break-all">
                         <b>Địa chỉ:</b> {booking.address}

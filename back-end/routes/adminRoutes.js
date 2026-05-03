@@ -20,6 +20,9 @@ const upload = multer({ storage });
 // DASHBOARD
 router.get("/dashboard", authMiddleware, adminMiddleware, adminController.getDashboardStats);
 
+// NOTIFICATIONS
+router.get("/notifications", authMiddleware, adminMiddleware, adminController.getNotifications);
+
 // USERS
 router.get("/users", authMiddleware, adminMiddleware, userController.getUsers);
 router.delete("/users/:id", authMiddleware, adminMiddleware, userController.deleteUser);
