@@ -164,17 +164,6 @@ function AdminBookings() {
     }
   };
 
-  const handleStaffSelectionChange = (bookingId, staffId, checked) => {
-    setSelectedStaffByBooking((prev) => {
-      const current = Array.isArray(prev[bookingId]) ? prev[bookingId] : [];
-      const next = checked
-        ? [...new Set([...current, Number(staffId)])]
-        : current.filter((value) => Number(value) !== Number(staffId));
-
-      return { ...prev, [bookingId]: next };
-    });
-  };
-
   const timeSlotLabel = (slot) => {
     if (slot === "morning") return "Buổi sáng";
     if (slot === "afternoon") return "Buổi chiều";
@@ -348,40 +337,64 @@ function AdminBookings() {
                   </div>
                 </td>
                 <td className="px-4 py-4">
-                  <div className="max-h-40 space-y-2 overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    {staffs.map((staff) => {
-                      const checked = (selectedStaffByBooking[booking.id] || []).includes(Number(staff.id));
-                      return (
-                        <label key={staff.id} className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={(event) => handleStaffSelectionChange(booking.id, staff.id, event.target.checked)}
-                            className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                          />
-                          <span>{staff.name}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
+                  <div className="space-y-3">
+                    {/* Danh sách checkbox staff có thể scroll */}
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 mb-1">
+                        Chọn nhân viên
+                      </label>
+                      <div className="max-h-48 overflow-y-scroll rounded-xl border border-slate-200 bg-slate-50 p-3 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
+                        {staffs.map((staff) => {
+                          const checked = (selectedStaffByBooking[booking.id] || []).includes(Number(staff.id));
+                          return (
+                            <label key={staff.id} className={`flex items-center gap-2 text-sm mb-2 ${booking.status === "completed" ? "cursor-not-allowed opacity-50" : "cursor-pointer"} text-slate-700`}>
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                disabled={booking.status === "completed"}
+                                onChange={(event) => {
+                                  const isChecked = event.target.checked;
+                                  setSelectedStaffByBooking((prev) => {
+                                    const current = Array.isArray(prev[booking.id]) ? prev[booking.id] : [];
+                                    const next = isChecked
+                                      ? [...new Set([...current, Number(staff.id)])]
+                                      : current.filter((value) => Number(value) !== Number(staff.id));
 
-                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                    <span>
-                      Đã chọn: {(selectedStaffByBooking[booking.id] || []).length} nhân viên
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleAssignStaff(booking.id, selectedStaffByBooking[booking.id] || [])}
-                      className="rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white transition hover:bg-emerald-700"
-                    >
-                      Gán staff
-                    </button>
-                  </div>
+                                    return { ...prev, [booking.id]: next };
+                                  });
+                                }}
+                                className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+                              />
+                              <span>{staff.name}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                  <div className="mt-2 text-xs text-slate-400">
-                    {booking.staff_names?.length
-                      ? `Đã gán: ${booking.staff_names.join(", ")}`
-                      : "Admin có thể gán nhiều nhân viên cho 1 booking"}
+                    {/* Thông tin đã chọn */}
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                      <span>
+                        Đã chọn: {(selectedStaffByBooking[booking.id] || []).length} nhân viên
+                      </span>
+                      <button
+                        type="button"
+                        disabled={booking.status === "completed"}
+                        onClick={() => handleAssignStaff(booking.id, selectedStaffByBooking[booking.id] || [])}
+                        className="rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Gán staff
+                      </button>
+                    </div>
+
+                    {/* Thông tin đã gán */}
+                    <div className="text-xs text-slate-400">
+                      {booking.status === "completed"
+                        ? "Không thể gán staff cho booking đã hoàn thành"
+                        : booking.staff_names?.length
+                        ? `Đã gán: ${booking.staff_names.join(", ")}`
+                        : "Admin có thể gán nhiều nhân viên cho 1 booking"}
+                    </div>
                   </div>
                 </td>
                 <td className="px-4 py-4 text-sm text-slate-700">{booking.payment_method_vietnamese}</td>

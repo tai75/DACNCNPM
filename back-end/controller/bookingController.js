@@ -949,7 +949,7 @@ exports.assignStaff = (req, res) => {
     }
 
     // First, get booking details (date and time_slot)
-    db.query("SELECT booking_date, time_slot FROM bookings WHERE id = ?", [id], (bookingErr, bookingRows) => {
+    db.query("SELECT booking_date, time_slot, status FROM bookings WHERE id = ?", [id], (bookingErr, bookingRows) => {
       if (bookingErr) {
         console.error("Find booking error:", bookingErr);
         return res.status(500).json({ success: false, message: "Loi server" });
@@ -960,6 +960,12 @@ exports.assignStaff = (req, res) => {
       }
 
       const booking = bookingRows[0];
+
+      // Check if booking is already completed
+      if (booking.status === "completed") {
+        return res.status(400).json({ success: false, message: "Khong the gan nhan vien cho booking da hoan thanh" });
+      }
+
       const bookingDate = booking.booking_date;
       const timeSlot = booking.time_slot;
 

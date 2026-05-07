@@ -30,6 +30,7 @@ router.put("/users/:id", authMiddleware, adminMiddleware, userController.updateU
 
 // STAFF
 router.get("/staff", authMiddleware, adminMiddleware, adminController.getStaffList);
+router.post("/staff", authMiddleware, adminMiddleware, adminController.createStaff);
 router.get("/staff/:id/schedule", authMiddleware, adminMiddleware, adminController.getStaffSchedule);
 
 // REVIEWS

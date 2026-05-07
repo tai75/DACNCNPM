@@ -12,6 +12,9 @@ function AdminStaff() {
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [scheduleLoading, setScheduleLoading] = useState(false);
   const [scheduleRows, setScheduleRows] = useState([]);
+  const [showAddStaffModal, setShowAddStaffModal] = useState(false);
+  const [newStaff, setNewStaff] = useState({ name: "", email: "", phone: "", password: "" });
+  const [addStaffLoading, setAddStaffLoading] = useState(false);
 
   const fetchStaff = async () => {
     try {
@@ -125,6 +128,45 @@ function AdminStaff() {
   const totalBusy = staffList.filter(s => s.status === 'busy').length;
   const totalAvailable = staffList.filter(s => s.status === 'available').length;
 
+  const handleAddStaff = async (e) => {
+    e.preventDefault();
+    if (!newStaff.name || !newStaff.email || !newStaff.phone || !newStaff.password) {
+      alert("Vui lòng điền đầy đủ thông tin");
+      return;
+    }
+
+    try {
+      setAddStaffLoading(true);
+      const res = await api.post("/admin/staff", newStaff);
+      if (res.data.success) {
+        alert("Thêm nhân viên thành công!");
+        setNewStaff({ name: "", email: "", phone: "", password: "" });
+        setShowAddStaffModal(false);
+        fetchStaff(); // Refresh list
+      } else {
+        alert(res.data.message || "Lỗi thêm nhân viên");
+      }
+    } catch (err) {
+      console.error("Lỗi thêm nhân viên:", err);
+      alert(err.response?.data?.message || "Lỗi thêm nhân viên");
+    } finally {
+      setAddStaffLoading(false);
+    }
+  };
+
+  const handleDeleteStaff = async (staffId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa nhân viên này?")) return;
+
+    try {
+      await api.delete(`/admin/users/${staffId}`);
+      alert("Xóa nhân viên thành công!");
+      fetchStaff();
+    } catch (err) {
+      console.error("Lỗi xóa nhân viên:", err);
+      alert(err.response?.data?.message || "Lỗi xóa nhân viên");
+    }
+  };
+
   return (
     <div className="space-y-5">
       <div className="rounded-2xl border border-slate-200 bg-white p-6">
@@ -179,13 +221,22 @@ function AdminStaff() {
             <option value="busy_first">Ưu tiên đang có lịch</option>
           </select>
 
-          <button
-            type="button"
-            onClick={fetchStaff}
-            className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-gray-50"
-          >
-            Làm mới danh sách
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={fetchStaff}
+              className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-gray-50"
+            >
+              Làm mới
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAddStaffModal(true)}
+              className="flex-1 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-green-700"
+            >
+              Thêm nhân viên
+            </button>
+          </div>
         </div>
       </div>
 
@@ -225,13 +276,20 @@ function AdminStaff() {
                 <td className="p-3">
                   <span className={statusBadge(staff.status)}>{statusLabel(staff.status)}</span>
                 </td>
-                <td className="p-3">
+                <td className="p-3 space-y-2">
                   <button
                     type="button"
                     onClick={() => openScheduleModal(staff)}
-                    className="rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-green-700"
+                    className="w-full rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-green-700"
                   >
                     Xem lịch làm việc
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteStaff(staff.id)}
+                    className="w-full rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-rose-700"
+                  >
+                    Xóa nhân viên
                   </button>
                 </td>
               </tr>
@@ -298,6 +356,91 @@ function AdminStaff() {
           </div>
         )}
       </div>
+
+      {showAddStaffModal && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-slate-800">Thêm nhân viên mới</h2>
+              <button
+                type="button"
+                onClick={() => setShowAddStaffModal(false)}
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-slate-600 hover:bg-gray-50"
+              >
+                Đóng
+              </button>
+            </div>
+
+            <form onSubmit={handleAddStaff} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Họ tên</label>
+                <input
+                  type="text"
+                  value={newStaff.name}
+                  onChange={(e) => setNewStaff({ ...newStaff, name: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                  placeholder="Nhập họ tên"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={newStaff.email}
+                  onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                  placeholder="Nhập email"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Số điện thoại</label>
+                <input
+                  type="tel"
+                  value={newStaff.phone}
+                  onChange={(e) => setNewStaff({ ...newStaff, phone: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                  placeholder="Nhập số điện thoại"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Mật khẩu</label>
+                <input
+                  type="password"
+                  value={newStaff.password}
+                  onChange={(e) => setNewStaff({ ...newStaff, password: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                  placeholder="Nhập mật khẩu"
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAddStaffModal(false)}
+                  className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-gray-50"
+                  disabled={addStaffLoading}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-green-700 disabled:opacity-50"
+                  disabled={addStaffLoading}
+                >
+                  {addStaffLoading ? "Đang thêm..." : "Thêm nhân viên"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {selectedStaff && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-4">

@@ -20,8 +20,9 @@ function BookingDetail() {
   const [cancelingItemId, setCancelingItemId] = useState(null);
   const [itemToCancel, setItemToCancel] = useState(null);
   const [cancelBookingLoading, setCancelBookingLoading] = useState(false);
-  const [showCancelBookingModal, setShowCancelBookingModal] = useState(false);
-  const imageBaseUrl = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "").replace(/\/api$/, "");
+  const [showCancelBookingModal, setShowCancelBookingModal] = useState(false);  const [confirmingPayment, setConfirmingPayment] = useState(false);
+  const [paymentConfirmError, setPaymentConfirmError] = useState(null);
+  const currentUser = JSON.parse(localStorage.getItem("user") || "null");  const imageBaseUrl = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "").replace(/\/api$/, "");
 
   useEffect(() => {
     const fetchBookingDetail = async () => {
@@ -75,6 +76,14 @@ function BookingDetail() {
   };
 
   const resolveCancelItemKey = (item) => String(item?.cancel_key ?? item?.id ?? item?.service_id ?? "").trim();
+
+  const isAssignedStaff = booking?.staff_ids?.includes(currentUser?.id);
+  const canStaffConfirmPayment = () =>
+    currentUser?.role === "staff" &&
+    isAssignedStaff &&
+    booking?.payment_method === "cod" &&
+    booking?.status === "completed" &&
+    booking?.payment_status !== "paid";
 
   const openCancelModal = (item) => {
     setItemToCancel(item);
@@ -134,6 +143,38 @@ function BookingDetail() {
   const closeCancelBookingModal = () => {
     if (cancelBookingLoading) return;
     setShowCancelBookingModal(false);
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!booking) return;
+
+    try {
+      setPaymentConfirmError(null);
+      setConfirmingPayment(true);
+      const res = await api.put(`/bookings/${booking.id}/payment`, {
+        payment_status: "paid",
+      });
+
+      if (res.data?.success) {
+        setBooking((currentBooking) =>
+          currentBooking
+            ? {
+                ...currentBooking,
+                payment_status: "paid",
+                payment_status_vietnamese: "Đã thanh toán",
+              }
+            : currentBooking
+        );
+        alert("Xác nhận thanh toán thành công!");
+      } else {
+        setPaymentConfirmError(res.data?.message || "Không thể xác nhận thanh toán");
+      }
+    } catch (error) {
+      console.error("Confirm payment error:", error);
+      setPaymentConfirmError(error.response?.data?.message || "Không thể xác nhận thanh toán");
+    } finally {
+      setConfirmingPayment(false);
+    }
   };
 
   const handleCancelBooking = async () => {
@@ -367,6 +408,21 @@ function BookingDetail() {
               <p className="text-xs text-slate-500">ID Booking</p>
               <p className="mt-1 font-mono text-sm font-semibold text-slate-700">#{booking.id}</p>
             </div>
+            {canStaffConfirmPayment() && (
+              <div className="mt-6">
+                <button
+                  type="button"
+                  onClick={handleConfirmPayment}
+                  disabled={confirmingPayment}
+                  className="w-full rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {confirmingPayment ? "Đang xác nhận..." : "Xác nhận đã thanh toán"}
+                </button>
+                {paymentConfirmError && (
+                  <p className="mt-3 text-sm text-rose-600">{paymentConfirmError}</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* User Info */}

@@ -9,6 +9,13 @@ const visibilitySchema = Joi.object({
   is_visible: Joi.boolean().required(),
 });
 
+const createStaffSchema = Joi.object({
+  name: Joi.string().min(2).max(100).required(),
+  email: Joi.string().email().required(),
+  phone: Joi.string().min(10).max(20).required(),
+  password: Joi.string().min(6).required(),
+});
+
 let reviewVisibilityReady = false;
 
 const ensureReviewVisibilityColumn = async () => {
@@ -358,5 +365,39 @@ exports.getNotifications = async (req, res) => {
   } catch (err) {
     console.error("Get notifications error:", err);
     res.status(500).json({ success: false, message: "Lỗi tải thông báo" });
+  }
+};
+
+exports.createStaff = async (req, res) => {
+  const { error, value } = createStaffSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ success: false, message: error.details[0].message });
+  }
+
+  try {
+    // Check if email already exists
+    const existingUser = await query("SELECT id FROM users WHERE email = ? LIMIT 1", [value.email]);
+    if (existingUser.length > 0) {
+      return res.status(400).json({ success: false, message: "Email đã được sử dụng" });
+    }
+
+    // Hash password
+    const bcrypt = require("bcrypt");
+    const hashedPassword = await bcrypt.hash(value.password, 10);
+
+    // Insert new staff
+    const result = await query(
+      "INSERT INTO users (name, email, phone, password, role) VALUES (?, ?, ?, ?, 'staff')",
+      [value.name, value.email, value.phone, hashedPassword]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Thêm nhân viên thành công",
+      data: { id: result.insertId, name: value.name, email: value.email, phone: value.phone, role: 'staff' }
+    });
+  } catch (err) {
+    console.error("Create staff error:", err);
+    res.status(500).json({ success: false, message: "Lỗi thêm nhân viên" });
   }
 };
